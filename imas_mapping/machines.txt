@@ -1,0 +1,5 @@
+# Machine   Host        Plugin
+JET         -           EXP2IMAS
+ASDEX       -           EXP2IMAS
+TCV         -           EXP2IMAS
+WEST        -           WEST

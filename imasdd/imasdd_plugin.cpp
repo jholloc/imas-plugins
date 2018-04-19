@@ -314,7 +314,7 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         if (request.find("Shape_of") != std::string::npos) {
             //std::cout << request << std::endl;
 
-            size_t depth = std::count(request.begin(), request.end(), '#');
+            auto depth = std::count(request.begin(), request.end(), '#');
 
             IDAM_PLUGIN_INTERFACE new_plugin_interface = *plugin_interface;
             DATA_BLOCK result{};
