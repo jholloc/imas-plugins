@@ -20,8 +20,6 @@
 *---------------------------------------------------------------------------------------------------------------*/
 #include "imasdd_plugin.h"
 
-#include <stdlib.h>
-#include <strings.h>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -87,7 +85,7 @@ int imasdd_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = PLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -137,32 +135,32 @@ void IMASDDPlugin::reset()
 
 }
 
-int IMASDDPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASDDPlugin::help(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
     const char* desc = "templatePlugin: help = description of this plugin";
 
-    return setReturnDataString(idam_plugin_interface->data_block, help, desc);
+    return setReturnDataString(plugin_interface->data_block, help, desc);
 }
 
-int IMASDDPlugin::version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASDDPlugin::version(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
+    return setReturnDataIntScalar(plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
 }
 
-int IMASDDPlugin::build_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASDDPlugin::build_date(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    return setReturnDataString(idam_plugin_interface->data_block, __DATE__, "Plugin build date");
+    return setReturnDataString(plugin_interface->data_block, __DATE__, "Plugin build date");
 }
 
-int IMASDDPlugin::default_method(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASDDPlugin::default_method(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, "Plugin default method");
+    return setReturnDataString(plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, "Plugin default method");
 }
 
-int IMASDDPlugin::max_interface_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASDDPlugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, "Maximum Interface Version");
+    return setReturnDataIntScalar(plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, "Maximum Interface Version");
 }
 
 namespace {
@@ -239,7 +237,7 @@ void call_plugin(const std::string& plugin_name, const std::string& request, IDA
     //}
     //return;
 
-    REQUEST_BLOCK new_request;
+    REQUEST_BLOCK new_request{};
     copyRequestBlock(&new_request, *plugin_interface->request_block);
 
     strcpy(new_request.signal, request.c_str());
@@ -263,7 +261,7 @@ void call_plugin(const std::string& plugin_name, const std::string& request, IDA
 void expand_request(std::vector<std::string>& requests, size_t depth, const std::string& request, const std::vector<int>& sizes)
 {
     size_t pos = 0;
-    if ((pos = request.find("#")) == std::string::npos) {
+    if ((pos = request.find('#')) == std::string::npos) {
         requests.push_back(request);
         return;
     }
@@ -279,14 +277,14 @@ void expand_request(std::vector<std::string>& requests, size_t depth, const std:
     
 }
 
-int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_BLOCK* request_block = plugin_interface->request_block;
 
-    const char* path = NULL;
+    const char* path = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
 
-    if (path == NULL || path[0] == '\0') {
+    if (path == nullptr || path[0] == '\0') {
         RAISE_PLUGIN_ERROR("invalid path provided");
     }
 
@@ -318,8 +316,8 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
             size_t depth = std::count(request.begin(), request.end(), '#');
 
-            IDAM_PLUGIN_INTERFACE new_plugin_interface = *idam_plugin_interface;
-            DATA_BLOCK result;
+            IDAM_PLUGIN_INTERFACE new_plugin_interface = *plugin_interface;
+            DATA_BLOCK result{};
             new_plugin_interface.data_block = &result;
             call_plugin("imas", request, &new_plugin_interface);
             int size = *(int*)result.data;
@@ -333,14 +331,14 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         }
     }
 
-    DATA_BLOCK* list = (DATA_BLOCK*)malloc(total_requests.size() * sizeof(DATA_BLOCK));
+    auto list = (DATA_BLOCK*)malloc(total_requests.size() * sizeof(DATA_BLOCK));
 
     int i = 0;
     for (const auto& request : total_requests) {
         //std::cout << request << std::endl;
-        IDAM_PLUGIN_INTERFACE new_plugin_interface = *idam_plugin_interface;
+        IDAM_PLUGIN_INTERFACE new_plugin_interface = *plugin_interface;
 
-        DATA_BLOCK result;
+        DATA_BLOCK result{};
         new_plugin_interface.data_block = &result;
 
         call_plugin("imas", request, &new_plugin_interface);
@@ -351,14 +349,14 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     closeIdamError();
 
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
+    DATA_BLOCK* data_block = plugin_interface->data_block;
     initDataBlock(data_block);
 
     int rank = 1;
-    data_block->rank = (int)rank;
+    data_block->rank = (unsigned int)rank;
     data_block->dims = (DIMS*)malloc(rank * sizeof(DIMS));
 
-    for (int i = 0; i < rank; ++i) {
+    for (i = 0; i < rank; ++i) {
         initDimBlock(&data_block->dims[i]);
 
         data_block->dims[i].data_type = UDA_TYPE_UNSIGNED_INT;

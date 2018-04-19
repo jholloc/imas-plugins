@@ -1,20 +1,20 @@
-#ifndef IDAM_PLUGINS_TEMPLATE_PLUGIN_H
-#define IDAM_PLUGINS_TEMPLATE_PLUGIN_H
+#ifndef UDA_PLUGINS_IMAS_MAPPING_PLUGIN_H
+#define UDA_PLUGINS_IMAS_MAPPING_PLUGIN_H
 
 #include <plugins/udaPlugin.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define THISPLUGIN_VERSION                  1
 #define THISPLUGIN_MAX_INTERFACE_VERSION    1        // Interface versions higher than this will not be understood!
 #define THISPLUGIN_DEFAULT_METHOD           "help"
 
-int templatePlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int imas_mapping_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // IDAM_PLUGINS_TEMPLATE_PLUGIN_H
+#endif // UDA_PLUGINS_IMAS_MAPPING_PLUGIN_H

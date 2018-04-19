@@ -1,27 +1,7 @@
-/*---------------------------------------------------------------
-* v1 IDAM Plugin Template: Standardised plugin design template, just add ... 
-*
-* Input Arguments:	IDAM_PLUGIN_INTERFACE *idam_plugin_interface
-*
-* Returns:		0 if the plugin functionality was successful
-*			otherwise a Error Code is returned 
-*
-* Standard functionality:
-*
-*	help	a description of what this plugin does together with a list of functions available
-*
-*	reset	frees all previously allocated heap, closes file handles and resets all static parameters.
-*		This has the same functionality as setting the housekeeping directive in the plugin interface
-*		data structure to TRUE (1)
-*
-*	init	Initialise the plugin: read all required data and process. Retain staticly for
-*		future reference.	
-*
-*---------------------------------------------------------------------------------------------------------------*/
-#include "templatePlugin.h"
+#include "imas_plugin.h"
 
-#include <stdlib.h>
-#include <strings.h>
+#include <cstdlib>
+#include <cstring>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -39,7 +19,7 @@ static int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
 static int do_function(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
-int templatePlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     static int init = 0;
 

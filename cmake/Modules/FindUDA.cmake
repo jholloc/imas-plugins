@@ -1,26 +1,38 @@
 # - Find UDA
 #
-# To provide the module with a hint about where to find your UDA
-# installation, you can set the environment variables UDA_DIR. The
-# Find module will then look in this path when searching for UDA paths
-# and libraries.
+# Once done this will define
 #
-# Find the UDA includes and libraries
-#
-#  UDA_INCLUDES        - Where to find memcached.h, etc
-#  UDA_LIBRARY_DIRS    - Where to find the libraries
-#  UDA_LIBRARIES       - Link these libraries when using UDA
-#  UDA_FOUND           - True if UDA found
-#
-# Normal usage would be:
-#  find_package (UDA REQUIRED)
-#  target_link_libraries (name ${UDA_LIBRARIES})
+#  UDA_FOUND - System has UDA
+#  UDA_INCLUDE_DIRS - The UDA include directory
+#  UDA_LIBRARIES - The libraries needed to use UDA
+#  UDA_DEFINITIONS - Compiler switches required for using UDA
+#=======================================================================================================================
 
-# Check using pkg-config first
-find_package( PkgConfig QUIET )
-pkg_check_modules( UDA QUIET uda-fat-client )
+# use pkg-config to get the directories and then use these values
+# in the FIND_PATH() and FIND_LIBRARY() calls
+find_package( PkgConfig )
 
+set( UDA_DEFINITIONS  )
+set( UDA_INCLUDE_DIRS )
+set( UDA_LIBRARY_DIRS )
+set( UDA_LIBRARIES )
+
+if( "${UDA_FIND_COMPONENTS}" STREQUAL "" )
+  set( UDA_FIND_COMPONENTS client )
+endif()
+
+foreach( COMP ${UDA_FIND_COMPONENTS} )
+  pkg_check_modules( PC_UDA uda-${COMP} QUIET )
+
+  set( UDA_DEFINITIONS  ${UDA_DEFINITIONS}  ${PC_UDA_CFLAGS_OTHER} )
+  set( UDA_INCLUDE_DIRS ${UDA_INCLUDE_DIRS} ${PC_UDA_INCLUDE_DIRS} )
+  set( UDA_LIBRARY_DIRS ${UDA_LIBRARY_DIRS} ${PC_UDA_LIBRARY_DIRS} )
+  set( UDA_LIBRARIES    ${UDA_LIBRARIES}    ${PC_UDA_LIBRARIES} )
+endforeach()
+
+# handle the QUIETLY and REQUIRED arguments and set UDA_FOUND to TRUE if
+# all listed variables are TRUE
 include( FindPackageHandleStandardArgs )
 find_package_handle_standard_args( UDA DEFAULT_MSG UDA_LIBRARIES UDA_INCLUDE_DIRS )
 
-mark_as_advanced( UDA_LIBRARIES UDA_INCLUDE_DIRS )
+mark_as_advanced( UDA_INCLUDE_DIRS UDA_LIBRARIES )

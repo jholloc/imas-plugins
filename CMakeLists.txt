@@ -1,25 +1,35 @@
-cmake_minimum_required( VERSION 3.1 )
+cmake_minimum_required( VERSION 3.0 )
 
+########################################################################################################################
+# CMake configuration
+#
+cmake_policy( SET CMP0042 NEW )
+cmake_policy( SET CMP0048 NEW )
+cmake_policy( SET CMP0068 NEW )
+
+# Extra cmake modules to find libraries
 set( CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH}
   ${CMAKE_SOURCE_DIR}/cmake
   ${CMAKE_SOURCE_DIR}/cmake/Modules
 )
 
-project( uda_plugins )
+project( imas_plugins )
 
 set( CMAKE_CXX_STANDARD 11 )
-#set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 
-find_package( UDA REQUIRED )
+########################################################################################################################
+# Plugins to build
 
-include_directories( ${UDA_INCLUDE_DIRS} )
-
-add_definitions( -DSERVERBUILD )
-
-#add_subdirectory( exp2imas )
-#add_subdirectory( imas )
-add_subdirectory( imasdd )
-#add_subdirectory( imas_mapping )
-#add_subdirectory( tore_supra )
-#add_subdirectory( west )
+if( DEFINED BUILD_PLUGINS )
+  foreach( PLUGIN IN ITEMS ${BUILD_PLUGINS} )
+    add_subdirectory( ${PLUGIN} )
+  endforeach( PLUGIN )
+else()
+  add_subdirectory( exp2imas )
+  add_subdirectory( imas )
+  add_subdirectory( imasdd )
+  add_subdirectory( imas_mapping )
+  #add_subdirectory( tore_supra )
+  #add_subdirectory( west )
+endif()
