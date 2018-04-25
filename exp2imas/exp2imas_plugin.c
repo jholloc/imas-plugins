@@ -744,7 +744,13 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* IDS_version = NULL;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, IDS_version);
 
-    const char* experiment = request_block->archive;
+    const char* experiment = NULL;
+    FIND_STRING_VALUE(request_block->nameValueList, experiment);
+
+    // keep old way of passing experiment until IMAS plugin has been updated
+    if (experiment == NULL) {
+        experiment = request_block->archive;
+    }
 
     // Search mapping value and request type (static or dynamic)
     char* experiment_mapping_file_name = getMachineMappingFileName(experiment, element);

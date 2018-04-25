@@ -8,30 +8,6 @@
 #include <sstream>
 #include <boost/tokenizer.hpp>
 
-namespace {
-
-template <typename T>
-struct irange {
-    explicit irange(std::istream& in) : d_in(in)
-    {}
-
-    std::istream& d_in;
-};
-
-template <typename T>
-std::istream_iterator<T> begin(irange<T> r)
-{
-    return std::istream_iterator<T>(r.d_in);
-}
-
-template <typename T>
-std::istream_iterator<T> end(irange<T>)
-{
-    return std::istream_iterator<T>();
-}
-
-}
-
 namespace imas_uda_plugins {
 
 class MachineMapping {
@@ -44,8 +20,17 @@ public:
         }
 
         std::ifstream in_file(file_name);
-        for (const auto& line : irange<std::string>(in_file)) {
-            boost::tokenizer<> tokens{ line };
+
+        typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+        boost::char_separator<char> sep(" ");
+
+        std::string line;
+        while (std::getline(in_file, line)) {
+            if (line[0] == '#') {
+                continue;
+            }
+
+            tokenizer tokens{ line, sep };
             std::vector<std::string> words(tokens.begin(), tokens.end());
             if (words.size() != 3) {
                 throw std::runtime_error(std::string("bad line in ") + file_name + ": " + line);

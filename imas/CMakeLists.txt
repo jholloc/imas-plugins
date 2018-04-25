@@ -3,10 +3,10 @@ include( plugins )
 uda_plugin(
   NAME IMAS
   VERSION 1.0.0
-  ENTRY_FUNC imasMappingPlugin
+  ENTRY_FUNC imasPlugin
   DESCRIPTION ""
   EXAMPLE ""
-  LIBNAME imas_mapping_plugin
+  LIBNAME imas_plugin
   SOURCES
     imas_plugin.cpp
     imas_plugin.h

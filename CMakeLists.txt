@@ -5,7 +5,9 @@ cmake_minimum_required( VERSION 3.0 )
 #
 cmake_policy( SET CMP0042 NEW )
 cmake_policy( SET CMP0048 NEW )
-cmake_policy( SET CMP0068 NEW )
+if( "${CMAKE_VERSION}" VERSION_GREATER "3.8.0" )
+  cmake_policy( SET CMP0068 NEW )
+endif()
 
 # Extra cmake modules to find libraries
 set( CMAKE_MODULE_PATH
@@ -27,7 +29,7 @@ if( DEFINED BUILD_PLUGINS )
   endforeach( PLUGIN )
 else()
   add_subdirectory( exp2imas )
-  add_subdirectory( imas )
+  #add_subdirectory( imas )
   add_subdirectory( imasdd )
   add_subdirectory( imas_mapping )
   #add_subdirectory( tore_supra )

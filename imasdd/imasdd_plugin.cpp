@@ -33,9 +33,9 @@
 #include <clientserver/initStructs.h>
 #include <clientserver/udaTypes.h>
 #include <clientserver/copyStructs.h>
+#include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
 #include <plugins/serverPlugin.h>
-#include <server/makeServerRequestBlock.h>
 
 #include "pugixml.hpp"
 
@@ -242,7 +242,7 @@ void call_plugin(const std::string& plugin_name, const std::string& request, IDA
 
     strcpy(new_request.signal, request.c_str());
 
-    makeServerRequestBlock(&new_request, *plugin_interface->pluginList);
+    makeRequestBlock(&new_request, *plugin_interface->pluginList, plugin_interface->environment);
 
     plugin_interface->request_block = &new_request;
 

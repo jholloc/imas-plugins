@@ -18,11 +18,12 @@
 #include <clientserver/copyStructs.h>
 #include <plugins/udaPlugin.h>
 #include <plugins/serverPlugin.h>
-#include <server/makeServerRequestBlock.h>
 
-class imas_uda_plugins::MappingPlugin {
+namespace imas_uda_plugins {
+
+class MappingPlugin {
 public:
-    imas_uda_plugins::MappingPlugin() = default;
+    MappingPlugin() = default;
 
     void init() {}
     void reset() {}
@@ -35,10 +36,13 @@ public:
     int open(IDAM_PLUGIN_INTERFACE* plugin_interface);
     int close(IDAM_PLUGIN_INTERFACE* plugin_interface);
     int get(IDAM_PLUGIN_INTERFACE* plugin_interface);
+    int getdim(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
 private:
     MachineMapping machine_mapping_;
 };
+
+} // namespace
 
 int imas_mapping_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
@@ -80,6 +84,8 @@ int imas_mapping_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             return plugin.close(idam_plugin_interface);
         } else if (STR_IEQUALS(request_block->function, "get")) {
             return plugin.get(idam_plugin_interface);
+        } else if (STR_IEQUALS(request_block->function, "getdim")) {
+            return plugin.getdim(idam_plugin_interface);
         } else {
             RAISE_PLUGIN_ERROR("Unknown function requested!");
         }
@@ -229,7 +235,7 @@ char* indices_to_string(const int* indices, size_t num_indices)
 
 int convert_IMAS_to_UDS_type(const std::string& type)
 {
-    if (type == "int") {
+    if (type == "integer") {
         return UDA_TYPE_INT;
     } else if (type == "float") {
         return UDA_TYPE_FLOAT;
@@ -273,13 +279,54 @@ int imas_uda_plugins::MappingPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface
 
     char* path = NULL;
     int* indices = NULL;
-    size_t num_indices = extract_array_indices(group, &path, &indices);
+    size_t num_indices = extract_array_indices(element.c_str(), &path, &indices);
     char* indices_string = indices_to_string(indices, num_indices);
 
     int uda_type = convert_IMAS_to_UDS_type(type);
 
-    auto request = boost::format("read(element=%s, shot=%d, indices=%s, dtype=%d, IDS_version='')")
-                   % element % shot % indices_string % uda_type;
+    auto request = boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
+                   % plugin_name % expName % path % shot % indices_string % uda_type;
+    std::cout << request.str() << std::endl;
+
+    return callPlugin(plugin_interface->pluginList, request.str().c_str(), plugin_interface);
+}
+
+int imas_uda_plugins::MappingPlugin::getdim(IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    REQUEST_BLOCK* request_block = plugin_interface->request_block;
+
+    const char* expName;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, expName);
+
+    const char* group;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, group);
+
+    const char* variable;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, variable);
+
+    int shot;
+    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+
+    int run;
+    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+
+    const char* user;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);    
+
+    auto plugin_name = machine_mapping_.plugin(expName);
+
+    auto element = std::string(group) + "/" + variable + "/Shape_of";
+
+    char* path = NULL;
+    int* indices = NULL;
+    size_t num_indices = extract_array_indices(element.c_str(), &path, &indices);
+    char* indices_string = indices_to_string(indices, num_indices);
+
+    int uda_type = UDA_TYPE_INT;
+
+    auto request = boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
+                   % plugin_name % expName % path % shot % indices_string % uda_type;
+    std::cout << request.str() << std::endl;
 
     return callPlugin(plugin_interface->pluginList, request.str().c_str(), plugin_interface);
 }
