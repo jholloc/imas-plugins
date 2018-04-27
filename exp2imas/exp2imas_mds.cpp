@@ -1,10 +1,7 @@
 #include "exp2imas_mds.h"
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <regex.h>
-#include <mdslib.h>
-#include <mdsshr.h>
+#include <mdsobjects.h>
 
 #include <logging/logging.h>
 #include <clientserver/stringUtils.h>
@@ -14,31 +11,19 @@
 #include "exp2imas_ssh.h"
 #include "exp2imas_ssh_server.h"
 
-#define status_ok(status) (((status) & 1) == 1)
-
-static int get_signal_length(const char* signal)
+static int get_signal_length(MDSplus::Connection& conn, std::string signal)
 {
-    /* local vars */
-    int dtype_long = DTYPE_LONG;
-    char buf[2048];
-    int size;
-    int null = 0;
-    int idesc = descr(&dtype_long, &size, &null);
-    int status;
+    signal += "; SIZE(_sig);";
 
-    /* put SIZE() TDI function around signal name */
-    sprintf(buf, "%s; SIZE(_sig);", signal);
-
-    /* use MdsValue to get the signal length */
-    status = MdsValue(buf, &idesc, &null, NULL);
-    if (((status & 1) != 1)) {
-        UDA_LOG(UDA_LOG_ERROR, "Unable to get length of %s.\n", signal);
+    try {
+        MDSplus::Data* ret = conn.get(signal.c_str());
+        int size = ret->getInt();
+        MDSplus::deleteData(ret);
+        return size;
+    } catch (MDSplus::MdsException& ex) {
+        UDA_LOG(UDA_LOG_ERROR, "Unable to get length of %s.\n", signal.c_str());
         return -1;
     }
-
-    /* return signal length */
-    return size;
-
 }
 
 typedef struct ServerThreadData {
@@ -49,16 +34,16 @@ typedef struct ServerThreadData {
 
 static void* server_task(void* ptr)
 {
-    SERVER_THREAD_DATA* data = (SERVER_THREAD_DATA*)ptr;
+    auto data = (SERVER_THREAD_DATA*)ptr;
     ssh_run_server(data->experiment, data->ssh_host, data->mds_host);
-    return NULL;
+    return nullptr;
 }
 
 int mds_get(const char* experiment, const char* signalName, int shot, float** time, float** data, int* len, int time_dim)
 {
-    static int socket = -1;
+    static MDSplus::Connection* conn = nullptr;
 
-    if (socket == -1) {
+    if (conn == nullptr) {
 
         char host[100];
 
@@ -66,8 +51,8 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
             g_server_port = 0;
             g_initialised = false;
 
-            pthread_cond_init(&g_initialised_cond, NULL);
-            pthread_mutex_init(&g_initialised_mutex, NULL);
+            pthread_cond_init(&g_initialised_cond, nullptr);
+            pthread_mutex_init(&g_initialised_mutex, nullptr);
 
             pthread_t server_thread;
             SERVER_THREAD_DATA thread_data = {};
@@ -81,7 +66,7 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
                 thread_data.mds_host = "mdsplus.aug.ipp.mpg.de";
             }
 
-            pthread_create(&server_thread, NULL, server_task, &thread_data);
+            pthread_create(&server_thread, nullptr, server_task, &thread_data);
 
             pthread_mutex_lock(&g_initialised_mutex);
             while (!g_initialised) {
@@ -92,25 +77,19 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
             pthread_mutex_destroy(&g_initialised_mutex);
             pthread_cond_destroy(&g_initialised_cond);
 
-            struct timespec sleep_for;
+            struct timespec sleep_for = {};
             sleep_for.tv_sec = 0;
             sleep_for.tv_nsec = 100000000;
-            nanosleep(&sleep_for, NULL);
+            nanosleep(&sleep_for, nullptr);
 
             sprintf(host, "localhost:%d", g_server_port);
         } else {
             strcpy(host, "mdsplus.jet.efda.org:8000");
         }
 
-//        const char* host = getenv("UDA_EXP2IMAS_MDSPLUS_FORWARD_PORT");
-
-//        if (host == NULL || host[0] == '\0') {
-//
-//        }
-
-        /* Connect to MDSplus */
-        socket = MdsConnect((char*)host);
-        if (socket == -1) {
+        try {
+            conn = new MDSplus::Connection((char*)host);
+        } catch (MDSplus::MdsException& ex) {
             UDA_LOG(UDA_LOG_ERROR, "Error connecting to %s.\n", host);
             return -1;
         }
@@ -133,11 +112,11 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     if (r == 0) {
         char* tmp = strdup(signalName);
         tmp[matches[1].rm_eo] = '\0';
-        sprintf(work, "_sig=augdiag(%%SHOT%%,\"%s\",\"%s\")", tmp, &tmp[matches[2].rm_so]);
+        sprintf(work, R"(_sig=augdiag(%%SHOT%%,"%s","%s"))", tmp, &tmp[matches[2].rm_so]);
         free(tmp);
     } else if (STR_STARTSWITH(signalName, "%TDI%")) {
         char* shot_pos = strstr(signalName, "%SHOT%");
-        if (shot_pos != NULL) {
+        if (shot_pos != nullptr) {
             char shot_str[20];
             sprintf(shot_str, "%d", shot);
             char* tmp = StringReplaceAll(signalName, "%SHOT%", shot_str);
@@ -153,7 +132,7 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     char signal[2048];
 
     char* shot_pos = strstr(work, "%SHOT%");
-    if (shot_pos != NULL) {
+    if (shot_pos != nullptr) {
         char shot_str[10];
         sprintf(shot_str, "%d", shot);
         char* tmp = StringReplaceAll(work, "%SHOT%", shot_str);
@@ -169,8 +148,8 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
 
     fprintf(stderr, "fetching signal %s", signal);
 
-    static RAM_CACHE* cache = NULL;
-    if (cache == NULL) {
+    static RAM_CACHE* cache = nullptr;
+    if (cache == nullptr) {
         cache = ram_cache_new(100);
     }
 
@@ -182,8 +161,8 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     sprintf(time_key, "%s/time", signal);
     sprintf(data_key, "%s/data", signal);
 
-    int* cache_len = (int*)ram_cache_get(cache, len_key);
-    if (cache_len != NULL) {
+    auto cache_len = (int*)ram_cache_get(cache, len_key);
+    if (cache_len != nullptr) {
         *len = *cache_len;
         *time = (float*)malloc(*len * sizeof(float));
         *data = (float*)malloc(*len * sizeof(float));
@@ -196,14 +175,15 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     if (StringIEquals(experiment, "TCV")) {
         const char* tree = "tcv_shot";
 
-        int status = MdsOpen((char*)tree, &shot);
-        if (((status & 1) != 1)) {
-            UDA_LOG(UDA_LOG_ERROR, "Error opening tree for shot %d: %s.\n", shot, MdsGetMsg(status));
+        try {
+            conn->openTree((char*)tree, shot);
+        } catch (MDSplus::MdsException& ex) {
+            UDA_LOG(UDA_LOG_ERROR, "Error opening tree for shot %d: %s.\n", shot, ex.what());
             return -1;
         }
     }
 
-    *len = get_signal_length(signal);
+    *len = get_signal_length(*conn, signal);
 
     if (*len < 0) {
         fprintf(stderr, " -> unable to get signal length.\n");
@@ -211,34 +191,33 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
         return -1;
     }
 
-    *time = malloc(*len * sizeof(float));
-    *data = malloc(*len * sizeof(float));
+    std::string buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
 
-    int null = 0;
-    int dtype_float = DTYPE_FLOAT;
+    *time = nullptr;
 
-    int fdesc = descr(&dtype_float, *time, len, &null);
-    int rlen = 0;
-
-    char buf[2048];
-
-    //Get time data
-    sprintf(buf, "%s; dim_of(_sig, %d);", signal, time_dim - 1);
-
-    int status = MdsValue(buf, &fdesc, &null, &rlen, NULL);
-    if (((status & 1) != 1)) {
+    try {
+        MDSplus::Data* ret = conn->get(buf.c_str());
+        size_t sz = *len * sizeof(float);
+        *time = (float*)malloc(sz);
+        memcpy(*time, ret->getFloatArray(len), sz);
+        MDSplus::deleteData(ret);
+    } catch (MDSplus::MdsException& ex) {
         fprintf(stderr, " -> unable to get signal\n");
         UDA_LOG(UDA_LOG_ERROR, "Unable to get signal.\n");
         return -1;
     }
 
-    fdesc = descr(&dtype_float, *data, len, &null);
+    buf = std::string(signal) + "; _sig;";
 
-    //Get data
-    sprintf(buf, "%s; _sig;", signal);
+    *data = nullptr;
 
-    status = MdsValue(buf, &fdesc, &null, &rlen, NULL);
-    if (((status & 1) != 1)) {
+    try {
+        MDSplus::Data* ret = conn->get(buf.c_str());
+        size_t sz = *len * sizeof(float);
+        *data = (float*)malloc(sz);
+        memcpy(*data, ret->getFloatArray(len), sz);
+        MDSplus::deleteData(ret);
+    } catch (MDSplus::MdsException& ex) {
         fprintf(stderr, " -> unable to get signal\n");
         UDA_LOG(UDA_LOG_ERROR, "Unable to get signal.\n");
         return -1;
@@ -249,8 +228,6 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     ram_cache_add(cache, len_key, len, sizeof(int));
     ram_cache_add(cache, time_key, *time, *len * sizeof(float));
     ram_cache_add(cache, data_key, *data, *len * sizeof(float));
-
-//    MdsDisconnect();
 
     return 0;
 }

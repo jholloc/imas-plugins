@@ -45,7 +45,7 @@ static void close_callback(GtkWidget *widget, gpointer *data)
 int ssh_open_dialog(char** username, char** password)
 {
     int argc = 0;
-    char* argv[1];
+    const char* argv[1];
     argv[0] = "SSH";
 
     gtk_init(&argc, (char***)&(argv));

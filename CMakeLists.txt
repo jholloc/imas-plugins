@@ -20,6 +20,8 @@ project( imas_plugins )
 
 set( CMAKE_CXX_STANDARD 11 )
 
+include( LibXml2StrPrintfConfig )
+
 ########################################################################################################################
 # Plugins to build
 

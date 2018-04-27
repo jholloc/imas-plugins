@@ -195,7 +195,7 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
         xmlChar* pre = xmlStrndup(indexedXpathExpr, (int)(p - indexedXpathExpr));
 
         len = xmlStrlen(pre) + xmlStrlen(num_str) + xmlStrlen(p + 1) + 1;
-        xmlChar* temp = malloc((len + 1) * sizeof(xmlChar));
+        xmlChar* temp = (xmlChar*)malloc((len + 1) * sizeof(xmlChar));
         xmlStrPrintf(temp, len, (XML_FMT_TYPE)"%s%s%s", pre, num_str, p + 1);
         free(indexedXpathExpr);
         indexedXpathExpr = temp;
@@ -208,7 +208,7 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
         *indices = NULL;
         *n_indices = 0;
     } else {
-        int* temp = malloc((*n_indices - n) * sizeof(int));
+        int* temp = (int*)malloc((*n_indices - n) * sizeof(int));
         size_t i;
         for (i = n; i < *n_indices; ++i) {
             temp[i - n] = (*indices)[i];
@@ -280,7 +280,7 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
     }
 
     if (xml_data.rank > 1 && mapping->index != -1) {
-        indices = realloc(indices, (nindices + 1) * sizeof(int));
+        indices = (int*)realloc(indices, (nindices + 1) * sizeof(int));
         indices[nindices] = mapping->index;
         ++nindices;
     }
@@ -324,7 +324,7 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
                 if (resize > 0) {
                     shape[0] = (size_t)resize;
                 }
-                int* data = malloc(shape[0] * shape[1] * sizeof(int));
+                int* data = (int*)malloc(shape[0] * shape[1] * sizeof(int));
                 int n = 0;
                 int i, j;
                 for (j = 0; j < shape[1]; ++j) {
@@ -482,9 +482,9 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
             size_t n_arrays = 0;
 
             for (i = 0; i < size; ++i) {
-                data_arrays = realloc(data_arrays, (n_arrays + 1) * sizeof(float*));
+                data_arrays = (float**)realloc(data_arrays, (n_arrays + 1) * sizeof(float*));
 
-                data_arrays[n_arrays] = malloc(data_n * sizeof(float));
+                data_arrays[n_arrays] = (float*)malloc(data_n * sizeof(float));
 
                 if (StringEndsWith(element, "/time")) {
                     memcpy(data_arrays[n_arrays], &time[0], data_n * sizeof(float));
@@ -511,7 +511,7 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
             data_block->data_n = data_n;
 
             size_t sz = data_n * sizeof(float);
-            data_block->data = malloc(sz);
+            data_block->data = (char*)malloc(sz);
 
             if (data_arrays != NULL) {
                 if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
@@ -538,7 +538,7 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
         data_block->dims[0].data_type = UDA_TYPE_FLOAT;
         data_block->dims[0].dim_n = data_n;
         data_block->dims[0].compressed = 0;
-        data_block->dims[0].dim = (char*)time;
+        data_block->dims[0].dim = (char*)NULL;
 
         strcpy(data_block->data_label, "");
         strcpy(data_block->data_units, "");
@@ -629,12 +629,12 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
         size_t n_arrays = 0;
 
         for (i = 0; i < size; ++i) {
-            error_arrays = realloc(error_arrays, (n_arrays + 1) * sizeof(float*));
+            error_arrays = (float**)realloc(error_arrays, (n_arrays + 1) * sizeof(float*));
 
             double abs = xml_abserror.values != NULL ? xml_abserror.values[i] : 0.0;
             double rel = xml_relerror.values != NULL ? xml_relerror.values[i] : 0.0;
 
-            error_arrays[n_arrays] = malloc(data_n * sizeof(float));
+            error_arrays[n_arrays] = (float*)malloc(data_n * sizeof(float));
 
             int j;
             for (j = 0; j < data_n; ++j) {
@@ -670,7 +670,7 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
         data_block->data_n = data_n;
 
         size_t sz = data_n * sizeof(float);
-        data_block->data = malloc(sz);
+        data_block->data = (char*)malloc(sz);
 
         if (error_arrays != NULL) {
             if (nindices > 0 && indices[0] > 0) {
@@ -695,7 +695,7 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
     data_block->dims[0].data_type = UDA_TYPE_FLOAT;
     data_block->dims[0].dim_n = data_n;
     data_block->dims[0].compressed = 0;
-    data_block->dims[0].dim = (char*)time;
+    data_block->dims[0].dim = (char*)NULL;
 
     strcpy(data_block->data_label, "");
     strcpy(data_block->data_units, "");
@@ -830,7 +830,7 @@ xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, co
     // Creating the Xpath request
     const char* fmt = "//mapping[@key='%s']/@%s";
     size_t len = strlen(request) + strlen(attribute) + strlen(fmt) + 1;
-    xmlChar* xpath_expr = malloc(len * sizeof(xmlChar));
+    xmlChar* xpath_expr = (xmlChar*)malloc(len * sizeof(xmlChar));
     xmlStrPrintf(xpath_expr, (int)len, (XML_FMT_TYPE)fmt, request, attribute);
 
     /*
@@ -909,7 +909,7 @@ XML_MAPPING* getMappingValue(const char* mapping_file_name, const char* request)
         }
     }
 
-    XML_MAPPING* mapping = calloc(1, sizeof(XML_MAPPING));
+    XML_MAPPING* mapping = (XML_MAPPING*)calloc(1, sizeof(XML_MAPPING));
     mapping->index = -1;
 
     xmlChar* value = xmlAttributeValue(xpath_ctx, request, "value");
@@ -972,5 +972,3 @@ char* deblank(char* input)
     output[j] = '\0';
     return output;
 }
-
-

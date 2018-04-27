@@ -22,7 +22,7 @@ include( plugins )
 
 set( SOURCES
   exp2imas_plugin.c
-  exp2imas_mds.c
+  exp2imas_mds.cpp
   exp2imas_xml.c
   exp2imas_ssh_server.c
   exp2imas_ssh.c
@@ -57,3 +57,5 @@ uda_plugin(
     pthread
     resolv
 )
+
+add_subdirectory( tests )
