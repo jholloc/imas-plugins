@@ -30,6 +30,8 @@ typedef struct XMLMapping {
     MAPPING_TYPE request_type;
     int index;
     int adjust;
+    int slice_dim;
+    bool flatten;
     const xmlChar* dim;
 } XML_MAPPING;
 
@@ -285,6 +287,10 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
         ++nindices;
     }
 
+    if (nindices > 1 && indices[nindices - 1] == 1 && mapping->flatten == true) {
+        --nindices;
+    }
+
     if ((xml_data.rank != 0 || nindices != 1) && (xml_data.rank != nindices)) {
         if (xml_data.rank == 1 && nindices == 0) {
             size_t shape[] = { (size_t)xml_data.dims[0] };
@@ -301,6 +307,11 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
         } else if (xml_data.rank == 2 && nindices == 1) {
             size_t shape[] = { (size_t)xml_data.dims[1] };
             int idx = (indices[0] - 1) * xml_data.dims[1];
+
+            if (mapping->slice_dim == 0) {
+                shape[0] = (size_t)xml_data.dims[0];
+                idx = (indices[0] - 1) * xml_data.dims[0];
+            }
 
             if (xml_data.data_type == UDA_TYPE_DOUBLE) {
                 setReturnDataDoubleArray(data_block, &((double*)xml_data.data)[idx], 1, shape, NULL);
@@ -466,10 +477,11 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
             float* time = NULL;
             float* fdata = NULL;
             int len = -1;
+            int time_len = -1;
 
             char* signalName = signal_names[name_index];
 
-            status = mds_get(experiment, signalName, shot, &time, &fdata, &len, xml_data.time_dim);
+            status = mds_get(experiment, signalName, shot, &time, &fdata, &len, &time_len, xml_data.time_dim);
 
             if (status != 0) {
                 return status;
@@ -610,13 +622,14 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
         float coefa = (xml_data.coefas != NULL) ? xml_data.coefas[name_index] : 1.0f;
         float coefb = (xml_data.coefbs != NULL) ? xml_data.coefbs[name_index] : 0.0f;
 
-        float* time;
-        float* fdata;
-        int len;
+        float* time = NULL;
+        float* fdata = NULL;
+        int len = -1;
+        int time_len = -1;
 
         char* signalName = signal_names[name_index];
 
-        status = mds_get(experiment, signalName, shot, &time, &fdata, &len, xml_data.time_dim);
+        status = mds_get(experiment, signalName, shot, &time, &fdata, &len, &time_len, xml_data.time_dim);
 
         if (status != 0) {
             return status;
@@ -633,6 +646,14 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
 
             double abs = xml_abserror.values != NULL ? xml_abserror.values[i] : 0.0;
             double rel = xml_relerror.values != NULL ? xml_relerror.values[i] : 0.0;
+
+            float abs_coefa = (xml_abserror.coefas != NULL) ? xml_abserror.coefas[i] : 1.0f;
+            float abs_coefb = (xml_abserror.coefbs != NULL) ? xml_abserror.coefbs[i] : 0.0f;
+            float rel_coefa = (xml_relerror.coefas != NULL) ? xml_relerror.coefas[i] : 1.0f;
+            float rel_coefb = (xml_relerror.coefbs != NULL) ? xml_relerror.coefbs[i] : 0.0f;
+
+            abs = abs_coefa * abs + abs_coefb;
+            rel = rel_coefa * rel + rel_coefb;
 
             error_arrays[n_arrays] = (float*)malloc(data_n * sizeof(float));
 
@@ -951,6 +972,19 @@ XML_MAPPING* getMappingValue(const char* mapping_file_name, const char* request)
     if (adjust != NULL) {
         mapping->adjust = (int)strtol((char*)adjust, NULL, 10);
         free(adjust);
+    }
+
+    xmlChar* flatten = xmlAttributeValue(xpath_ctx, request, "flatten");
+    if (flatten != NULL) {
+        mapping->flatten = true;
+        free(flatten);
+    }
+
+    mapping->slice_dim = -1;
+    xmlChar* slice_dim = xmlAttributeValue(xpath_ctx, request, "slice_dim");
+    if (slice_dim != NULL) {
+        mapping->slice_dim = (int)strtol((char*)slice_dim, NULL, 10);
+        free(slice_dim);
     }
 
     mapping->dim = xmlAttributeValue(xpath_ctx, request, "dim");

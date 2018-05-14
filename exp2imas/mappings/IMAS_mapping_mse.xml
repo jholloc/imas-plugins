@@ -23,16 +23,16 @@
   <!--<mapping key="mse/channel/#/detector/centre/z" value="" type=""/>-->
   <!--<mapping key="mse/channel/#/detector/centre/z" value="" type=""/>-->
 
-  <!--<mapping key="mse/channel/#/detector/centre/phi" value="//msediag/polarimetry/syyetup/rzgamma/phi" type="static"/>-->
+  <!--<mapping key="mse/channel/#/detector/centre/phi" value="//msediag/polarimetry/setup/rzgamma/phi" type="static"/>-->
   <!--<mapping key="mse/channel/#/detector/centre/phi" value="" type=""/>-->
   <!--<mapping key="mse/channel/#/detector/centre/phi" value="" type=""/>-->
   <!--<mapping key="mse/channel/#/detector/centre/phi" value="" type=""/>-->
   
   <mapping key="mse/channel/#/active_spacial_resolution/Shape_of" value="1" type="constant"/>
-  <mapping key="mse/channel/#/active_spatial_resolution/#/centre/r" value="//msediag/polarimetry/syyetup/rzgamma/r" type="static"/>
-  <mapping key="mse/channel/#/active_spatial_resolution/#/centre/z" value="//msediag/polarimetry/syyetup/rzgamma/z" type="static"/>
-  <mapping key="mse/channel/#/active_spatial_resolution/#/centre/phi" value="//msediag/polarimetry/syyetup/rzgamma/phi" type="static"/>
-  <mapping key="mse/channel/#/active_spatial_resolution/#/geometric_coefficients" value="//msediag/polarimetry/syyetup/rzgamma/geom_coef" type="static"/>
+  <mapping key="mse/channel/#/active_spatial_resolution/#/centre/r" value="//msediag/polarimetry/setup/rzgamma/r" type="static" flatten="true"/>
+  <mapping key="mse/channel/#/active_spatial_resolution/#/centre/z" value="//msediag/polarimetry/setup/rzgamma/z" type="static" flatten="true"/>
+  <mapping key="mse/channel/#/active_spatial_resolution/#/centre/phi" value="//msediag/polarimetry/setup/rzgamma/phi" type="static" flatten="true"/>
+  <mapping key="mse/channel/#/active_spatial_resolution/#/geometric_coefficients" value="//msediag/polarimetry/setup/geom_coef" type="static" flatten="true" slice_dim="0"/>
 
 <!--
   <mapping key="mse/channel/#/aperture/Shape_of" value="" type=""/>

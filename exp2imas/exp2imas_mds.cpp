@@ -39,7 +39,7 @@ static void* server_task(void* ptr)
     return nullptr;
 }
 
-int mds_get(const char* experiment, const char* signalName, int shot, float** time, float** data, int* len, int time_dim)
+int mds_get(const char* experiment, const char* signalName, int shot, float** time, float** data, int* len, int* time_len, int time_dim)
 {
     static MDSplus::Connection* conn = nullptr;
 
@@ -115,7 +115,7 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
         sprintf(work, R"(_sig=augdiag(%%SHOT%%,"%s","%s"))", tmp, &tmp[matches[2].rm_so]);
         free(tmp);
     } else if (STR_STARTSWITH(signalName, "%TDI%")) {
-        char* shot_pos = strstr(signalName, "%SHOT%");
+        const char* shot_pos = strstr(signalName, "%SHOT%");
         if (shot_pos != nullptr) {
             char shot_str[20];
             sprintf(shot_str, "%d", shot);
@@ -154,19 +154,22 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     }
 
     char len_key[2048];
+    char time_len_key[2048];
     char time_key[2048];
     char data_key[2048];
 
     sprintf(len_key, "%s/length", signal);
+    sprintf(time_len_key, "%s/time_length", signal);
     sprintf(time_key, "%s/time", signal);
     sprintf(data_key, "%s/data", signal);
 
     auto cache_len = (int*)ram_cache_get(cache, len_key);
     if (cache_len != nullptr) {
         *len = *cache_len;
-        *time = (float*)malloc(*len * sizeof(float));
+        *time_len = *(int*)ram_cache_get(cache, time_len_key);
+        *time = (float*)malloc(*time_len * sizeof(float));
         *data = (float*)malloc(*len * sizeof(float));
-        memcpy(*time, (int*)ram_cache_get(cache, time_key), *len * sizeof(float));
+        memcpy(*time, (int*)ram_cache_get(cache, time_key), *time_len * sizeof(float));
         memcpy(*data, (int*)ram_cache_get(cache, data_key), *len * sizeof(float));
         fprintf(stderr, " -> from cache\n");
         return 0;
@@ -183,13 +186,13 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
         }
     }
 
-    *len = get_signal_length(*conn, signal);
+    //*len = get_signal_length(*conn, signal);
 
-    if (*len < 0) {
-        fprintf(stderr, " -> unable to get signal length.\n");
-        UDA_LOG(UDA_LOG_ERROR, "Unable to get signal length.\n");
-        return -1;
-    }
+    //if (*len < 0) {
+    //    fprintf(stderr, " -> unable to get signal length.\n");
+    //    UDA_LOG(UDA_LOG_ERROR, "Unable to get signal length.\n");
+    //    return -1;
+    //}
 
     std::string buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
 
@@ -197,9 +200,10 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
 
     try {
         MDSplus::Data* ret = conn->get(buf.c_str());
-        size_t sz = *len * sizeof(float);
+        float* fdata = ret->getFloatArray(time_len);
+        size_t sz = *time_len * sizeof(float);
         *time = (float*)malloc(sz);
-        memcpy(*time, ret->getFloatArray(len), sz);
+        memcpy(*time, fdata, sz);
         MDSplus::deleteData(ret);
     } catch (MDSplus::MdsException& ex) {
         fprintf(stderr, " -> unable to get signal\n");
@@ -213,9 +217,10 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
 
     try {
         MDSplus::Data* ret = conn->get(buf.c_str());
+        float* fdata = ret->getFloatArray(len);
         size_t sz = *len * sizeof(float);
         *data = (float*)malloc(sz);
-        memcpy(*data, ret->getFloatArray(len), sz);
+        memcpy(*data, fdata, sz);
         MDSplus::deleteData(ret);
     } catch (MDSplus::MdsException& ex) {
         fprintf(stderr, " -> unable to get signal\n");
@@ -226,7 +231,8 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     fprintf(stderr, " -> from mdsplus\n");
 
     ram_cache_add(cache, len_key, len, sizeof(int));
-    ram_cache_add(cache, time_key, *time, *len * sizeof(float));
+    ram_cache_add(cache, time_len_key, time_len, sizeof(int));
+    ram_cache_add(cache, time_key, *time, *time_len * sizeof(float));
     ram_cache_add(cache, data_key, *data, *len * sizeof(float));
 
     return 0;

@@ -58,4 +58,4 @@ uda_plugin(
     resolv
 )
 
-add_subdirectory( tests )
+#add_subdirectory( tests )
