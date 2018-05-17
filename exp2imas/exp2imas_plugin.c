@@ -6,13 +6,12 @@
 #include <libxml/xpath.h>
 #include <float.h>
 
+#include <clientserver/errorLog.h>
 #include <clientserver/initStructs.h>
+#include <clientserver/stringUtils.h>
 #include <clientserver/udaTypes.h>
 #include <logging/logging.h>
-#include <clientserver/errorLog.h>
-#include <clientserver/stringUtils.h>
 #include <plugins/udaPlugin.h>
-#include <structures/struct.h>
 
 #include "exp2imas_mds.h"
 #include "exp2imas_xml.h"
@@ -644,13 +643,13 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
         for (i = 0; i < size; ++i) {
             error_arrays = (float**)realloc(error_arrays, (n_arrays + 1) * sizeof(float*));
 
-            double abs = xml_abserror.values != NULL ? xml_abserror.values[i] : 0.0;
-            double rel = xml_relerror.values != NULL ? xml_relerror.values[i] : 0.0;
+            double abs = xml_abserror.values != NULL ? xml_abserror.values[i + name_offset] : 0.0;
+            double rel = xml_relerror.values != NULL ? xml_relerror.values[i + name_offset] : 0.0;
 
-            float abs_coefa = (xml_abserror.coefas != NULL) ? xml_abserror.coefas[i] : 1.0f;
-            float abs_coefb = (xml_abserror.coefbs != NULL) ? xml_abserror.coefbs[i] : 0.0f;
-            float rel_coefa = (xml_relerror.coefas != NULL) ? xml_relerror.coefas[i] : 1.0f;
-            float rel_coefb = (xml_relerror.coefbs != NULL) ? xml_relerror.coefbs[i] : 0.0f;
+            float abs_coefa = (xml_abserror.coefas != NULL) ? xml_abserror.coefas[i + name_offset] : 1.0f;
+            float abs_coefb = (xml_abserror.coefbs != NULL) ? xml_abserror.coefbs[i + name_offset] : 0.0f;
+            float rel_coefa = (xml_relerror.coefas != NULL) ? xml_relerror.coefas[i + name_offset] : 1.0f;
+            float rel_coefb = (xml_relerror.coefbs != NULL) ? xml_relerror.coefbs[i + name_offset] : 0.0f;
 
             abs = abs_coefa * abs + abs_coefb;
             rel = rel_coefa * rel + rel_coefb;
@@ -992,13 +991,13 @@ XML_MAPPING* getMappingValue(const char* mapping_file_name, const char* request)
     return mapping;
 }
 
-char* deblank(char* input)
+char* deblank(char* token)
 {
     int i, j;
-    char* output = input;
-    for (i = 0, j = 0; i < strlen(input); i++, j++) {
-        if (input[i] != ' ' && input[i] != '\'') {
-            output[j] = input[i];
+    char* output = token;
+    for (i = 0, j = 0; i < strlen(token); i++, j++) {
+        if (token[i] != ' ' && token[i] != '\'') {
+            output[j] = token[i];
         } else {
             j--;
         }

@@ -272,7 +272,9 @@ static void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, 
 
         xmlNodePtr cur;
 
-        if (nodes != NULL && nodes->nodeNr > 0) {
+        if (nodes != NULL && nodes->nodeNr > 0
+            && !STR_EQUALS((char *)nodes->nodeTab[0]->children->content, "Put value here")) {
+
             *coefas = malloc(nodes->nodeNr * sizeof(int));
 
             int i;
@@ -302,7 +304,9 @@ static void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, 
 
         xmlNodePtr cur;
 
-        if (nodes != NULL && nodes->nodeNr > 0) {
+        if (nodes != NULL && nodes->nodeNr > 0
+            && !STR_EQUALS((char *)nodes->nodeTab[0]->children->content, "Put value here")) {
+
             *coefbs = malloc(nodes->nodeNr * sizeof(int));
 
             int i;

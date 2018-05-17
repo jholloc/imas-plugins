@@ -32,13 +32,13 @@ macro( uda_plugin )
     set( PLUGIN_VERSION "0.0.0" )
   endif()
 
-  find_package( UDA REQUIRED COMPONENTS client plugins )
+  find_package( UDA REQUIRED )
 
   include_directories(
-    ${UDA_INCLUDE_DIRS}
+    ${UDA_PLUGINS_INCLUDE_DIRS}
   )
 
-  link_directories( ${UDA_LIBRARY_DIRS} )
+  link_directories( ${UDA_PLUGINS_LIBRARY_DIRS} )
 
   if( CMAKE_COMPILER_IS_GNUCC )
     set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs" )
@@ -69,7 +69,7 @@ macro( uda_plugin )
     add_definitions( ${DEF} )
   endforeach()
 
-  target_link_libraries( ${PLUGIN_LIBNAME} LINK_PRIVATE ${UDA_LIBRARIES} )
+  target_link_libraries( ${PLUGIN_LIBNAME} LINK_PRIVATE ${UDA_PLUGINS_LIBRARIES} )
 
   filter_lib_list( "${PLUGIN_EXTRA_LINK_LIBS}" FILTERED_LINK_LIBS debug optimized )
 

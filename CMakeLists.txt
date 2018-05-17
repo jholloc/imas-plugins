@@ -19,6 +19,7 @@ set( CMAKE_MODULE_PATH
 project( imas_plugins )
 
 set( CMAKE_CXX_STANDARD 11 )
+set( CMAKE_CXX_STANDARD_REQUIRED ON )
 
 include( LibXml2StrPrintfConfig )
 

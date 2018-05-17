@@ -1,5 +1,6 @@
 include( plugins )
 
+find_package( UDA REQUIRED )
 find_package( Boost REQUIRED )
 
 uda_plugin(
@@ -16,5 +17,7 @@ uda_plugin(
     machine_mapping.h
   EXTRA_INCLUDE_DIRS
     ${Boost_INCLUDE_DIRS}
+    ${UDA_CLIENT_INCLUDE_DIRS}
   EXTRA_LINK_LIBS
+    ${UDA_CLIENT_LIBRARIES}
 )

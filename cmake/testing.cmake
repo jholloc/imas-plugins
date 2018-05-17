@@ -7,23 +7,23 @@ macro( BUILD_TEST NAME SOURCE )
 
   find_package( Boost REQUIRED )
   find_package( OpenSSL REQUIRED )
-  find_package( UDA REQUIRED COMPONENTS cpp )
+  find_package( UDA REQUIRED )
 
   include_directories( SYSTEM ${Boost_INCLUDE_DIR} )
-  include_directories( ${UDA_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} )
+  include_directories( ${UDA_CPP_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} )
 
-  link_directories( ${UDA_LIBRARY_DIRS} )
+  link_directories( ${UDA_CPP_LIBRARY_DIRS} )
 
   add_executable( ${NAME} ${HELPER_FILES} ${SOURCE} )
   target_link_libraries( ${NAME} PRIVATE
-    ${UDA_LIBRARIES}
+    ${UDA_CPP_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     test_helpers
   )
 
   add_executable( fat_${NAME} ${HELPER_FILES} ${SOURCE} )
   target_link_libraries( fat_${NAME} PRIVATE
-    ${FAT_UDA_LIBRARIES}
+    ${UDA_FAT_CPP_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     test_helpers
   )

@@ -1,3 +1,5 @@
+find_package( UDA REQUIRED )
+
 include( testing )
 
 set( TESTS

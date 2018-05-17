@@ -2,6 +2,7 @@ find_package( LibXml2 QUIET )
 find_package( MDSplus QUIET )
 find_package( LibSSH QUIET )
 find_package( GTK3 QUIET )
+find_package( UDA REQUIRED )
 
 if( NOT MDSPLUS_FOUND )
   message( WARNING "mdsplus not found - skipping exp2imas plugin" )
@@ -49,13 +50,15 @@ uda_plugin(
     ${MDSPLUS_INCLUDES}
     ${LIBSSH_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}
+    ${UDA_CLIENT_INCLUDE_DIRS}
   EXTRA_LINK_LIBS
     ${LIBXML2_LIBRARIES}
     ${MDSPLUS_LIBRARIES}
     ${LIBSSH_LIBRARIES}
     ${GTK3_LIBRARIES}
+    ${UDA_CLIENT_LIBRARIES}
     pthread
     resolv
 )
 
-#add_subdirectory( tests )
+add_subdirectory( tests )

@@ -1,5 +1,7 @@
 include( plugins )
 
+find_package( UDA REQUIRED )
+
 uda_plugin(
   NAME IMASDD
   VERSION 1.0.0
@@ -13,5 +15,7 @@ uda_plugin(
     pugixml.hpp
     pugiconfig.hpp
   EXTRA_INCLUDE_DIRS
+    ${UDA_CLIENT_INCLUDE_DIRS}
   EXTRA_LINK_LIBS
+    ${UDA_CLIENT_LIBRARIES}
 )
