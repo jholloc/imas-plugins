@@ -606,6 +606,16 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
 
     char** signal_names = (char**)xml_data.data;
 
+    char** abserror_signal_names = NULL;
+    if (xml_abserror.data != NULL) {
+        abserror_signal_names = (char**)xml_abserror.data;
+    }
+
+    char** relerror_signal_names = NULL;
+    if (xml_relerror.data != NULL) {
+        relerror_signal_names = (char**)xml_relerror.data;
+    }
+
     int data_n = 0;
 
     size_t name_index = get_signal_name_index(&xml_data, indices, nindices);
@@ -621,17 +631,44 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
         float coefa = (xml_data.coefas != NULL) ? xml_data.coefas[name_index] : 1.0f;
         float coefb = (xml_data.coefbs != NULL) ? xml_data.coefbs[name_index] : 0.0f;
 
-        float* time = NULL;
         float* fdata = NULL;
+        float* fabserror = NULL;
+        float* frelerror = NULL;
         int len = -1;
-        int time_len = -1;
 
         char* signalName = signal_names[name_index];
-
-        status = mds_get(experiment, signalName, shot, &time, &fdata, &len, &time_len, xml_data.time_dim);
+        status = mds_get(experiment, signalName, shot, NULL, &fdata, &len, NULL, 0);
 
         if (status != 0) {
             return status;
+        }
+
+        if (abserror_signal_names != NULL) {
+            signalName = abserror_signal_names[name_index];
+            int abslen = -1;
+            status = mds_get(experiment, signalName, shot, NULL, &fabserror, &abslen, NULL, 0);
+
+            if (status != 0) {
+                return status;
+            }
+
+            if (abslen != len) {
+                return -1;
+            }
+        }
+
+        if (relerror_signal_names != NULL) {
+            signalName = relerror_signal_names[name_index];
+            int rellen = -1;
+            status = mds_get(experiment, signalName, shot, NULL, &frelerror, &rellen, NULL, 0);
+
+            if (status != 0) {
+                return status;
+            }
+
+            if (rellen != len) {
+                return -1;
+            }
         }
 
         int size = (xml_data.sizes == NULL || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
@@ -661,14 +698,27 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
                 error_arrays[n_arrays][j] = coefa * fdata[i + j * size] + coefb;
 
                 double error;
-                if (xml_abserror.values != NULL && xml_relerror.values != NULL) {
-                    error = MAX(abs, rel * error_arrays[n_arrays][j]);
-                } else if (xml_abserror.values != NULL) {
-                    error = abs;
-                } else if (xml_relerror.values != NULL) {
-                    error = rel * error_arrays[n_arrays][j];
+
+                if (abserror_signal_names != NULL || relerror_signal_names != NULL) {
+                    if (abserror_signal_names != NULL && relerror_signal_names != NULL) {
+                        double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
+                        double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
+                        error =  MAX(fabs, frel * error_arrays[n_arrays][j]);
+                    } else if (abserror_signal_names != NULL) {
+                        error = abs_coefa * fabserror[i + j * size] + abs_coefb;
+                    } else {
+                        error = rel_coefa * frelerror[i + j * size] + rel_coefb;
+                    }
                 } else {
-                    return -1;
+                    if (xml_abserror.values != NULL && xml_relerror.values != NULL) {
+                        error = MAX(abs, rel * error_arrays[n_arrays][j]);
+                    } else if (xml_abserror.values != NULL) {
+                        error = abs;
+                    } else if (xml_relerror.values != NULL) {
+                        error = rel * error_arrays[n_arrays][j];
+                    } else {
+                        return -1;
+                    }
                 }
 
                 if (StringEndsWith(element, "lower")) {
@@ -682,8 +732,6 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
         }
 
         free(fdata);
-        free(time);
-        free(signalName);
 
         data_block->rank = 1;
         data_block->data_type = UDA_TYPE_FLOAT;

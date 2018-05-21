@@ -166,10 +166,12 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     auto cache_len = (int*)ram_cache_get(cache, len_key);
     if (cache_len != nullptr) {
         *len = *cache_len;
-        *time_len = *(int*)ram_cache_get(cache, time_len_key);
-        *time = (float*)malloc(*time_len * sizeof(float));
+        if (time != nullptr) {
+            *time_len = *(int*)ram_cache_get(cache, time_len_key);
+            *time = (float*)malloc(*time_len * sizeof(float));
+            memcpy(*time, (int*)ram_cache_get(cache, time_key), *time_len * sizeof(float));
+        }
         *data = (float*)malloc(*len * sizeof(float));
-        memcpy(*time, (int*)ram_cache_get(cache, time_key), *time_len * sizeof(float));
         memcpy(*data, (int*)ram_cache_get(cache, data_key), *len * sizeof(float));
         fprintf(stderr, " -> from cache\n");
         return 0;
@@ -194,22 +196,27 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     //    return -1;
     //}
 
-    std::string buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
+    std::string buf;
 
-    *time = nullptr;
+    if (time != nullptr) {
+        buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
 
-    try {
-        MDSplus::Data* ret = conn->get(buf.c_str());
-        float* fdata = ret->getFloatArray(time_len);
-        size_t sz = *time_len * sizeof(float);
-        *time = (float*)malloc(sz);
-        memcpy(*time, fdata, sz);
-        MDSplus::deleteData(ret);
-    } catch (MDSplus::MdsException& ex) {
-        fprintf(stderr, " -> unable to get signal\n");
-        UDA_LOG(UDA_LOG_ERROR, "Unable to get signal.\n");
-        return -1;
+        *time = nullptr;
+
+        try {
+            MDSplus::Data* ret = conn->get(buf.c_str());
+            float* fdata = ret->getFloatArray(time_len);
+            size_t sz = *time_len * sizeof(float);
+            *time = (float*)malloc(sz);
+            memcpy(*time, fdata, sz);
+            MDSplus::deleteData(ret);
+        } catch (MDSplus::MdsException& ex) {
+            fprintf(stderr, " -> unable to get signal\n");
+            UDA_LOG(UDA_LOG_ERROR, "Unable to get signal.\n");
+            return -1;
+        }
     }
+
 
     buf = std::string(signal) + "; _sig;";
 
@@ -231,11 +238,14 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     fprintf(stderr, " -> from mdsplus\n");
 
     ram_cache_add(cache, len_key, len, sizeof(int));
-    ram_cache_add(cache, time_len_key, time_len, sizeof(int));
-    ram_cache_add(cache, time_key, *time, *time_len * sizeof(float));
+    if (time != nullptr) {
+        ram_cache_add(cache, time_len_key, time_len, sizeof(int));
+        ram_cache_add(cache, time_key, *time, *time_len * sizeof(float));
+    }
     ram_cache_add(cache, data_key, *data, *len * sizeof(float));
 
     return 0;
 }
+
 
 
