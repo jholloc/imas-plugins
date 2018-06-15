@@ -31,7 +31,7 @@ TEST_CASE( "Test iron_core comment", "[IMAS][JET][IRON_CORE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='ids_properties/comment', expName='JET', type=string, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/ids_properties/comment', indices='', experiment='JET', dtype=17, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -58,7 +58,7 @@ TEST_CASE( "Test iron_core homogeneous_time", "[IMAS][JET][IRON_CORE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='ids_properties/homogeneous_time', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/ids_properties/homogeneous_time', indices='', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -85,7 +85,7 @@ TEST_CASE( "Test iron_core number of segments", "[IMAS][JET][IRON_CORE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/Shape_of', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/Shape_of', indices='', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -112,7 +112,7 @@ TEST_CASE( "Test iron_core segment name", "[IMAS][JET][IRON_CORE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/#/name', expName='JET', type=string, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/#/name', indices='1', experiment='JET', dtype=17, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -139,7 +139,7 @@ TEST_CASE( "Test iron_core segment identifier", "[IMAS][JET][IRON_CORE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/#/identifier', expName='JET', type=string, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/#/identifier', indices='1', experiment='JET', dtype=17, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -166,7 +166,7 @@ TEST_CASE( "Test iron_core segment b_field", "[IMAS][JET][IRON_CORE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/1/b_field', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/#/b_field', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -175,7 +175,7 @@ TEST_CASE( "Test iron_core segment b_field", "[IMAS][JET][IRON_CORE]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -183,10 +183,10 @@ TEST_CASE( "Test iron_core segment b_field", "[IMAS][JET][IRON_CORE]" )
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 27 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(0.07) );
-    REQUIRE( arr->as<double>()[1] == Approx(0.25) );
-    REQUIRE( arr->as<double>()[2] == Approx(0.6) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(0.07) );
+    REQUIRE( arr->as<float>()[1] == Approx(0.25) );
+    REQUIRE( arr->as<float>()[2] == Approx(0.6) );
 }
 
 TEST_CASE( "Test iron_core segment permeability_relative", "[IMAS][JET][IRON_CORE]" )
@@ -197,7 +197,7 @@ TEST_CASE( "Test iron_core segment permeability_relative", "[IMAS][JET][IRON_COR
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/1/permeability_relative', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/#/permeability_relative', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -206,7 +206,7 @@ TEST_CASE( "Test iron_core segment permeability_relative", "[IMAS][JET][IRON_COR
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -214,10 +214,10 @@ TEST_CASE( "Test iron_core segment permeability_relative", "[IMAS][JET][IRON_COR
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 27 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(700) );
-    REQUIRE( arr->as<double>()[1] == Approx(1250) );
-    REQUIRE( arr->as<double>()[2] == Approx(2000) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(700) );
+    REQUIRE( arr->as<float>()[1] == Approx(1250) );
+    REQUIRE( arr->as<float>()[2] == Approx(2000) );
 }
 
 TEST_CASE( "Test iron_core segment geometry type", "[IMAS][JET][IRON_CORE]" )
@@ -228,7 +228,7 @@ TEST_CASE( "Test iron_core segment geometry type", "[IMAS][JET][IRON_CORE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/1/geometry/geometry_type', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/#/geometry/geometry_type', indices='1', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -255,7 +255,7 @@ TEST_CASE( "Test iron_core segment geometry outline r", "[IMAS][JET][IRON_CORE]"
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/1/geometry/outline/r', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/#/geometry/outline/r', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -264,7 +264,7 @@ TEST_CASE( "Test iron_core segment geometry outline r", "[IMAS][JET][IRON_CORE]"
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -272,11 +272,11 @@ TEST_CASE( "Test iron_core segment geometry outline r", "[IMAS][JET][IRON_CORE]"
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 4 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(0.522000) );
-    REQUIRE( arr->as<double>()[1] == Approx(0.800000) );
-    REQUIRE( arr->as<double>()[2] == Approx(0.800000) );
-    REQUIRE( arr->as<double>()[3] == Approx(0.522000) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(0.522000) );
+    REQUIRE( arr->as<float>()[1] == Approx(0.800000) );
+    REQUIRE( arr->as<float>()[2] == Approx(0.800000) );
+    REQUIRE( arr->as<float>()[3] == Approx(0.522000) );
 }
 
 TEST_CASE( "Test iron_core segment geometry outline z", "[IMAS][JET][IRON_CORE]" )
@@ -287,7 +287,7 @@ TEST_CASE( "Test iron_core segment geometry outline z", "[IMAS][JET][IRON_CORE]"
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='iron_core', variable='segment/1/geometry/outline/z', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='iron_core/segment/#/geometry/outline/z', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -296,7 +296,7 @@ TEST_CASE( "Test iron_core segment geometry outline z", "[IMAS][JET][IRON_CORE]"
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -304,9 +304,9 @@ TEST_CASE( "Test iron_core segment geometry outline z", "[IMAS][JET][IRON_CORE]"
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 4 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(2.763000) );
-    REQUIRE( arr->as<double>()[1] == Approx(2.763000) );
-    REQUIRE( arr->as<double>()[2] == Approx(3.033000) );
-    REQUIRE( arr->as<double>()[3] == Approx(3.033000) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(2.763000) );
+    REQUIRE( arr->as<float>()[1] == Approx(2.763000) );
+    REQUIRE( arr->as<float>()[2] == Approx(3.033000) );
+    REQUIRE( arr->as<float>()[3] == Approx(3.033000) );
 }

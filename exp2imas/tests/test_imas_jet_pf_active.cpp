@@ -15,7 +15,7 @@ TEST_CASE( "Test pf_active coil count", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/Shape_of', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/Shape_of', indices='', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -43,7 +43,7 @@ TEST_CASE( "Test pf_active coil name", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/name', expName='JET', type=string, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/name', indices='1', experiment='JET', dtype=17, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -70,7 +70,7 @@ TEST_CASE( "Test pf_active coil identifier", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/identifier', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/identifier', indices='1', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -98,7 +98,7 @@ TEST_CASE( "Test pf_active coil element count", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/element/Shape_of', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/element/Shape_of', indices='1', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -126,7 +126,7 @@ TEST_CASE( "Test pf_active coil element name", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/element/1/name', expName='JET', type=string, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/element/#/name', indices='1;1', experiment='JET', dtype=17, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -153,7 +153,7 @@ TEST_CASE( "Test pf_active coil element identifier", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/element/1/identifier', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/element/#/identifier', indices='1;1', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -181,7 +181,7 @@ TEST_CASE( "Test pf_active coil element number of turns", "[IMAS][JET][PF_ACTIVE
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/element/1/turns_with_sign', expName='JET', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/element/#/turns_with_sign', indices='1;1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -190,15 +190,15 @@ TEST_CASE( "Test pf_active coil element number of turns", "[IMAS][JET][PF_ACTIVE
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto val = dynamic_cast<uda::Scalar*>(data);
 
     REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-    REQUIRE( val->type().name() == typeid(double).name() );
-    REQUIRE( val->as<double>() == Approx(71.0) );
+    REQUIRE( val->type().name() == typeid(float).name() );
+    REQUIRE( val->as<float>() == Approx(71.0) );
 }
 
 TEST_CASE( "Test pf_active coil element geometry type", "[IMAS][JET][PF_ACTIVE]" )
@@ -209,7 +209,7 @@ TEST_CASE( "Test pf_active coil element geometry type", "[IMAS][JET][PF_ACTIVE]"
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/element/1/geometry/geometry_type', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/element/#/geometry/geometry_type', indices='1;1', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -237,7 +237,7 @@ TEST_CASE( "Test pf_active coil element geometry r", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/element/1/geometry/rectangle/r', expName='JET', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/element/#/geometry/rectangle/r', indices='1;1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -246,15 +246,15 @@ TEST_CASE( "Test pf_active coil element geometry r", "[IMAS][JET][PF_ACTIVE]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto val = dynamic_cast<uda::Scalar*>(data);
 
     REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-    REQUIRE( val->type().name() == typeid(double).name() );
-    REQUIRE( val->as<double>() == Approx(0.897) );
+    REQUIRE( val->type().name() == typeid(float).name() );
+    REQUIRE( val->as<float>() == Approx(0.897) );
 }
 
 TEST_CASE( "Test pf_active coil element geometry z", "[IMAS][JET][PF_ACTIVE]" )
@@ -265,7 +265,7 @@ TEST_CASE( "Test pf_active coil element geometry z", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/element/1/geometry/rectangle/z', expName='JET', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/element/#/geometry/rectangle/z', indices='1;1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -274,15 +274,15 @@ TEST_CASE( "Test pf_active coil element geometry z", "[IMAS][JET][PF_ACTIVE]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto val = dynamic_cast<uda::Scalar*>(data);
 
     REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-    REQUIRE( val->type().name() == typeid(double).name() );
-    REQUIRE( val->as<double>() == Approx(2.461) );
+    REQUIRE( val->type().name() == typeid(float).name() );
+    REQUIRE( val->as<float>() == Approx(2.461) );
 }
 
 TEST_CASE( "Test pf_active coil element geometry width", "[IMAS][JET][PF_ACTIVE]" )
@@ -295,7 +295,7 @@ TEST_CASE( "Test pf_active coil element geometry width", "[IMAS][JET][PF_ACTIVE]
 
     {
         const uda::Result& result = client.get(
-                "imas::get(idx=0, group='pf_active', variable='coil/1/element/1/geometry/rectangle/width', expName='JET', type=double, rank=0, shot=" SHOT_NUM ", )",
+                "EXP2IMAS::read(element='pf_active/coil/#/element/#/geometry/rectangle/width', indices='1;1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')",
                 "");
 
         REQUIRE(result.errorCode() == 0);
@@ -305,20 +305,20 @@ TEST_CASE( "Test pf_active coil element geometry width", "[IMAS][JET][PF_ACTIVE]
 
         REQUIRE(data != nullptr);
         REQUIRE(!data->isNull());
-        REQUIRE(data->type().name() == typeid(double).name());
+        REQUIRE(data->type().name() == typeid(float).name());
 
         auto val = dynamic_cast<uda::Scalar*>(data);
 
         REQUIRE(val != nullptr);
         REQUIRE(!val->isNull());
 
-        REQUIRE(val->type().name() == typeid(double).name());
-        REQUIRE(val->as<double>() == Approx(0.337));
+        REQUIRE(val->type().name() == typeid(float).name());
+        REQUIRE(val->as<float>() == Approx(0.337));
     }
 
     {
         const uda::Result& result = client.get(
-                "imas::get(idx=0, group='pf_active', variable='coil/9/element/1/geometry/rectangle/width', expName='JET', type=double, rank=0, shot=" SHOT_NUM ", )",
+                "EXP2IMAS::read(element='pf_active/coil/#/element/#/geometry/rectangle/width', indices='9;1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')",
                 "");
 
         REQUIRE(result.errorCode() == 0);
@@ -328,15 +328,15 @@ TEST_CASE( "Test pf_active coil element geometry width", "[IMAS][JET][PF_ACTIVE]
 
         REQUIRE(data != nullptr);
         REQUIRE(!data->isNull());
-        REQUIRE(data->type().name() == typeid(double).name());
+        REQUIRE(data->type().name() == typeid(float).name());
 
         auto val = dynamic_cast<uda::Scalar*>(data);
 
         REQUIRE(val != nullptr);
         REQUIRE(!val->isNull());
 
-        REQUIRE(val->type().name() == typeid(double).name());
-        REQUIRE(val->as<double>() == Approx(0.368));
+        REQUIRE(val->type().name() == typeid(float).name());
+        REQUIRE(val->as<float>() == Approx(0.368));
     }
 }
 
@@ -350,7 +350,7 @@ TEST_CASE( "Test pf_active coil element geometry height", "[IMAS][JET][PF_ACTIVE
 
     {
         const uda::Result& result = client.get(
-                "imas::get(idx=0, group='pf_active', variable='coil/1/element/1/geometry/rectangle/height', expName='JET', type=double, rank=0, shot=" SHOT_NUM ", )",
+                "EXP2IMAS::read(element='pf_active/coil/#/element/#/geometry/rectangle/height', indices='1;1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')",
                 "");
 
         REQUIRE(result.errorCode() == 0);
@@ -360,20 +360,20 @@ TEST_CASE( "Test pf_active coil element geometry height", "[IMAS][JET][PF_ACTIVE
 
         REQUIRE(data != nullptr);
         REQUIRE(!data->isNull());
-        REQUIRE(data->type().name() == typeid(double).name());
+        REQUIRE(data->type().name() == typeid(float).name());
 
         auto val = dynamic_cast<uda::Scalar*>(data);
 
         REQUIRE(val != nullptr);
         REQUIRE(!val->isNull());
 
-        REQUIRE(val->type().name() == typeid(double).name());
-        REQUIRE(val->as<double>() == Approx(0.505));
+        REQUIRE(val->type().name() == typeid(float).name());
+        REQUIRE(val->as<float>() == Approx(0.505));
     }
 
     {
         const uda::Result& result = client.get(
-                "imas::get(idx=0, group='pf_active', variable='coil/9/element/1/geometry/rectangle/height', expName='JET', type=double, rank=0, shot=" SHOT_NUM ", )",
+                "EXP2IMAS::read(element='pf_active/coil/#/element/#/geometry/rectangle/height', indices='9;1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')",
                 "");
 
         REQUIRE(result.errorCode() == 0);
@@ -383,15 +383,15 @@ TEST_CASE( "Test pf_active coil element geometry height", "[IMAS][JET][PF_ACTIVE
 
         REQUIRE(data != nullptr);
         REQUIRE(!data->isNull());
-        REQUIRE(data->type().name() == typeid(double).name());
+        REQUIRE(data->type().name() == typeid(float).name());
 
         auto val = dynamic_cast<uda::Scalar*>(data);
 
         REQUIRE(val != nullptr);
         REQUIRE(!val->isNull());
 
-        REQUIRE(val->type().name() == typeid(double).name());
-        REQUIRE(val->as<double>() == Approx(0.282));
+        REQUIRE(val->type().name() == typeid(float).name());
+        REQUIRE(val->as<float>() == Approx(0.282));
     }
 }
 
@@ -403,7 +403,7 @@ TEST_CASE( "Test pf_active coil current", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/current/data', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/current/data', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -412,7 +412,7 @@ TEST_CASE( "Test pf_active coil current", "[IMAS][JET][PF_ACTIVE]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -420,8 +420,8 @@ TEST_CASE( "Test pf_active coil current", "[IMAS][JET][PF_ACTIVE]" )
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 1024 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(-423.4526977539) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(-423.4526977539) );
 }
 
 TEST_CASE( "Test pf_active coil current error upper", "[IMAS][JET][PF_ACTIVE]" )
@@ -432,7 +432,7 @@ TEST_CASE( "Test pf_active coil current error upper", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/current/data_error_upper', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/current/data_error_upper', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -441,7 +441,7 @@ TEST_CASE( "Test pf_active coil current error upper", "[IMAS][JET][PF_ACTIVE]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -449,8 +449,8 @@ TEST_CASE( "Test pf_active coil current error upper", "[IMAS][JET][PF_ACTIVE]" )
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 1024 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(76.5473022461) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(76.5473022461) );
 }
 
 TEST_CASE( "Test pf_active coil current error lower", "[IMAS][JET][PF_ACTIVE]" )
@@ -461,7 +461,7 @@ TEST_CASE( "Test pf_active coil current error lower", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/current/data_error_lower', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/current/data_error_lower', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -470,7 +470,7 @@ TEST_CASE( "Test pf_active coil current error lower", "[IMAS][JET][PF_ACTIVE]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -478,8 +478,8 @@ TEST_CASE( "Test pf_active coil current error lower", "[IMAS][JET][PF_ACTIVE]" )
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 1024 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(-923.4526977539) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(-923.4526977539) );
 }
 
 TEST_CASE( "Test pf_active coil current time", "[IMAS][JET][PF_ACTIVE]" )
@@ -490,7 +490,7 @@ TEST_CASE( "Test pf_active coil current time", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='coil/1/current/time', expName='JET', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/coil/#/current/time', indices='1', experiment='JET', dtype=7, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -499,7 +499,7 @@ TEST_CASE( "Test pf_active coil current time", "[IMAS][JET][PF_ACTIVE]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
@@ -507,8 +507,8 @@ TEST_CASE( "Test pf_active coil current time", "[IMAS][JET][PF_ACTIVE]" )
     REQUIRE( !arr->isNull() );
 
     REQUIRE( arr->size() == 1024 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
-    REQUIRE( arr->as<double>()[0] == Approx(25.0161991119) );
+    REQUIRE( arr->type().name() == typeid(float).name() );
+    REQUIRE( arr->as<float>()[0] == Approx(25.0161991119) );
 }
 
 TEST_CASE( "Test pf_active coil force count", "[IMAS][JET][PF_ACTIVE]" )
@@ -519,7 +519,7 @@ TEST_CASE( "Test pf_active coil force count", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='vertical_force/Shape_of', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/vertical_force/Shape_of', indices='', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -547,7 +547,7 @@ TEST_CASE( "Test pf_active coil circuit count", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='circuit/Shape_of', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/circuit/Shape_of', indices='', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -575,7 +575,7 @@ TEST_CASE( "Test pf_active coil supply count", "[IMAS][JET][PF_ACTIVE]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='pf_active', variable='supply/Shape_of', expName='JET', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("EXP2IMAS::read(element='pf_active/supply/Shape_of', indices='', experiment='JET', dtype=3, shot=" SHOT_NUM ", IDS_version='')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );

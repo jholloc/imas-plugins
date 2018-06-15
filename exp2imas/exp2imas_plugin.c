@@ -304,22 +304,47 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
                 RAISE_PLUGIN_ERROR("Unsupported data type");
             }
         } else if (xml_data.rank == 2 && nindices == 1) {
-            size_t shape[] = { (size_t)xml_data.dims[1] };
-            int idx = (indices[0] - 1) * xml_data.dims[1];
-
             if (mapping->slice_dim == 0) {
-                shape[0] = (size_t)xml_data.dims[0];
-                idx = (indices[0] - 1) * xml_data.dims[0];
-            }
+                size_t shape[] = { (size_t)xml_data.dims[0] };
+                int idx = (indices[0] - 1);
 
-            if (xml_data.data_type == UDA_TYPE_DOUBLE) {
-                setReturnDataDoubleArray(data_block, &((double*)xml_data.data)[idx], 1, shape, NULL);
-            } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
-                setReturnDataFloatArray(data_block, &((float*)xml_data.data)[idx], 1, shape, NULL);
-            } else if (xml_data.data_type == UDA_TYPE_INT) {
-                setReturnDataIntArray(data_block, &((int*)xml_data.data)[idx], 1, shape, NULL);
+                if (xml_data.data_type == UDA_TYPE_DOUBLE) {
+                    double vals[shape[0]];
+                    int i;
+                    for (i = 0; i < shape[0]; ++i) {
+                        vals[i] = ((double*)xml_data.data)[idx + i * xml_data.dims[1]];
+                    }
+                    setReturnDataDoubleArray(data_block, vals, 1, shape, NULL);
+                } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
+                    float vals[shape[0]];
+                    int i;
+                    for (i = 0; i < shape[0]; ++i) {
+                        vals[i] = ((float*)xml_data.data)[idx + i * xml_data.dims[1]];
+                    }
+                    setReturnDataFloatArray(data_block, vals, 1, shape, NULL);
+                } else if (xml_data.data_type == UDA_TYPE_INT) {
+                    int vals[shape[0]];
+                    int i;
+                    for (i = 0; i < shape[0]; ++i) {
+                        vals[i] = ((int*)xml_data.data)[idx + i * xml_data.dims[1]];
+                    }
+                    setReturnDataIntArray(data_block, vals, 1, shape, NULL);
+                } else {
+                    RAISE_PLUGIN_ERROR("Unsupported data type");
+                }
             } else {
-                RAISE_PLUGIN_ERROR("Unsupported data type");
+                size_t shape[] = { (size_t)xml_data.dims[1] };
+                int idx = (indices[0] - 1) * xml_data.dims[1];
+
+                if (xml_data.data_type == UDA_TYPE_DOUBLE) {
+                    setReturnDataDoubleArray(data_block, &((double*)xml_data.data)[idx], 1, shape, NULL);
+                } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
+                    setReturnDataFloatArray(data_block, &((float*)xml_data.data)[idx], 1, shape, NULL);
+                } else if (xml_data.data_type == UDA_TYPE_INT) {
+                    setReturnDataIntArray(data_block, &((int*)xml_data.data)[idx], 1, shape, NULL);
+                } else {
+                    RAISE_PLUGIN_ERROR("Unsupported data type");
+                }
             }
         } else if (xml_data.rank == 3 && nindices == 1) {
             int idx = (indices[0] - 1) * xml_data.dims[1] * xml_data.dims[2];
@@ -643,7 +668,7 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
             return status;
         }
 
-        if (abserror_signal_names != NULL) {
+        if (StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != NULL) {
             signalName = abserror_signal_names[name_index];
             int abslen = -1;
             status = mds_get(experiment, signalName, shot, NULL, &fabserror, &abslen, NULL, 0);
@@ -657,7 +682,7 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
             }
         }
 
-        if (relerror_signal_names != NULL) {
+        if (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != NULL) {
             signalName = relerror_signal_names[name_index];
             int rellen = -1;
             status = mds_get(experiment, signalName, shot, NULL, &frelerror, &rellen, NULL, 0);
@@ -699,7 +724,8 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
 
                 double error;
 
-                if (abserror_signal_names != NULL || relerror_signal_names != NULL) {
+                if ((StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != NULL)
+                    || (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != NULL)) {
                     if (abserror_signal_names != NULL && relerror_signal_names != NULL) {
                         double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
                         double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
@@ -780,13 +806,8 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     initDataBlock(data_block);
 
-    data_block->rank = 1;
-    data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
-
-    int i;
-    for (i = 0; i < data_block->rank; i++) {
-        initDimBlock(&data_block->dims[i]);
-    }
+    data_block->rank = 0;
+    data_block->dims = NULL;
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 

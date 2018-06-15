@@ -20,6 +20,9 @@ macro( BUILD_TEST NAME SOURCE )
     ${OPENSSL_LIBRARIES}
     test_helpers
   )
+  target_compile_options( ${NAME} PRIVATE ${UDA_CPP_CFLAGS_OTHER}  )
+
+  link_directories( ${UDA_FAT_CPP_LIBRARY_DIRS} )
 
   add_executable( fat_${NAME} ${HELPER_FILES} ${SOURCE} )
   target_link_libraries( fat_${NAME} PRIVATE
@@ -27,7 +30,7 @@ macro( BUILD_TEST NAME SOURCE )
     ${OPENSSL_LIBRARIES}
     test_helpers
   )
-  target_compile_definitions( fat_${NAME} PRIVATE ${FAT_UDA_DEFINITIONS} )
+  target_compile_options( fat_${NAME} PRIVATE ${UDA_FAT_CPP_CFLAGS_OTHER}  )
 
   if( FAT_TESTS )
     add_test( ${NAME} fat_${NAME} )

@@ -205,11 +205,16 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
 
         try {
             MDSplus::Data* ret = conn->get(buf.c_str());
-            float* fdata = ret->getFloatArray(time_len);
-            size_t sz = *time_len * sizeof(float);
-            *time = (float*)malloc(sz);
-            memcpy(*time, fdata, sz);
-            MDSplus::deleteData(ret);
+            if (ret->dtype == DTYPE_FLOAT || ret->dtype == DTYPE_L) {
+                float* fdata = ret->getFloatArray(time_len);
+                size_t sz = *time_len * sizeof(float);
+                *time = (float*)malloc(sz);
+                memcpy(*time, fdata, sz);
+                MDSplus::deleteData(ret);
+            } else {
+                MDSplus::deleteData(ret);
+                return -1;
+            }
         } catch (MDSplus::MdsException& ex) {
             fprintf(stderr, " -> unable to get signal\n");
             UDA_LOG(UDA_LOG_ERROR, "Unable to get signal.\n");
@@ -224,11 +229,16 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
 
     try {
         MDSplus::Data* ret = conn->get(buf.c_str());
-        float* fdata = ret->getFloatArray(len);
-        size_t sz = *len * sizeof(float);
-        *data = (float*)malloc(sz);
-        memcpy(*data, fdata, sz);
-        MDSplus::deleteData(ret);
+        if (ret->dtype == DTYPE_FLOAT || ret->dtype == DTYPE_L) {
+            float* fdata = ret->getFloatArray(len);
+            size_t sz = *len * sizeof(float);
+            *data = (float*)malloc(sz);
+            memcpy(*data, fdata, sz);
+            MDSplus::deleteData(ret);
+        } else {
+            MDSplus::deleteData(ret);
+            return -1;
+        }
     } catch (MDSplus::MdsException& ex) {
         fprintf(stderr, " -> unable to get signal\n");
         UDA_LOG(UDA_LOG_ERROR, "Unable to get signal.\n");
@@ -246,6 +256,3 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
 
     return 0;
 }
-
-
-
