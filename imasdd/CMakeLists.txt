@@ -1,6 +1,11 @@
-include( plugins )
+find_package( UDA QUIET )
 
-find_package( UDA REQUIRED )
+if( NOT UDA_FOUND )
+  message( WARNING "UDA not found - skipping imasdd plugin" )
+  return()
+endif()
+
+include( plugins )
 
 uda_plugin(
   NAME IMASDD

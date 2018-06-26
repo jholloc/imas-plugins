@@ -1,7 +1,15 @@
-include( plugins )
+find_package( UDA QUIET )
+find_package( Boost QUIET )
 
-find_package( UDA REQUIRED )
-find_package( Boost REQUIRED )
+if( NOT UDA_FOUND )
+  message( WARNING "UDA not found - skipping imas_mapping plugin" )
+  return()
+elseif( NOT Boost_FOUND )
+  message( WARNING "Boost not found - skipping imas_mapping plugin" )
+  return()
+endif()
+
+include( plugins )
 
 uda_plugin(
   NAME IMAS_MAPPING

@@ -122,7 +122,11 @@ int imasdd_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 void IMASDDPlugin::init()
 {
-    std::string dd_path = "/afs/eufus.eu/user/g/g2jhollo/uda_plugins/imasdd/IDSDef.xml";
+    const char* env = getenv("UDA_IMASDD_IDSDEF_PATH");
+    if (env == nullptr) {
+        throw std::runtime_error("UDA_IMASDD_IDSDEF_PATH environmental variable not set");
+    }
+    std::string dd_path = env;
 
     pugi::xml_parse_result result = doc_.load_file(dd_path.c_str());
     if (!result) {
