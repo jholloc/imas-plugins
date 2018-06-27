@@ -1,11 +1,15 @@
 find_package( UDA QUIET )
 find_package( Boost QUIET )
+find_package( IMAS QUIET )
 
 if( NOT UDA_FOUND )
-  message( WARNING "UDA not found - skipping imas_mapping plugin" )
+  message( WARNING "UDA not found - skipping IMAS plugin" )
   return()
 elseif( NOT Boost_FOUND )
-  message( WARNING "Boost not found - skipping imas_mapping plugin" )
+  message( WARNING "Boost not found - skipping IMAS plugin" )
+  return()
+elseif( NOT IMAS_FOUND )
+  message( WARNING "IMAS not found - skipping IMAS plugin" )
   return()
 endif()
 

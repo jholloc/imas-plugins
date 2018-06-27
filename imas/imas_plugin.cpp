@@ -295,7 +295,7 @@ int do_writeData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     size_t ndims;
     FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, dims);
 
-    int rank = static_cast<int>(ndims);
+    auto rank = static_cast<int>(ndims);
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
