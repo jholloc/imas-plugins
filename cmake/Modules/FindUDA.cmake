@@ -22,6 +22,7 @@ set( UDA_DEFINITIONS  ${UDA_CLIENT_CFLAGS_OTHER} )
 set( UDA_INCLUDE_DIRS ${UDA_CLIENT_INCLUDE_DIRS} )
 set( UDA_LIBRARY_DIRS ${UDA_CLIENT_LIBRARY_DIRS} )
 set( UDA_LIBRARIES    ${UDA_CLIENT_LIBRARIES} )
+get_filename_component( UDA_DIR ${UDA_LIBRARY_DIRS} DIRECTORY )
 
 # handle the QUIETLY and REQUIRED arguments and set UDA_FOUND to TRUE if
 # all listed variables are TRUE

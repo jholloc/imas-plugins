@@ -23,18 +23,4 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 
 include( LibXml2StrPrintfConfig )
 
-########################################################################################################################
-# Plugins to build
-
-if( DEFINED BUILD_PLUGINS )
-  foreach( PLUGIN IN ITEMS ${BUILD_PLUGINS} )
-    add_subdirectory( ${PLUGIN} )
-  endforeach( PLUGIN )
-else()
-  add_subdirectory( exp2imas )
-  add_subdirectory( imas )
-  add_subdirectory( imasdd )
-  add_subdirectory( imas_mapping )
-  #add_subdirectory( tore_supra )
-  #add_subdirectory( west )
-endif()
+add_subdirectory( source )

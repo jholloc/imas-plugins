@@ -7,6 +7,8 @@
 
 #include "catch.hpp"
 
+#include <plugins/pluginStructs.h>
+
 namespace Catch {
 namespace Detail {
 
@@ -79,7 +81,7 @@ using Catch::Detail::ApproxVector;
 
 namespace uda {
 namespace test {
-std::string format(const char* fmt, ...);
+IDAM_PLUGIN_INTERFACE generate_plugin_interface(const char* request);
 }
 }
 

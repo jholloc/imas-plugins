@@ -10,7 +10,7 @@ macro( BUILD_TEST NAME SOURCE )
   find_package( UDA REQUIRED )
 
   include_directories( SYSTEM ${Boost_INCLUDE_DIR} )
-  include_directories( ${UDA_CPP_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} )
+  include_directories( ${UDA_CPP_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR} )
 
   link_directories( ${UDA_CPP_LIBRARY_DIRS} )
 
@@ -26,7 +26,7 @@ macro( BUILD_TEST NAME SOURCE )
 
   add_executable( fat_${NAME} ${HELPER_FILES} ${SOURCE} )
   target_link_libraries( fat_${NAME} PRIVATE
-    ${UDA_FAT_CPP_LIBRARIES}
+    ${UDA_FAT_CPP_LIBRARIES} -L/Users/jhollocombe/ida3/lib -lida3 -lida3c
     ${OPENSSL_LIBRARIES}
     test_helpers
   )

@@ -17,7 +17,7 @@
 #include <clientserver/udaTypes.h>
 #include <clientserver/copyStructs.h>
 #include <plugins/udaPlugin.h>
-#include <plugins/serverPlugin.h>
+#include <plugins/pluginUtils.h>
 
 namespace imas_uda_plugins {
 
@@ -277,8 +277,8 @@ int imas_uda_plugins::MappingPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface
 
     auto element = std::string(group) + "/" + variable;
 
-    char* path = NULL;
-    int* indices = NULL;
+    char* path = nullptr;
+    int* indices = nullptr;
     size_t num_indices = extract_array_indices(element.c_str(), &path, &indices);
     char* indices_string = indices_to_string(indices, num_indices);
 
@@ -317,8 +317,8 @@ int imas_uda_plugins::MappingPlugin::getdim(IDAM_PLUGIN_INTERFACE* plugin_interf
 
     auto element = std::string(group) + "/" + variable + "/Shape_of";
 
-    char* path = NULL;
-    int* indices = NULL;
+    char* path = nullptr;
+    int* indices = nullptr;
     size_t num_indices = extract_array_indices(element.c_str(), &path, &indices);
     char* indices_string = indices_to_string(indices, num_indices);
 

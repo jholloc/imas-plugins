@@ -16,8 +16,6 @@ set( TESTS
   test_imas_aug_pf_active
 )
 
-add_library( test_helpers test_helpers.cpp test_helpers.h )
-
 foreach( TEST ${TESTS} )
   BUILD_TEST( ${TEST} ${TEST}.cpp )
 endforeach()

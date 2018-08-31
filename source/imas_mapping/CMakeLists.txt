@@ -29,3 +29,5 @@ uda_plugin(
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
 )
+
+add_subdirectory( tests )

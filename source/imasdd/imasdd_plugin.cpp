@@ -35,7 +35,7 @@
 #include <clientserver/copyStructs.h>
 #include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
-#include <plugins/serverPlugin.h>
+#include <plugins/pluginUtils.h>
 
 #include "pugixml.hpp"
 
@@ -231,13 +231,13 @@ void get_requests(std::vector<std::string>& requests, const std::string& ids, co
 void call_plugin(const std::string& plugin_name, const std::string& request, IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     //if (request.find("flux_loop/Shape_of") != std::string::npos) {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 36, NULL);
+    //    setReturnDataIntScalar(plugin_interface->data_block, 36, nullptr);
     //} else if (request.find("bpol_probe/Shape_of") != std::string::npos) {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 71, NULL);
+    //    setReturnDataIntScalar(plugin_interface->data_block, 71, nullptr);
     //} else if (request.find("position/Shape_of") != std::string::npos) {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 1, NULL);
+    //    setReturnDataIntScalar(plugin_interface->data_block, 1, nullptr);
     //} else {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 1, NULL);
+    //    setReturnDataIntScalar(plugin_interface->data_block, 1, nullptr);
     //}
     //return;
 
