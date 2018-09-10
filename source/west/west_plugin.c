@@ -100,7 +100,7 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         // ======================================================================================
         // Error ...
         err = 999;
-        addIdamError(CODEERRORTYPE, __func__, err, "Unknown function requested!");
+        addIdamError(CODEERRORTYPE, __func__, err, "WEST:ERROR: unknown function requested!");
     }
 
     // --------------------------------------------------------------------------------------
@@ -230,7 +230,7 @@ int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 // Add functionality here ....
 int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    UDA_LOG(UDA_LOG_DEBUG, "Calling do_read from WEST plugin\n");
+    UDA_LOG(UDA_LOG_DEBUG, "Calling do_read function from WEST plugin\n");
 
     int err = 0;
 
@@ -248,7 +248,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    char* element;    // will contain the IDAM mapping got from the IDAM request
+    const char* element;    // will contain the IDAM mapping got from the IDAM request
     int shot;
     int* indices;
     size_t nindices;
@@ -257,7 +257,9 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
     FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
 
-    char* IDAM_MappingKey = element;
+    UDA_LOG(UDA_LOG_INFO, "Calling %s for shot: %d\n", element, shot);
+
+    const char* IDAM_MappingKey = element;
 
     char* mappingFileName = getenv("UDA_WEST_MAPPING_FILE");
 
@@ -271,8 +273,10 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     //The path requested has not been found
     if (mapfun == NULL) {
-        UDA_LOG(UDA_LOG_DEBUG, "The requested mapping function has not been found. Check the IDAM mapping file.\n");
+        UDA_LOG(UDA_LOG_ERROR, "The requested mapping function has not been found. Check the IDAM mapping file.\n");
         fprintf(stderr, "The requested mapping function has not been found. Check the IDAM mapping file.");
+        int err = 901;
+        addIdamError(CODEERRORTYPE, "dynamic data empty !", err, "");
         return -1;
     }
 
@@ -282,13 +286,14 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         UDA_LOG(UDA_LOG_DEBUG, "Fetching static data from WEST plugin\n");
 
         // Executing TSLib for getting static data
-        int status =
-                GetStaticData(shot, mapfun, data_block, indices);
+        int status = GetStaticData(shot, mapfun, data_block, indices);
         if (status != 0) {
             return status;
         }
 
         int data_type = data_block->data_type;
+
+        UDA_LOG(UDA_LOG_DEBUG, "Requested data type: %d\n", data_type);
 
         if (data_type != UDA_TYPE_STRING &&
             data_type != UDA_TYPE_DOUBLE &&
@@ -297,18 +302,8 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             data_type != UDA_TYPE_INT &&
             data_type != UDA_TYPE_SHORT) {
             err = 999;
-            addIdamError(CODEERRORTYPE, __func__, err, "west : Unsupported data type");
+            addIdamError(CODEERRORTYPE, __func__, err, "WEST:ERROR: unsupported data type");
         }
-
-        free(data_block->dims);
-
-        // Scalar data
-        data_block->rank = 0;
-        data_block->data_n = 1;
-
-        strcpy(data_block->data_label, "");
-        strcpy(data_block->data_units, "");
-        strcpy(data_block->data_desc, "");
 
         return 0;
 
@@ -319,9 +314,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         int status = GetDynamicData(shot, mapfun, data_block, indices);
 
-        if (status != 0) {
-            return status;
-        }
+        return status;
     }
 
     return 0;
@@ -348,9 +341,9 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
      */
     doc = xmlParseFile(mappingFileName);
     if (doc == NULL) {
-        UDA_LOG(UDA_LOG_DEBUG, "Error: unable to parse IDAM mapping file\n");
-        fprintf(stderr, "Error: unable to parse file \"%s\"\n",
-                mappingFileName);
+        UDA_LOG(UDA_LOG_ERROR, "WEST:ERROR: unable to parse IDAM mapping file %s\n", mappingFileName);
+        int err = 901;
+        addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to parse IDAM mapping file !", err, "");
         return NULL;
     }
 
@@ -359,8 +352,9 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
      */
     xpathCtx = xmlXPathNewContext(doc);
     if (xpathCtx == NULL) {
-        UDA_LOG(UDA_LOG_DEBUG, "Error: unable to create new XPath context\n");
-        fprintf(stderr, "Error: unable to create new XPath context\n");
+        UDA_LOG(UDA_LOG_ERROR, "WEST:ERROR: unable to create new XPath context\n");
+        int err = 901;
+        addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to create new XPath context", err, "");
         xmlFreeDoc(doc);
         return NULL;
     }
@@ -368,7 +362,7 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
     UDA_LOG(UDA_LOG_DEBUG, "Creating the Xpath request\n");
     int len = strlen(IDAM_MappingKey) + 26;
     xmlChar* xPathExpr = malloc(len + sizeof(xmlChar));
-    const xmlChar* c = "//mapping[@key='%s']/@value";
+    const char* c = "//mapping[@key='%s']/@value";
     xmlStrPrintf(xPathExpr, len, c, IDAM_MappingKey);
 
     /*
@@ -376,10 +370,9 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
      */
     xpathObj = xmlXPathEvalExpression(xPathExpr, xpathCtx);
     if (xpathObj == NULL) {
-        UDA_LOG(UDA_LOG_DEBUG, "Error: unable to evaluate xpath expression\n");
-        fprintf(stderr,
-                "Error: unable to evaluate xpath expression \"%s\"\n",
-                xPathExpr);
+        UDA_LOG(UDA_LOG_ERROR, "WEST:ERROR: unable to evaluate xpath expression %s\n", c);
+        int err = 901;
+        addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to evaluate xpath expression %s\n", err, c);
         xmlXPathFreeContext(xpathCtx);
         xmlFreeDoc(doc);
         return NULL;
@@ -399,10 +392,10 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
         value = strdup((char*)cur->content);
     } else {
         UDA_LOG(UDA_LOG_DEBUG, "Error : size equals 0\n");
-        err = 998;
+        err = 902;
         addIdamError(CODEERRORTYPE, __func__, err, "no result on XPath request");
     }
-    const xmlChar* key_type = "//mapping[@key='%s']/@type";
+    const char* key_type = "//mapping[@key='%s']/@type";
     xmlStrPrintf(xPathExpr, len, key_type,
                  IDAM_MappingKey);
 
@@ -411,11 +404,10 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
      */
     xpathObj = xmlXPathEvalExpression(xPathExpr, xpathCtx);
     if (xpathObj == NULL) {
-        UDA_LOG(UDA_LOG_DEBUG,
-                 "Error: unable to evaluate xpath expression for getting the type (static or dynamic)\n");
-        fprintf(stderr,
-                "Error: unable to evaluate xpath expression \"%s\"\n",
-                xPathExpr);
+        UDA_LOG(UDA_LOG_ERROR,
+                 "WEST:ERROR: unable to evaluate xpath expression for getting the type (static or dynamic): %s\n", key_type);
+        err = 901;
+        addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to evaluate following xpath expression for getting the type (static or dynamic): %s\n", err, key_type);
         xmlXPathFreeContext(xpathCtx);
         xmlFreeDoc(doc);
         return NULL;
@@ -432,7 +424,8 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
         cur = cur->children;
         typeStr = strdup((char*)cur->content);
     } else {
-        err = 998;
+        err = 902;
+        UDA_LOG(UDA_LOG_ERROR, "no result on XPath request\n");
         addIdamError(CODEERRORTYPE, __func__, err, "no result on XPath request");
     }
 
