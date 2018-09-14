@@ -8,7 +8,8 @@
 #include <sstream>
 #include <boost/tokenizer.hpp>
 
-namespace imas_uda_plugins {
+namespace uda {
+namespace imas_mapping {
 
 class MachineMapping {
 public:
@@ -44,11 +45,13 @@ public:
         }
     }
 
-    std::string host(const std::string& machine) {
+    std::string host(const std::string& machine)
+    {
         return mappings_[machine].host;
     }
 
-    std::string plugin(const std::string& machine) {
+    std::string plugin(const std::string& machine)
+    {
         return mappings_[machine].plugin;
     }
 
@@ -61,6 +64,7 @@ private:
     std::unordered_map<std::string, MappingValue> mappings_;
 };
 
+}
 }
 
 #endif // IMAS_PLUGINS_MACHINE_MAPPING_H

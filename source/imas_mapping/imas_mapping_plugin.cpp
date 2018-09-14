@@ -19,7 +19,7 @@
 #include <plugins/udaPlugin.h>
 #include <plugins/pluginUtils.h>
 
-namespace imas_uda_plugins {
+namespace {
 
 class MappingPlugin {
 public:
@@ -39,15 +39,15 @@ public:
     int getdim(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
 private:
-    MachineMapping machine_mapping_;
+    uda::imas_mapping::MachineMapping machine_mapping_;
 };
 
-} // namespace
+} // anon namespace
 
 int imas_mapping_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     try {
-        static imas_uda_plugins::MappingPlugin plugin;
+        static MappingPlugin plugin;
 
         if (idam_plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
             RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
@@ -94,12 +94,14 @@ int imas_mapping_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     }
 }
 
+namespace {
+
 /**
  * Help: A Description of library functionality
  * @param idam_plugin_interface
  * @return
  */
-int imas_uda_plugins::MappingPlugin::help(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::help(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
     const char* desc = "templatePlugin: help = description of this plugin";
@@ -112,7 +114,7 @@ int imas_uda_plugins::MappingPlugin::help(IDAM_PLUGIN_INTERFACE* plugin_interfac
  * @param idam_plugin_interface
  * @return
  */
-int imas_uda_plugins::MappingPlugin::version(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::version(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     return setReturnDataIntScalar(plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
 }
@@ -122,7 +124,7 @@ int imas_uda_plugins::MappingPlugin::version(IDAM_PLUGIN_INTERFACE* plugin_inter
  * @param idam_plugin_interface
  * @return
  */
-int imas_uda_plugins::MappingPlugin::build_date(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::build_date(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     return setReturnDataString(plugin_interface->data_block, __DATE__, "Plugin build date");
 }
@@ -132,7 +134,7 @@ int imas_uda_plugins::MappingPlugin::build_date(IDAM_PLUGIN_INTERFACE* plugin_in
  * @param idam_plugin_interface
  * @return
  */
-int imas_uda_plugins::MappingPlugin::default_method(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::default_method(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     return setReturnDataString(plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, "Plugin default method");
 }
@@ -142,12 +144,13 @@ int imas_uda_plugins::MappingPlugin::default_method(IDAM_PLUGIN_INTERFACE* plugi
  * @param idam_plugin_interface
  * @return
  */
-int imas_uda_plugins::MappingPlugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    return setReturnDataIntScalar(plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, "Maximum Interface Version");
+    return setReturnDataIntScalar(plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION,
+                                  "Maximum Interface Version");
 }
 
-int imas_uda_plugins::MappingPlugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     REQUEST_BLOCK* request_block = plugin_interface->request_block;
 
@@ -160,7 +163,7 @@ int imas_uda_plugins::MappingPlugin::open(IDAM_PLUGIN_INTERFACE* plugin_interfac
     return 0;
 }
 
-int imas_uda_plugins::MappingPlugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     REQUEST_BLOCK* request_block = plugin_interface->request_block;
 
@@ -223,13 +226,13 @@ char* indices_to_string(const int* indices, size_t num_indices)
     int i;
     for (i = 0; i < num_indices; ++i) {
         auto len = (size_t)snprintf(nullptr, 0, "%s%d;", string, indices[i]);
-        auto temp = (char*)malloc(len+1);
-        snprintf(temp, len+1, "%s%d;", string, indices[i]);
+        auto temp = (char*)malloc(len + 1);
+        snprintf(temp, len + 1, "%s%d;", string, indices[i]);
         free(string);
         string = temp;
     }
 
-    string[strlen(string)-1] = '\0'; // remove last ';'
+    string[strlen(string) - 1] = '\0'; // remove last ';'
     return string;
 }
 
@@ -248,7 +251,7 @@ int convert_IMAS_to_UDS_type(const std::string& type)
     }
 }
 
-int imas_uda_plugins::MappingPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     REQUEST_BLOCK* request_block = plugin_interface->request_block;
 
@@ -284,14 +287,15 @@ int imas_uda_plugins::MappingPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface
 
     int uda_type = convert_IMAS_to_UDS_type(type);
 
-    auto request = boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
-                   % plugin_name % expName % path % shot % indices_string % uda_type;
+    auto request =
+            boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
+            % plugin_name % expName % path % shot % indices_string % uda_type;
     std::cout << request.str() << std::endl;
 
     return callPlugin(plugin_interface->pluginList, request.str().c_str(), plugin_interface);
 }
 
-int imas_uda_plugins::MappingPlugin::getdim(IDAM_PLUGIN_INTERFACE* plugin_interface)
+int MappingPlugin::getdim(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     REQUEST_BLOCK* request_block = plugin_interface->request_block;
 
@@ -311,7 +315,7 @@ int imas_uda_plugins::MappingPlugin::getdim(IDAM_PLUGIN_INTERFACE* plugin_interf
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
 
     const char* user;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);    
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
 
     auto plugin_name = machine_mapping_.plugin(expName);
 
@@ -324,9 +328,12 @@ int imas_uda_plugins::MappingPlugin::getdim(IDAM_PLUGIN_INTERFACE* plugin_interf
 
     int uda_type = UDA_TYPE_INT;
 
-    auto request = boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
-                   % plugin_name % expName % path % shot % indices_string % uda_type;
+    auto request =
+            boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
+            % plugin_name % expName % path % shot % indices_string % uda_type;
     std::cout << request.str() << std::endl;
 
     return callPlugin(plugin_interface->pluginList, request.str().c_str(), plugin_interface);
 }
+
+} // anon namespace

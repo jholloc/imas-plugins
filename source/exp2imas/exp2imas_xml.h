@@ -1,6 +1,7 @@
 #ifndef UDA_PLUGIN_EXP2IMAS_EXP2IMAS_XML_H
 #define UDA_PLUGIN_EXP2IMAS_EXP2IMAS_XML_H
 
+#include <string>
 #include <libxml/xpath.h>
 
 #include <clientserver/udaStructs.h>
@@ -10,6 +11,9 @@
 #else
 #  define XML_FMT_TYPE const xmlChar*
 #endif
+
+namespace uda {
+namespace exp2imas {
 
 typedef struct XMLData {
     char* data;
@@ -26,6 +30,9 @@ typedef struct XMLData {
     int resize;
 } XML_DATA;
 
-int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, int index, XML_DATA* xml_data);
+int execute_xpath_expression(const std::string& filename, const xmlChar* xpathExpr, int index, XML_DATA* xml_data);
+
+}
+}
 
 #endif // UDA_PLUGIN_EXP2IMAS_EXP2IMAS_XML_H

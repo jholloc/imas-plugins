@@ -27,9 +27,9 @@ uda_plugin(
     imas_plugin.h
   EXTRA_INCLUDE_DIRS
     ${Boost_INCLUDE_DIRS}
-    /Users/jhollocombe/Projects/access-layer/lowlevel
+    ${IMAS_LOW_LEVEL_INCLUDE_DIRS}
     ${UDA_CLIENT_INCLUDE_DIRS}
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
-    /Users/jhollocombe/Projects/access-layer/lowlevel/
+    ${IMAS_LOW_LEVEL_LIBRARIES}
 )

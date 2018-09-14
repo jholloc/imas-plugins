@@ -11,24 +11,26 @@
 #include <ual_backend.h>
 #include <ual_lowlevel.h>
 
-static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+namespace {
 
-static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+class IMASPlugin {
+public:
+    int help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int build_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int default_method(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int max_interface_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+};
 
-static int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-
-static int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-
-static int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-
-static int do_openPulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_closePulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_beginAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_endAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_writeData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_readData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_deleteData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_beginArraystructAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+}
 
 int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
@@ -43,23 +45,11 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
 
-    //----------------------------------------------------------------------------------------
-    // Heap Housekeeping
-
-    // Plugin must maintain a list of open file handles and sockets: loop over and close all files and sockets
-    // Plugin must maintain a list of plugin functions called: loop over and reset state and free heap.
-    // Plugin must maintain a list of calls to other plugins: loop over and call each plugin with the housekeeping request
-    // Plugin must destroy lists at end of housekeeping
-
-    // A plugin only has a single instance on a server. For multiple instances, multiple servers are needed.
-    // Plugins can maintain state so recursive calls (on the same server) must respect this.
-    // If the housekeeping action is requested, this must be also applied to all plugins called.
-    // A list must be maintained to register these plugin calls to manage housekeeping.
-    // Calls to plugins must also respect access policy and user authentication policy
-
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    std::string function = request_block->function;
+
+    if (idam_plugin_interface->housekeeping || function == "reset") {
         if (!init) return 0; // Not previously initialised: Nothing to do!
         // Free Heap & reset counters
         init = 0;
@@ -69,58 +59,57 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     //----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_block->function, "init")
-        || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || function == "init" || function == "initialise") {
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise"))
-            return 0;
+        if (function == "init" || function == "initialise") return 0;
     }
 
     //----------------------------------------------------------------------------------------
     // Plugin Functions
     //----------------------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------------------
-    // Standard methods: version, builddate, defaultmethod, maxinterfaceversion
+    IMASPlugin plugin{};
 
-    if (STR_IEQUALS(request_block->function, "help")) {
-        return do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
-        return do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
-        return do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
-        return do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
-        return do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "openPulse")) {
-        return do_openPulse(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "closePulse")) {
-        return do_closePulse(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "beginAction")) {
-        return do_beginAction(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "endAction")) {
-        return do_endAction(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "writeData")) {
-        return do_writeData(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "readData")) {
-        return do_readData(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "deleteData")) {
-        return do_deleteData(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "beginArraystructAction")) {
-        return do_beginArraystructAction(idam_plugin_interface);
+    if (function == "help") {
+        return plugin.help(idam_plugin_interface);
+    } else if (function == "version") {
+        return plugin.version(idam_plugin_interface);
+    } else if (function == "builddate") {
+        return plugin.build_date(idam_plugin_interface);
+    } else if (function == "defaultmethod") {
+        return plugin.default_method(idam_plugin_interface);
+    } else if (function == "maxinterfaceversion") {
+        return plugin.max_interface_version(idam_plugin_interface);
+    } else if (function == "openPulse") {
+        return plugin.open_pulse(idam_plugin_interface);
+    } else if (function == "closePulse") {
+        return plugin.close_pulse(idam_plugin_interface);
+    } else if (function == "beginAction") {
+        return plugin.begin_action(idam_plugin_interface);
+    } else if (function == "endAction") {
+        return plugin.end_action(idam_plugin_interface);
+    } else if (function == "writeData") {
+        return plugin.write_data(idam_plugin_interface);
+    } else if (function == "readData") {
+        return plugin.read_data(idam_plugin_interface);
+    } else if (function == "deleteData") {
+        return plugin.default_method(idam_plugin_interface);
+    } else if (function == "beginArraystructAction") {
+        return plugin.begin_arraystruct_action(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
 }
+
+namespace {
 
 /**
  * Help: A Description of library functionality
  * @param idam_plugin_interface
  * @return
  */
-int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
     const char* desc = "templatePlugin: help = description of this plugin";
@@ -133,7 +122,7 @@ int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  * @param idam_plugin_interface
  * @return
  */
-int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
 }
@@ -143,7 +132,7 @@ int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  * @param idam_plugin_interface
  * @return
  */
-int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::build_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     return setReturnDataString(idam_plugin_interface->data_block, __DATE__, "Plugin build date");
 }
@@ -153,7 +142,7 @@ int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  * @param idam_plugin_interface
  * @return
  */
-int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::default_method(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, "Plugin default method");
 }
@@ -163,12 +152,13 @@ int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  * @param idam_plugin_interface
  * @return
  */
-int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::max_interface_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, "Maximum Interface Version");
+    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION,
+                                  "Maximum Interface Version");
 }
 
-int do_openPulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -205,7 +195,7 @@ int do_openPulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return 0;
 }
 
-int do_closePulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -226,7 +216,7 @@ int do_closePulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return 0;
 }
 
-int do_beginAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -258,7 +248,7 @@ int do_beginAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return 0;
 }
 
-int do_endAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -273,7 +263,7 @@ int do_endAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return 0;
 }
 
-int do_writeData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -305,7 +295,7 @@ int do_writeData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return 0;
 }
 
-int do_readData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -334,7 +324,7 @@ int do_readData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return 0;
 }
 
-int do_deleteData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -369,7 +359,7 @@ int do_deleteData(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return 0;
 }
 
-static bool is_integer(const std::string& string)
+bool is_integer(const std::string& string)
 {
     if (string.empty()) {
         return false;
@@ -379,7 +369,8 @@ static bool is_integer(const std::string& string)
     return end != nullptr && *end == '\0';
 }
 
-ArraystructContext* build_arraystruct_context(const char* path, const char* timebase, const PulseContext& ctx, const std::string& dataobject, int access)
+ArraystructContext* build_arraystruct_context(const char* path, const char* timebase, const PulseContext& ctx,
+                                              const std::string& dataobject, int access)
 {
     std::vector<std::string> tokens;
 
@@ -412,7 +403,7 @@ ArraystructContext* build_arraystruct_context(const char* path, const char* time
     return arrCtx;
 }
 
-int do_beginArraystructAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -454,4 +445,6 @@ int do_beginArraystructAction(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
     return 0;
+}
+
 }

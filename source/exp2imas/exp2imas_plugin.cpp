@@ -15,6 +15,9 @@
 
 #include "exp2imas_mds.h"
 #include "exp2imas_xml.h"
+#include "exp2imas_mapping_files.h"
+
+namespace {
 
 typedef enum MappingType {
     NONE,
@@ -34,17 +37,17 @@ typedef struct XMLMapping {
     const xmlChar* dim;
 } XML_MAPPING;
 
-static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-static char* getMappingFileName(const char* IDSversion, const char* element);
-static char* getMachineMappingFileName(const char* experiment, const char* element);
-static XML_MAPPING* getMappingValue(const char* mapping_file_name, const char* request);
-static char* deblank(char* token);
-static xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_indices);
+int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::string& request);
+char* deblank(char* token);
+xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_indices);
+
+} // anon namespace
 
 #ifndef strndup
 
@@ -136,6 +139,8 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return err;
 }
 
+namespace {
+
 // Help: A Description of library functionality
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
@@ -180,15 +185,15 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
 {
     xmlChar* indexedXpathExpr = xmlStrdup(xpathExpr);
 
-    if ((*indices) == NULL) {
+    if ((*indices) == nullptr) {
         return indexedXpathExpr;
     }
 
     const xmlChar* p;
     size_t n = 0;
 
-    while ((p = xmlStrchr(indexedXpathExpr, '#')) != NULL) {
-        int len = snprintf(NULL, 0, "%d", (*indices)[n]);
+    while ((p = xmlStrchr(indexedXpathExpr, '#')) != nullptr) {
+        int len = snprintf(nullptr, 0, "%d", (*indices)[n]);
         xmlChar num_str[len + 1];
         xmlStrPrintf(num_str, len + 1, (XML_FMT_TYPE)"%d", (*indices)[n]);
         ++n;
@@ -206,7 +211,7 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
 
     if (n == *n_indices) {
         free(*indices);
-        *indices = NULL;
+        *indices = nullptr;
         *n_indices = 0;
     } else {
         int* temp = (int*)malloc((*n_indices - n) * sizeof(int));
@@ -222,39 +227,38 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
     return indexedXpathExpr;
 }
 
-static int handle_constant(DATA_BLOCK* data_block, int dtype, const xmlChar* xPath)
+int handle_constant(DATA_BLOCK* data_block, int dtype, const xmlChar* xPath)
 {
     switch (dtype) {
         case UDA_TYPE_SHORT:
-            setReturnDataShortScalar(data_block, (short)strtol((char*)xPath, NULL, 10), NULL);
+            setReturnDataShortScalar(data_block, (short)strtol((char*)xPath, nullptr, 10), nullptr);
             break;
         case UDA_TYPE_LONG:
-            setReturnDataLongScalar(data_block, strtol((char*)xPath, NULL, 10), NULL);
+            setReturnDataLongScalar(data_block, strtol((char*)xPath, nullptr, 10), nullptr);
             break;
         case UDA_TYPE_FLOAT:
-            setReturnDataFloatScalar(data_block, strtof((char*)xPath, NULL), NULL);
+            setReturnDataFloatScalar(data_block, strtof((char*)xPath, nullptr), nullptr);
             break;
         case UDA_TYPE_DOUBLE:
-            setReturnDataDoubleScalar(data_block, strtod((char*)xPath, NULL), NULL);
+            setReturnDataDoubleScalar(data_block, strtod((char*)xPath, nullptr), nullptr);
             break;
         case UDA_TYPE_INT:
-            setReturnDataIntScalar(data_block, (int)strtol((char*)xPath, NULL, 10), NULL);
+            setReturnDataIntScalar(data_block, (int)strtol((char*)xPath, nullptr, 10), nullptr);
             break;
         case UDA_TYPE_STRING:
-            setReturnDataString(data_block, (char*)xPath, NULL);
+            setReturnDataString(data_block, (char*)xPath, nullptr);
             break;
-        default:
-            RAISE_PLUGIN_ERROR("unknown dtype given to plugin");
+        default: RAISE_PLUGIN_ERROR("unknown dtype given to plugin");
     }
     return 0;
 }
 
-static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_file_name, const xmlChar* xPath,
+int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                          const XML_MAPPING* mapping, int* indices, size_t nindices)
 {
     // Executing XPath
 
-    XML_DATA xml_data;
+    uda::exp2imas::XML_DATA xml_data;
 
     int status = execute_xpath_expression(experiment_mapping_file_name, xPath, mapping->index, &xml_data);
     if (status != 0) {
@@ -262,8 +266,8 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
     }
 
     int resize = 0;
-    if (mapping->dim != NULL) {
-        XML_DATA resize_data;
+    if (mapping->dim != nullptr) {
+        uda::exp2imas::XML_DATA resize_data;
         status = execute_xpath_expression(experiment_mapping_file_name, mapping->dim, mapping->index, &resize_data);
         if (status != 0) {
             RAISE_PLUGIN_ERROR("Failed to get resize data");
@@ -277,7 +281,7 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
         if (nindices != 1 || indices[0] < 1) {
             RAISE_PLUGIN_ERROR("Cannot use resize data without specified indices");
         }
-        resize = ((int*)resize_data.data)[indices[0]-1];
+        resize = ((int*)resize_data.data)[indices[0] - 1];
     }
 
     if (xml_data.rank > 1 && mapping->index != -1) {
@@ -295,11 +299,11 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
             size_t shape[] = { (size_t)xml_data.dims[0] };
 
             if (xml_data.data_type == UDA_TYPE_DOUBLE) {
-                setReturnDataDoubleArray(data_block, (double*)xml_data.data, 1, shape, NULL);
+                setReturnDataDoubleArray(data_block, (double*)xml_data.data, 1, shape, nullptr);
             } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
-                setReturnDataFloatArray(data_block, (float*)xml_data.data, 1, shape, NULL);
+                setReturnDataFloatArray(data_block, (float*)xml_data.data, 1, shape, nullptr);
             } else if (xml_data.data_type == UDA_TYPE_INT) {
-                setReturnDataIntArray(data_block, (int*)xml_data.data, 1, shape, NULL);
+                setReturnDataIntArray(data_block, (int*)xml_data.data, 1, shape, nullptr);
             } else {
                 RAISE_PLUGIN_ERROR("Unsupported data type");
             }
@@ -314,21 +318,21 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
                     for (i = 0; i < shape[0]; ++i) {
                         vals[i] = ((double*)xml_data.data)[idx + i * xml_data.dims[1]];
                     }
-                    setReturnDataDoubleArray(data_block, vals, 1, shape, NULL);
+                    setReturnDataDoubleArray(data_block, vals, 1, shape, nullptr);
                 } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
                     float vals[shape[0]];
                     int i;
                     for (i = 0; i < shape[0]; ++i) {
                         vals[i] = ((float*)xml_data.data)[idx + i * xml_data.dims[1]];
                     }
-                    setReturnDataFloatArray(data_block, vals, 1, shape, NULL);
+                    setReturnDataFloatArray(data_block, vals, 1, shape, nullptr);
                 } else if (xml_data.data_type == UDA_TYPE_INT) {
                     int vals[shape[0]];
                     int i;
                     for (i = 0; i < shape[0]; ++i) {
                         vals[i] = ((int*)xml_data.data)[idx + i * xml_data.dims[1]];
                     }
-                    setReturnDataIntArray(data_block, vals, 1, shape, NULL);
+                    setReturnDataIntArray(data_block, vals, 1, shape, nullptr);
                 } else {
                     RAISE_PLUGIN_ERROR("Unsupported data type");
                 }
@@ -337,11 +341,11 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
                 int idx = (indices[0] - 1) * xml_data.dims[1];
 
                 if (xml_data.data_type == UDA_TYPE_DOUBLE) {
-                    setReturnDataDoubleArray(data_block, &((double*)xml_data.data)[idx], 1, shape, NULL);
+                    setReturnDataDoubleArray(data_block, &((double*)xml_data.data)[idx], 1, shape, nullptr);
                 } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
-                    setReturnDataFloatArray(data_block, &((float*)xml_data.data)[idx], 1, shape, NULL);
+                    setReturnDataFloatArray(data_block, &((float*)xml_data.data)[idx], 1, shape, nullptr);
                 } else if (xml_data.data_type == UDA_TYPE_INT) {
-                    setReturnDataIntArray(data_block, &((int*)xml_data.data)[idx], 1, shape, NULL);
+                    setReturnDataIntArray(data_block, &((int*)xml_data.data)[idx], 1, shape, nullptr);
                 } else {
                     RAISE_PLUGIN_ERROR("Unsupported data type");
                 }
@@ -368,7 +372,7 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
                         ++n;
                     }
                 }
-                setReturnDataIntArray(data_block, data, 2, shape, NULL);
+                setReturnDataIntArray(data_block, data, 2, shape, nullptr);
             } else {
                 RAISE_PLUGIN_ERROR("Unsupported data type");
             }
@@ -386,30 +390,30 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
 
         if (xml_data.data_type == UDA_TYPE_DOUBLE) {
             double* ddata = (double*)xml_data.data;
-            setReturnDataDoubleScalar(data_block, ddata[data_idx] + mapping->adjust, NULL);
+            setReturnDataDoubleScalar(data_block, ddata[data_idx] + mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
             float* fdata = (float*)xml_data.data;
-            setReturnDataFloatScalar(data_block, fdata[data_idx] + mapping->adjust, NULL);
+            setReturnDataFloatScalar(data_block, fdata[data_idx] + mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_LONG) {
             long* ldata = (long*)xml_data.data;
-            setReturnDataLongScalar(data_block, ldata[data_idx] + mapping->adjust, NULL);
+            setReturnDataLongScalar(data_block, ldata[data_idx] + mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_INT) {
             int* idata = (int*)xml_data.data;
-            setReturnDataIntScalar(data_block, idata[data_idx] + mapping->adjust, NULL);
+            setReturnDataIntScalar(data_block, idata[data_idx] + mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_SHORT) {
             short* sdata = (short*)xml_data.data;
-            setReturnDataShortScalar(data_block, sdata[data_idx] + (short)mapping->adjust, NULL);
+            setReturnDataShortScalar(data_block, sdata[data_idx] + (short)mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_STRING) {
             char** sdata = (char**)xml_data.data;
-            if (sdata == NULL || sdata[1] == NULL) {
-                setReturnDataString(data_block, "", NULL);
+            if (sdata == nullptr || sdata[1] == nullptr) {
+                setReturnDataString(data_block, "", nullptr);
             } else {
-                setReturnDataString(data_block, deblank(sdata[data_idx]), NULL);
+                setReturnDataString(data_block, deblank(sdata[data_idx]), nullptr);
                 FreeSplitStringTokens((char***)&xml_data.data);
             }
         } else {
@@ -420,19 +424,19 @@ static int handle_static(DATA_BLOCK* data_block, const char* experiment_mapping_
     return 0;
 }
 
-static size_t get_signal_name_index(const XML_DATA* xml_data, const int* indices, size_t nindices)
+size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int* indices, size_t nindices)
 {
     char** signal_names = (char**)xml_data->data;
 
-    size_t* name_indices = NULL;
+    size_t* name_indices = nullptr;
 
     size_t idx = 0;
     size_t signal_names_idx = 0;
 
-    while (signal_names[signal_names_idx] != NULL) {
-        int size = (xml_data->sizes == NULL || xml_data->sizes[signal_names_idx] == 0)
-            ? 1
-            : xml_data->sizes[signal_names_idx];
+    while (signal_names[signal_names_idx] != nullptr) {
+        int size = (xml_data->sizes == nullptr || xml_data->sizes[signal_names_idx] == 0)
+                   ? 1
+                   : xml_data->sizes[signal_names_idx];
 
         name_indices = (size_t*)realloc(name_indices, (idx + size) * sizeof(size_t));
 
@@ -462,14 +466,14 @@ static size_t get_signal_name_index(const XML_DATA* xml_data, const int* indices
     return name_index;
 }
 
-static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping_file_name, const xmlChar* xPath,
+int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                           XML_MAPPING* mapping,
                           const char* experiment, const char* element, int shot, const int* indices,
                           size_t nindices)
 {
     // DYNAMIC case
 
-    XML_DATA xml_data;
+    uda::exp2imas::XML_DATA xml_data;
 
     int status = execute_xpath_expression(experiment_mapping_file_name, xPath, mapping->index, &xml_data);
     if (status != 0) {
@@ -479,7 +483,7 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
     if (xml_data.data_type == UDA_TYPE_STRING) {
 
         free(data_block->dims);
-        data_block->dims = NULL;
+        data_block->dims = nullptr;
 
         char** signal_names = (char**)xml_data.data;
 
@@ -490,16 +494,16 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
         int name_offset = 0;
         size_t i;
         for (i = 0; i < name_index; ++i) {
-            int size = (xml_data.sizes == NULL || xml_data.sizes[i] == 0) ? 1 : xml_data.sizes[i];
+            int size = (xml_data.sizes == nullptr || xml_data.sizes[i] == 0) ? 1 : xml_data.sizes[i];
             name_offset += size;
         }
 
         {
-            float coefa = (xml_data.coefas != NULL) ? xml_data.coefas[name_index] : 1.0f;
-            float coefb = (xml_data.coefbs != NULL) ? xml_data.coefbs[name_index] : 0.0f;
+            float coefa = (xml_data.coefas != nullptr) ? xml_data.coefas[name_index] : 1.0f;
+            float coefb = (xml_data.coefbs != nullptr) ? xml_data.coefbs[name_index] : 0.0f;
 
-            float* time = NULL;
-            float* fdata = NULL;
+            float* time = nullptr;
+            float* fdata = nullptr;
             int len = -1;
             int time_len = -1;
 
@@ -511,10 +515,10 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
                 return status;
             }
 
-            int size = (xml_data.sizes == NULL || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
+            int size = (xml_data.sizes == nullptr || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
             data_n = len / size;
 
-            float** data_arrays = NULL;
+            float** data_arrays = nullptr;
             size_t n_arrays = 0;
 
             for (i = 0; i < size; ++i) {
@@ -549,7 +553,7 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
             size_t sz = data_n * sizeof(float);
             data_block->data = (char*)malloc(sz);
 
-            if (data_arrays != NULL) {
+            if (data_arrays != nullptr) {
                 if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
                     memcpy(data_block->data, (char*)data_arrays[0], sz);
                 } else if (nindices > 0 && indices[0] > 0) {
@@ -574,7 +578,7 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
         data_block->dims[0].data_type = UDA_TYPE_FLOAT;
         data_block->dims[0].dim_n = data_n;
         data_block->dims[0].compressed = 0;
-        data_block->dims[0].dim = (char*)NULL;
+        data_block->dims[0].dim = (char*)nullptr;
 
         strcpy(data_block->data_label, "");
         strcpy(data_block->data_units, "");
@@ -586,11 +590,7 @@ static int handle_dynamic(DATA_BLOCK* data_block, const char* experiment_mapping
     return 0;
 }
 
-#ifndef MAX
-#  define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#endif
-
-static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_file_name, const xmlChar* xPath,
+int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                         XML_MAPPING* mapping,
                         const char* experiment, const char* element, int shot, const int* indices,
                         size_t nindices)
@@ -599,23 +599,25 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
 
     char* abserror = StringReplace((const char*)xPath, "/value/", "/abserror/");
 
-    XML_DATA xml_abserror;
+    uda::exp2imas::XML_DATA xml_abserror;
 
-    int status = execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)abserror, mapping->index, &xml_abserror);
+    int status = execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)abserror, mapping->index,
+                                          &xml_abserror);
     if (status != 0) {
-        xml_abserror.values = NULL;
+        xml_abserror.values = nullptr;
     }
 
     char* relerror = StringReplace((const char*)xPath, "/value/", "/relerror/");
 
-    XML_DATA xml_relerror;
+    uda::exp2imas::XML_DATA xml_relerror;
 
-    status = execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)relerror, mapping->index, &xml_relerror);
+    status = execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)relerror, mapping->index,
+                                      &xml_relerror);
     if (status != 0) {
-        xml_relerror.values = NULL;
+        xml_relerror.values = nullptr;
     }
 
-    XML_DATA xml_data;
+    uda::exp2imas::XML_DATA xml_data;
 
     status = execute_xpath_expression(experiment_mapping_file_name, xPath, mapping->index, &xml_data);
     if (status != 0) {
@@ -627,17 +629,17 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
     }
 
     free(data_block->dims);
-    data_block->dims = NULL;
+    data_block->dims = nullptr;
 
     char** signal_names = (char**)xml_data.data;
 
-    char** abserror_signal_names = NULL;
-    if (xml_abserror.data != NULL) {
+    char** abserror_signal_names = nullptr;
+    if (xml_abserror.data != nullptr) {
         abserror_signal_names = (char**)xml_abserror.data;
     }
 
-    char** relerror_signal_names = NULL;
-    if (xml_relerror.data != NULL) {
+    char** relerror_signal_names = nullptr;
+    if (xml_relerror.data != nullptr) {
         relerror_signal_names = (char**)xml_relerror.data;
     }
 
@@ -648,30 +650,30 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
     int name_offset = 0;
     size_t i;
     for (i = 0; i < name_index; ++i) {
-        int size = (xml_data.sizes == NULL || xml_data.sizes[i] == 0) ? 1 : xml_data.sizes[i];
+        int size = (xml_data.sizes == nullptr || xml_data.sizes[i] == 0) ? 1 : xml_data.sizes[i];
         name_offset += size;
     }
 
     {
-        float coefa = (xml_data.coefas != NULL) ? xml_data.coefas[name_index] : 1.0f;
-        float coefb = (xml_data.coefbs != NULL) ? xml_data.coefbs[name_index] : 0.0f;
+        float coefa = (xml_data.coefas != nullptr) ? xml_data.coefas[name_index] : 1.0f;
+        float coefb = (xml_data.coefbs != nullptr) ? xml_data.coefbs[name_index] : 0.0f;
 
-        float* fdata = NULL;
-        float* fabserror = NULL;
-        float* frelerror = NULL;
+        float* fdata = nullptr;
+        float* fabserror = nullptr;
+        float* frelerror = nullptr;
         int len = -1;
 
         char* signalName = signal_names[name_index];
-        status = mds_get(experiment, signalName, shot, NULL, &fdata, &len, NULL, 0);
+        status = mds_get(experiment, signalName, shot, nullptr, &fdata, &len, nullptr, 0);
 
         if (status != 0) {
             return status;
         }
 
-        if (StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != NULL) {
+        if (StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr) {
             signalName = abserror_signal_names[name_index];
             int abslen = -1;
-            status = mds_get(experiment, signalName, shot, NULL, &fabserror, &abslen, NULL, 0);
+            status = mds_get(experiment, signalName, shot, nullptr, &fabserror, &abslen, nullptr, 0);
 
             if (status != 0) {
                 return status;
@@ -682,10 +684,10 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
             }
         }
 
-        if (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != NULL) {
+        if (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr) {
             signalName = relerror_signal_names[name_index];
             int rellen = -1;
-            status = mds_get(experiment, signalName, shot, NULL, &frelerror, &rellen, NULL, 0);
+            status = mds_get(experiment, signalName, shot, nullptr, &frelerror, &rellen, nullptr, 0);
 
             if (status != 0) {
                 return status;
@@ -696,22 +698,22 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
             }
         }
 
-        int size = (xml_data.sizes == NULL || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
+        int size = (xml_data.sizes == nullptr || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
         data_n = len / size;
 
-        float** error_arrays = NULL;
+        float** error_arrays = nullptr;
         size_t n_arrays = 0;
 
         for (i = 0; i < size; ++i) {
             error_arrays = (float**)realloc(error_arrays, (n_arrays + 1) * sizeof(float*));
 
-            double abs = xml_abserror.values != NULL ? xml_abserror.values[i + name_offset] : 0.0;
-            double rel = xml_relerror.values != NULL ? xml_relerror.values[i + name_offset] : 0.0;
+            double abs = xml_abserror.values != nullptr ? xml_abserror.values[i + name_offset] : 0.0;
+            double rel = xml_relerror.values != nullptr ? xml_relerror.values[i + name_offset] : 0.0;
 
-            float abs_coefa = (xml_abserror.coefas != NULL) ? xml_abserror.coefas[i + name_offset] : 1.0f;
-            float abs_coefb = (xml_abserror.coefbs != NULL) ? xml_abserror.coefbs[i + name_offset] : 0.0f;
-            float rel_coefa = (xml_relerror.coefas != NULL) ? xml_relerror.coefas[i + name_offset] : 1.0f;
-            float rel_coefb = (xml_relerror.coefbs != NULL) ? xml_relerror.coefbs[i + name_offset] : 0.0f;
+            float abs_coefa = (xml_abserror.coefas != nullptr) ? xml_abserror.coefas[i + name_offset] : 1.0f;
+            float abs_coefb = (xml_abserror.coefbs != nullptr) ? xml_abserror.coefbs[i + name_offset] : 0.0f;
+            float rel_coefa = (xml_relerror.coefas != nullptr) ? xml_relerror.coefas[i + name_offset] : 1.0f;
+            float rel_coefb = (xml_relerror.coefbs != nullptr) ? xml_relerror.coefbs[i + name_offset] : 0.0f;
 
             abs = abs_coefa * abs + abs_coefb;
             rel = rel_coefa * rel + rel_coefb;
@@ -724,23 +726,23 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
 
                 double error;
 
-                if ((StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != NULL)
-                    || (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != NULL)) {
-                    if (abserror_signal_names != NULL && relerror_signal_names != NULL) {
+                if ((StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr)
+                    || (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr)) {
+                    if (abserror_signal_names != nullptr && relerror_signal_names != nullptr) {
                         double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
                         double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
-                        error =  MAX(fabs, frel * error_arrays[n_arrays][j]);
-                    } else if (abserror_signal_names != NULL) {
+                        error = std::max(fabs, frel * error_arrays[n_arrays][j]);
+                    } else if (abserror_signal_names != nullptr) {
                         error = abs_coefa * fabserror[i + j * size] + abs_coefb;
                     } else {
                         error = rel_coefa * frelerror[i + j * size] + rel_coefb;
                     }
                 } else {
-                    if (xml_abserror.values != NULL && xml_relerror.values != NULL) {
-                        error = MAX(abs, rel * error_arrays[n_arrays][j]);
-                    } else if (xml_abserror.values != NULL) {
+                    if (xml_abserror.values != nullptr && xml_relerror.values != nullptr) {
+                        error = std::max(abs, rel * error_arrays[n_arrays][j]);
+                    } else if (xml_abserror.values != nullptr) {
                         error = abs;
-                    } else if (xml_relerror.values != NULL) {
+                    } else if (xml_relerror.values != nullptr) {
                         error = rel * error_arrays[n_arrays][j];
                     } else {
                         return -1;
@@ -748,9 +750,9 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
                 }
 
                 if (StringEndsWith(element, "lower")) {
-                    error_arrays[n_arrays][j] -= error / 2;
+                    error_arrays[n_arrays][j] -= error;
                 } else {
-                    error_arrays[n_arrays][j] += error / 2;
+                    error_arrays[n_arrays][j] += error;
                 }
             }
 
@@ -766,7 +768,7 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
         size_t sz = data_n * sizeof(float);
         data_block->data = (char*)malloc(sz);
 
-        if (error_arrays != NULL) {
+        if (error_arrays != nullptr) {
             if (nindices > 0 && indices[0] > 0) {
                 memcpy(data_block->data, (char*)error_arrays[indices[0] - 1 - name_offset], sz);
             } else {
@@ -789,7 +791,7 @@ static int handle_error(DATA_BLOCK* data_block, const char* experiment_mapping_f
     data_block->dims[0].data_type = UDA_TYPE_FLOAT;
     data_block->dims[0].dim_n = data_n;
     data_block->dims[0].compressed = 0;
-    data_block->dims[0].dim = (char*)NULL;
+    data_block->dims[0].dim = (char*)nullptr;
 
     strcpy(data_block->data_label, "");
     strcpy(data_block->data_units, "");
@@ -807,52 +809,52 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     initDataBlock(data_block);
 
     data_block->rank = 0;
-    data_block->dims = NULL;
+    data_block->dims = nullptr;
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    const char* element = NULL;
+    const char* element = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
 
     int shot = 0;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
 
-    int* indices = NULL;
+    int* indices = nullptr;
     size_t nindices = 0;
     FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
 
     if (nindices == 1 && indices[0] == -1) {
         nindices = 0;
         free(indices);
-        indices = NULL;
+        indices = nullptr;
     }
 
     int dtype = 0;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
 
-    const char* IDS_version = NULL;
+    const char* IDS_version = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, IDS_version);
 
-    const char* experiment = NULL;
+    const char* experiment = nullptr;
     FIND_STRING_VALUE(request_block->nameValueList, experiment);
 
     // keep old way of passing experiment until IMAS plugin has been updated
-    if (experiment == NULL) {
+    if (experiment == nullptr) {
         experiment = request_block->archive;
     }
 
     // Search mapping value and request type (static or dynamic)
-    char* experiment_mapping_file_name = getMachineMappingFileName(experiment, element);
-    char* mapping_file_name = getMappingFileName(IDS_version, element);
+    std::string experiment_mapping_file_name = uda::exp2imas::get_machine_mapping_filename(experiment, element, shot);
+    std::string mapping_file_name = uda::exp2imas::get_mapping_filename(IDS_version, element);
 
     XML_MAPPING* mapping = getMappingValue(mapping_file_name, element);
-    if (mapping == NULL) {
+    if (mapping == nullptr) {
         return -1;
     }
 
     xmlChar* xPath = insertNodeIndices(mapping->value, &indices, &nindices);
 
-    if (xPath == NULL) {
+    if (xPath == nullptr) {
         return -1;
     }
 
@@ -866,10 +868,12 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             err = handle_static(data_block, experiment_mapping_file_name, xPath, mapping, indices, nindices);
             break;
         case DYNAMIC:
-            err = handle_dynamic(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, indices, nindices);
+            err = handle_dynamic(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot,
+                                 indices, nindices);
             break;
         case ERROR:
-            err = handle_error(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, indices, nindices);
+            err = handle_error(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot,
+                               indices, nindices);
             break;
         default:
             free(xPath);
@@ -878,40 +882,6 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     free(xPath);
     return err;
-}
-
-char* getMappingFileName(const char* IDSversion, const char* element)
-{
-    static char* dir = NULL;
-
-    if (dir == NULL) {
-        dir = getenv("UDA_EXP2IMAS_MAPPING_FILE_DIRECTORY");
-    }
-
-    char* slash = strchr(element, '/');
-    char* token = strndup(element, slash - element);
-
-    char* name = FormatString("%s/IMAS_mapping_%s.xml", dir, token);
-    free(token);
-
-    return name;
-}
-
-char* getMachineMappingFileName(const char* experiment, const char* element)
-{
-    static char* dir = NULL;
-
-    if (dir == NULL) {
-        dir = getenv("UDA_EXP2IMAS_MAPPING_FILE_DIRECTORY");
-    }
-
-    char* slash = strchr(element, '/');
-    char* token = strndup(element, slash - element);
-
-    char* name = FormatString("%s/%s_%s.xml", dir, experiment, token);
-    free(token);
-
-    return name;
 }
 
 xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, const char* attribute)
@@ -927,20 +897,20 @@ xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, co
      */
     xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(xpath_expr, xpath_ctx);
 
-    if (xpath_obj == NULL) {
+    if (xpath_obj == nullptr) {
         addIdamError(CODEERRORTYPE, __func__, 999, "unable to evaluate xpath expression");
         UDA_LOG(UDA_LOG_ERROR, "unable to evaluate xpath expression \"%s\"\n", xpath_expr);
         free(xpath_expr);
-        return NULL;
+        return nullptr;
     }
 
     free(xpath_expr);
 
     xmlNodeSetPtr nodes = xpath_obj->nodesetval;
 
-    xmlNodePtr current_node = NULL;
+    xmlNodePtr current_node = nullptr;
 
-    if (nodes != NULL && nodes->nodeNr > 0) {
+    if (nodes != nullptr && nodes->nodeNr > 0) {
         current_node = nodes->nodeTab[0];
         current_node = current_node->children;
         xmlChar* content = xmlStrdup(current_node->content);
@@ -948,70 +918,70 @@ xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, co
         return content;
     } else {
         xmlXPathFreeObject(xpath_obj);
-        return NULL;
+        return nullptr;
     }
 }
 
-XML_MAPPING* getMappingValue(const char* mapping_file_name, const char* request)
+XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::string& request)
 {
-    static const char* file_name = NULL;
-    static xmlDocPtr doc = NULL;
-    static xmlXPathContextPtr xpath_ctx = NULL;
+    static std::string cached_filename = {};
+    static xmlDocPtr doc = nullptr;
+    static xmlXPathContextPtr xpath_ctx = nullptr;
 
-    if (file_name == NULL) {
+    if (cached_filename.empty()) {
         // store the file name of the currently loaded XML file
-        file_name = mapping_file_name;
+        cached_filename = mapping_filename;
     }
 
-    if (!StringEquals(file_name, mapping_file_name)) {
+    if (cached_filename != mapping_filename) {
         // clear the file so we reload
         xmlXPathFreeContext(xpath_ctx);
         xmlFreeDoc(doc);
 
-        doc = NULL;
-        xpath_ctx = NULL;
+        doc = nullptr;
+        xpath_ctx = nullptr;
 
-        file_name = mapping_file_name;
+        cached_filename = mapping_filename;
     }
 
-    if (doc == NULL) {
+    if (doc == nullptr) {
         /*
          * Load XML document
          */
-        doc = xmlParseFile(mapping_file_name);
-        if (doc == NULL) {
+        doc = xmlParseFile(mapping_filename.c_str());
+        if (doc == nullptr) {
             addIdamError(CODEERRORTYPE, __func__, 999, "unable to parse file");
-            UDA_LOG(UDA_LOG_ERROR, "unable to parse file \"%s\"\n", mapping_file_name);
-            return NULL;
+            UDA_LOG(UDA_LOG_ERROR, "unable to parse file \"%s\"\n", mapping_filename.c_str());
+            return nullptr;
         }
     }
 
-    if (xpath_ctx == NULL) {
+    if (xpath_ctx == nullptr) {
         /*
          * Create xpath evaluation context
          */
         xpath_ctx = xmlXPathNewContext(doc);
-        if (xpath_ctx == NULL) {
+        if (xpath_ctx == nullptr) {
             addIdamError(CODEERRORTYPE, __func__, 999, "unable to create new XPath context");
-            UDA_LOG(UDA_LOG_ERROR, "unable to create new XPath context\n", mapping_file_name);
-            return NULL;
+            UDA_LOG(UDA_LOG_ERROR, "unable to create new XPath context\n", mapping_filename.c_str());
+            return nullptr;
         }
     }
 
     XML_MAPPING* mapping = (XML_MAPPING*)calloc(1, sizeof(XML_MAPPING));
     mapping->index = -1;
 
-    xmlChar* value = xmlAttributeValue(xpath_ctx, request, "value");
-    if (value != NULL) {
+    xmlChar* value = xmlAttributeValue(xpath_ctx, request.c_str(), "value");
+    if (value != nullptr) {
         mapping->value = value;
     } else {
         addIdamError(CODEERRORTYPE, __func__, 999, "no result on XPath request, no key attribute defined?");
-        return NULL;
+        return nullptr;
     }
 
-    char* type_str = (char*)xmlAttributeValue(xpath_ctx, request, "type");
+    char* type_str = (char*)xmlAttributeValue(xpath_ctx, request.c_str(), "type");
 
-    if (type_str == NULL) {
+    if (type_str == nullptr) {
         mapping->request_type = NONE;
     } else if (STR_IEQUALS(type_str, "constant")) {
         mapping->request_type = CONSTANT;
@@ -1025,37 +995,37 @@ XML_MAPPING* getMappingValue(const char* mapping_file_name, const char* request)
         addIdamError(CODEERRORTYPE, __func__, 999, "unknown mapping type");
         UDA_LOG(UDA_LOG_ERROR, "unknown mapping type \"%s\"\n", type_str);
         free(mapping);
-        return NULL;
+        return nullptr;
     }
 
     free(type_str);
 
-    xmlChar* index = xmlAttributeValue(xpath_ctx, request, "index");
-    if (index != NULL) {
-        mapping->index = (int)strtol((char*)index, NULL, 10);
+    xmlChar* index = xmlAttributeValue(xpath_ctx, request.c_str(), "index");
+    if (index != nullptr) {
+        mapping->index = (int)strtol((char*)index, nullptr, 10);
         free(index);
     }
 
-    xmlChar* adjust = xmlAttributeValue(xpath_ctx, request, "adjust");
-    if (adjust != NULL) {
-        mapping->adjust = (int)strtol((char*)adjust, NULL, 10);
+    xmlChar* adjust = xmlAttributeValue(xpath_ctx, request.c_str(), "adjust");
+    if (adjust != nullptr) {
+        mapping->adjust = (int)strtol((char*)adjust, nullptr, 10);
         free(adjust);
     }
 
-    xmlChar* flatten = xmlAttributeValue(xpath_ctx, request, "flatten");
-    if (flatten != NULL) {
+    xmlChar* flatten = xmlAttributeValue(xpath_ctx, request.c_str(), "flatten");
+    if (flatten != nullptr) {
         mapping->flatten = true;
         free(flatten);
     }
 
     mapping->slice_dim = -1;
-    xmlChar* slice_dim = xmlAttributeValue(xpath_ctx, request, "slice_dim");
-    if (slice_dim != NULL) {
-        mapping->slice_dim = (int)strtol((char*)slice_dim, NULL, 10);
+    xmlChar* slice_dim = xmlAttributeValue(xpath_ctx, request.c_str(), "slice_dim");
+    if (slice_dim != nullptr) {
+        mapping->slice_dim = (int)strtol((char*)slice_dim, nullptr, 10);
         free(slice_dim);
     }
 
-    mapping->dim = xmlAttributeValue(xpath_ctx, request, "dim");
+    mapping->dim = xmlAttributeValue(xpath_ctx, request.c_str(), "dim");
 
     return mapping;
 }
@@ -1074,3 +1044,5 @@ char* deblank(char* token)
     output[j] = '\0';
     return output;
 }
+
+} // anon namespace

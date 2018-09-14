@@ -25,14 +25,14 @@
   <!--<mapping key="thomson_scattering/channel/#/position/phi_error_lower" value="" type=""/>-->
   <!--<mapping key="thomson_scattering/channel/#/position/phi_error_index" value="" type=""/>-->
   <mapping key="thomson_scattering/channel/#/t_e/data" value="//tsdiag/measure/te/value/name" type="dynamic"/>
-  <!--<mapping key="thomson_scattering/channel/#/t_e/data_error_upper" value="" type=""/>-->
-  <!--<mapping key="thomson_scattering/channel/#/t_e/data_error_lower" value="" type=""/>-->
-  <!--<mapping key="thomson_scattering/channel/#/t_e/data_error_index" value="" type=""/>-->
+  <mapping key="thomson_scattering/channel/#/t_e/data_error_upper" value="//tsdiag/measure/te/value/name" type="error"/>
+  <mapping key="thomson_scattering/channel/#/t_e/data_error_lower" value="//tsdiag/measure/te/value/name" type="error"/>
+  <mapping key="thomson_scattering/channel/#/t_e/data_error_index" value="0" type="constant"/>
   <mapping key="thomson_scattering/channel/#/t_e/time" value="//tsdiag/measure/te/value/name" type="dynamic"/>
   <mapping key="thomson_scattering/channel/#/n_e/data" value="//tsdiag/measure/ne/value/name" type="dynamic"/>
-  <!--<mapping key="thomson_scattering/channel/#/n_e/data_error_upper" value="" type=""/>-->
-  <!--<mapping key="thomson_scattering/channel/#/n_e/data_error_lower" value="" type=""/>-->
-  <!--<mapping key="thomson_scattering/channel/#/n_e/data_error_index" value="" type=""/>-->
+  <mapping key="thomson_scattering/channel/#/n_e/data_error_upper" value="//tsdiag/measure/ne/value/name" type="error"/>
+  <mapping key="thomson_scattering/channel/#/n_e/data_error_lower" value="//tsdiag/measure/ne/value/name" type="error"/>
+  <mapping key="thomson_scattering/channel/#/n_e/data_error_index" value="0" type="constant"/>
   <mapping key="thomson_scattering/channel/#/n_e/time" value="//tsdiag/measure/ne/value/name" type="dynamic"/>
 
   <!--

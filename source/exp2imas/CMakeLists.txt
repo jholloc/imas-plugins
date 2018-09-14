@@ -3,6 +3,7 @@ find_package( MDSplus QUIET )
 find_package( LibSSH QUIET )
 find_package( GTK3 QUIET )
 find_package( UDA REQUIRED )
+find_package( Boost REQUIRED filesystem )
 
 if( NOT MDSPLUS_FOUND )
   message( WARNING "mdsplus not found - skipping exp2imas plugin" )
@@ -22,12 +23,13 @@ endif()
 include( plugins )
 
 set( SOURCES
-  exp2imas_plugin.c
+  exp2imas_plugin.cpp
   exp2imas_mds.cpp
-  exp2imas_xml.c
+  exp2imas_xml.cpp
   exp2imas_ssh_server.c
   exp2imas_ssh.c
   exp2imas_ramCache.c
+  exp2imas_mapping_files.cpp
 )
 
 if( GTK3_FOUND )
@@ -36,6 +38,8 @@ if( GTK3_FOUND )
 
   set( SOURCES exp2imas_ssh_gui.c ${SOURCES} )
 endif()
+
+include_directories( SYSTEM ${Boost_INCLUDE_DIR} )
 
 uda_plugin(
   NAME EXP2IMAS
@@ -57,6 +61,7 @@ uda_plugin(
     ${LIBSSH_LIBRARIES}
     ${GTK3_LIBRARIES}
     ${UDA_CLIENT_LIBRARIES}
+    ${Boost_LIBRARIES}
     pthread
     resolv
 )
