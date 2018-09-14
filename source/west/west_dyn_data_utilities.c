@@ -276,7 +276,7 @@ void SetDynData(DATA_BLOCK* data_block, int len, float* data_time, float* data, 
 {
 	//IDAM data block initialization
 	initDataBlock(data_block);
-	int i;
+	unsigned int i;
 	data_block->rank = 1;
 	data_block->data_type = UDA_TYPE_FLOAT;
 	data_block->data_n = len;
@@ -575,7 +575,7 @@ void setReturnData2DFloat (DATA_BLOCK* data_block, int dim1_shape, int dim2_shap
 	data_block->rank = 2;
 	data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
 
-	int i;
+	unsigned int i;
 	for (i = 0; i < data_block->rank; i++) {
 		initDimBlock(&data_block->dims[i]);
 		data_block->dims[i].data_type = UDA_TYPE_UNSIGNED_INT;
