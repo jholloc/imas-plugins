@@ -1,6 +1,7 @@
 #include "source.h"
 
 #include <strings.h>
+#include <stdbool.h>
 
 #include <client/accAPI.h>
 #include <client/udaClient.h>
@@ -11,9 +12,11 @@
 #include <clientserver/stringUtils.h>
 #include <clientserver/xmlStructs.h>
 #include <logging/logging.h>
-#include <plugins/pluginUtils.h>
 #include <plugins/udaPlugin.h>
 #include <structures/struct.h>
+#if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
+#  include <plugins/pluginUtils.h>
+#endif
 
 static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
@@ -218,11 +221,19 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, int* timeCountCa
     int runNumber = -1;
     bool isRunNumber = findIntValue(&request_block->nameValueList, &runNumber, "runNumber|run|pass|sequence");
 
+#if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
     double dataScaling = 1.0;
     bool isDataScaling = FIND_DOUBLE_VALUE(request_block->nameValueList, dataScaling);
 
     double timeScaling = 1.0;
     bool isTimeScaling = FIND_DOUBLE_VALUE(request_block->nameValueList, timeScaling);
+#else
+    float dataScaling = 1.0;
+    bool isDataScaling = FIND_FLOAT_VALUE(request_block->nameValueList, dataScaling);
+
+    float timeScaling = 1.0;
+    bool isTimeScaling = FIND_FLOAT_VALUE(request_block->nameValueList, timeScaling);
+#endif
 
     const char* host = NULL;
     bool isHost = FIND_STRING_VALUE(request_block->nameValueList, host);

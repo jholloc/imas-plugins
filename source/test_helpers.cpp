@@ -4,6 +4,12 @@
 #include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
 
+#if !defined(UDA_VERSION) || UDA_VERSION_MAJOR < 3
+// Legacy defines
+#define UDA_PLUGIN_CLASS_FUNCTION   PLUGINFUNCTION
+#define UDA_PLUGIN_OPERATIONAL      PLUGINOPERATIONAL
+#endif
+
 IDAM_PLUGIN_INTERFACE uda::test::generate_plugin_interface(const char* request)
 {
     IDAM_PLUGIN_INTERFACE plugin_interface = {};

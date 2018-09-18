@@ -10,8 +10,10 @@
 #include <clientserver/makeRequestBlock.h>
 #include <clientserver/stringUtils.h>
 #include <clientserver/udaTypes.h>
-#include <plugins/pluginUtils.h>
 #include <plugins/udaPlugin.h>
+#if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
+#  include <plugins/pluginUtils.h>
+#endif
 
 static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);

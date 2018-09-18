@@ -17,7 +17,9 @@
 #include <clientserver/udaTypes.h>
 #include <clientserver/copyStructs.h>
 #include <plugins/udaPlugin.h>
-#include <plugins/pluginUtils.h>
+#if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
+#  include <plugins/pluginUtils.h>
+#endif
 
 namespace {
 
