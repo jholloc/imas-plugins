@@ -232,8 +232,13 @@ int IMASPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int range;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, range);
 
+#ifdef FIND_REQUIRED_DOUBLE_VALUE
     double time;
     FIND_REQUIRED_DOUBLE_VALUE(request_block->nameValueList, time);
+#else
+    float time;
+    FIND_REQUIRED_FLOAT_VALUE(request_block->nameValueList, time);
+#endif
 
     int interp;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
