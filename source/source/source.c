@@ -221,7 +221,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, int* timeCountCa
     int runNumber = -1;
     bool isRunNumber = findIntValue(&request_block->nameValueList, &runNumber, "runNumber|run|pass|sequence");
 
-#if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
+#ifdef FIND_DOUBLE_VALUE
     double dataScaling = 1.0;
     bool isDataScaling = FIND_DOUBLE_VALUE(request_block->nameValueList, dataScaling);
 

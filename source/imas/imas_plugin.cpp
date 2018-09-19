@@ -343,8 +343,13 @@ int IMASPlugin::delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int range;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, range);
 
+#ifdef FIND_REQUIRED_DOUBLE_VALUE
     double time;
     FIND_REQUIRED_DOUBLE_VALUE(request_block->nameValueList, time);
+#else
+    float time;
+    FIND_REQUIRED_FLOAT_VALUE(request_block->nameValueList, time);
+#endif
 
     int interp;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
@@ -387,7 +392,8 @@ ArraystructContext* build_arraystruct_context(const char* path, const char* time
     for (const auto& token : tokens) {
         if (is_integer(token)) {
             if (prev.empty()) {
-                THROW_ERROR(nullptr, "Invalid path found in arraystruct context");
+                addIdamError(CODEERRORTYPE, __func__, 999, "Invalid path found in arraystruct context");
+                return nullptr;
             }
             auto index = static_cast<int>(std::strtol(token.c_str(), nullptr, 10));
             auto temp = new ArraystructContext(opCtx, prev, timebase, arrCtx->getParent(), index);
@@ -422,8 +428,13 @@ int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_inte
     int range;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, range);
 
+#ifdef FIND_REQUIRED_DOUBLE_VALUE
     double time;
     FIND_REQUIRED_DOUBLE_VALUE(request_block->nameValueList, time);
+#else
+    float time;
+    FIND_REQUIRED_FLOAT_VALUE(request_block->nameValueList, time);
+#endif
 
     int interp;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
