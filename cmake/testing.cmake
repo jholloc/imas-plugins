@@ -26,7 +26,7 @@ macro( BUILD_TEST NAME SOURCE )
 
   add_executable( fat_${NAME} ${HELPER_FILES} ${SOURCE} )
   target_link_libraries( fat_${NAME} PRIVATE
-    ${UDA_FAT_CPP_LIBRARIES} -L/Users/jhollocombe/ida3/lib -lida3 -lida3c
+    ${UDA_FAT_CPP_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     test_helpers
   )

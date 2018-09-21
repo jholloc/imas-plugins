@@ -11,7 +11,7 @@ extern "C" {
 #define THISPLUGIN_MAX_INTERFACE_VERSION    1        // Interface versions higher than this will not be understood!
 #define THISPLUGIN_DEFAULT_METHOD           "help"
 
-int tsPlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
+int exp2imasPlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
 
 #ifdef __cplusplus
 }

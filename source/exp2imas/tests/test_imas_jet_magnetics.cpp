@@ -454,7 +454,7 @@ TEST_CASE( "Test bpol_probe field error upper", "[IMAS][JET][BPOL]" )
 
     REQUIRE( arr->size() == 1024 );
     REQUIRE( arr->type().name() == typeid(float).name() );
-    REQUIRE( arr->as<float>()[0] == Approx(0.0024726114) );
+    REQUIRE( arr->as<float>()[0] == Approx(0.00497f) );
 }
 
 TEST_CASE( "Test bpol_probe field error lower", "[IMAS][JET][BPOL]" )
@@ -483,7 +483,7 @@ TEST_CASE( "Test bpol_probe field error lower", "[IMAS][JET][BPOL]" )
 
     REQUIRE( arr->size() == 1024 );
     REQUIRE( arr->type().name() == typeid(float).name() );
-    REQUIRE( arr->as<float>()[0] == Approx(-0.0025273885) );
+    REQUIRE( arr->as<float>()[0] == Approx(-0.00503f) );
 }
 
 /*
@@ -876,7 +876,7 @@ TEST_CASE( "Test flux_loop flux error upper", "[IMAS][JET][FLUX]" )
 
     REQUIRE( arr->size() == 1024 );
     REQUIRE( arr->type().name() == typeid(float).name() );
-    REQUIRE( arr->as<float>()[0] == Approx(0.00079f) );
+    REQUIRE( arr->as<float>()[0] == Approx(0.00129f) );
 
     const uda::Result& result_36 = client.get("EXP2IMAS::read(element='magnetics/flux_loop/#/flux/data_error_upper', indices='36', experiment='JET', dtype=6, rank=1, shot=" SHOT_NUM ", IDS_version='')", "");
 
@@ -896,7 +896,7 @@ TEST_CASE( "Test flux_loop flux error upper", "[IMAS][JET][FLUX]" )
 
     REQUIRE( arr->size() == 1024 );
     REQUIRE( arr->type().name() == typeid(float).name() );
-    REQUIRE( arr->as<float>()[0] == Approx(0.00509f) );
+    REQUIRE( arr->as<float>()[0] == Approx(0.00929f) );
 }
 
 TEST_CASE( "Test flux_loop flux error lower", "[IMAS][JET][FLUX]" )
@@ -925,7 +925,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][JET][FLUX]" )
 
     REQUIRE( arr->size() == 1024 );
     REQUIRE( arr->type().name() == typeid(float).name() );
-    REQUIRE( arr->as<float>()[0] == Approx(-0.00021f) );
+    REQUIRE( arr->as<float>()[0] == Approx(-0.00071f) );
 
     const uda::Result& result_36 = client.get("EXP2IMAS::read(element='magnetics/flux_loop/#/flux/data_error_lower', indices='36', experiment='JET', dtype=6, rank=1, shot=" SHOT_NUM ", IDS_version='')", "");
 
@@ -945,7 +945,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][JET][FLUX]" )
 
     REQUIRE( arr->size() == 1024 );
     REQUIRE( arr->type().name() == typeid(float).name() );
-    REQUIRE( arr->as<float>()[0] == Approx(-0.00331f) );
+    REQUIRE( arr->as<float>()[0] == Approx(-0.00751f) );
 }
 
 //TEST_CASE( "Test flux_loop flux errors", "[IMAS][JET][BPOL]" )

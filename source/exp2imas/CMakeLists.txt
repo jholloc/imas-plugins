@@ -3,7 +3,7 @@ find_package( MDSplus QUIET )
 find_package( LibSSH QUIET )
 find_package( GTK3 QUIET )
 find_package( UDA REQUIRED )
-find_package( Boost REQUIRED filesystem )
+find_package( Boost REQUIRED filesystem system )
 
 if( NOT MDSPLUS_FOUND )
   message( WARNING "mdsplus not found - skipping exp2imas plugin" )
@@ -49,6 +49,7 @@ uda_plugin(
   LIBNAME exp2imas_plugin
   SOURCES ${SOURCES}
   CONFIG_FILE exp2imas.cfg
+  VERSION 1.0.0
   EXTRA_INCLUDE_DIRS
     ${LIBXML2_INCLUDE_DIR}
     ${MDSPLUS_INCLUDES}

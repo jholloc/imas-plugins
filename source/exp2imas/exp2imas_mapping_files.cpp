@@ -75,9 +75,12 @@ std::string to_string(const Version& ver)
 Version find_imas_version(const std::string& directory, const std::string& filename_prefix,
                           const std::string& ids_version)
 {
-    std::stringstream ss{ ids_version };
-    Version version{ 0, 0, 0 };
-    ss >> version.major >> version.minor >> version.debug;
+    constexpr long long_max = std::numeric_limits<long>::max();
+    Version version{ long_max, long_max, long_max };
+    if (!ids_version.empty()) {
+        std::stringstream ss{ ids_version };
+        ss >> version.major >> version.minor >> version.debug;
+    }
 
     bf::path path{ directory };
 

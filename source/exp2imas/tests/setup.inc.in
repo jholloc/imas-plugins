@@ -3,10 +3,9 @@
 #ifdef FATCLIENT
 setenv("UDA_LOG", "@CMAKE_CURRENT_BINARY_DIR@", 1);
 setenv("UDA_LOG_MODE", "a", 1);
-setenv("UDA_PLUGIN_CONFIG", "@CMAKE_CURRENT_SOURCE_DIR@/../udaPlugins.conf", 1);
-setenv("UDA_SARRAY_CONFIG", "@CMAKE_SOURCE_DIR@/etc/udagenstruct.conf", 1);
+setenv("UDA_PLUGIN_CONFIG", "@CMAKE_INSTALL_PREFIX@/etc/plugins/udaPlugins.conf", 1);
+setenv("UDA_SARRAY_CONFIG", "@CMAKE_INSTALL_PREFIX@/etc/udagenstruct.conf", 1);
 setenv("UDA_LOG_LEVEL", "DEBUG", 1);
-setenv("UDA_PLUGIN_DIR", "@CMAKE_CURRENT_BINARY_DIR@/../", 1);
-setenv("UDA_EXP2IMAS_MAPPING_FILE", "@CMAKE_CURRENT_SOURCE_DIR@/../mappings/IMAS_mapping.xml", 1);
+setenv("UDA_PLUGIN_DIR", "@CMAKE_INSTALL_PREFIX@/lib/plugins", 1);
 setenv("UDA_EXP2IMAS_MAPPING_FILE_DIRECTORY", "@CMAKE_CURRENT_SOURCE_DIR@/../mappings", 1);
 #endif
