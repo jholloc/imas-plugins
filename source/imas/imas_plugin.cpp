@@ -1,5 +1,7 @@
 #include "imas_plugin.h"
 
+#include <memory>
+#include <stack>
 #include <cstdlib>
 #include <cstring>
 #include <boost/range/adaptor/reversed.hpp>
@@ -15,6 +17,9 @@ namespace {
 
 class IMASPlugin {
 public:
+    void init() {}
+    void reset() {}
+
     int help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
     int version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
     int build_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
@@ -28,16 +33,19 @@ public:
     int read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
     int delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
     int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
+private:
+    std::unique_ptr<OperationContext> op_ctx_;
+    std::stack<std::unique_ptr<ArraystructContext>> array_ctx_stack_;
+
+    ArraystructContext* build_arraystruct_context(const char* path, const char* timebase);
 };
 
 }
 
 int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    static int init = 0;
-
-    //----------------------------------------------------------------------------------------
-    // Standard v1 Plugin Interface
+    static IMASPlugin plugin{};
 
     if (idam_plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
@@ -50,26 +58,15 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     std::string function = request_block->function;
 
     if (idam_plugin_interface->housekeeping || function == "reset") {
-        if (!init) return 0; // Not previously initialised: Nothing to do!
-        // Free Heap & reset counters
-        init = 0;
+        plugin.reset();
         return 0;
     }
 
-    //----------------------------------------------------------------------------------------
-    // Initialise
+    plugin.init();
 
-    if (!init || function == "init" || function == "initialise") {
-
-        init = 1;
-        if (function == "init" || function == "initialise") return 0;
+    if (function == "init" || function == "initialise") {
+        return 0;
     }
-
-    //----------------------------------------------------------------------------------------
-    // Plugin Functions
-    //----------------------------------------------------------------------------------------
-
-    IMASPlugin plugin{};
 
     if (function == "help") {
         return plugin.help(idam_plugin_interface);
@@ -245,9 +242,12 @@ int IMASPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
-    OperationContext opCtx(*dynamic_cast<PulseContext*>(env.context), dataObject, access, range, time, interp);
+    PulseContext* pulse_ctx = dynamic_cast<PulseContext*>(env.context);
+    OperationContext* op_ctx = new OperationContext(*pulse_ctx, dataObject, access, range, time, interp);
 
-    env.backend->beginAction(&opCtx);
+    op_ctx_ = std::unique_ptr<OperationContext>{ op_ctx };
+
+    env.backend->beginAction(op_ctx);
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
     return 0;
@@ -260,9 +260,18 @@ int IMASPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int ctxId;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
 
+    int type;
+    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, type);
+
     LLenv env = Lowlevel::getLLenv(ctxId);
 
     env.backend->endAction(env.context);
+
+    if (type == CTX_ARRAYSTRUCT_TYPE) {
+        array_ctx_stack_.pop();
+    } else {
+        op_ctx_.reset(nullptr);
+    }
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
     return 0;
@@ -320,12 +329,52 @@ int IMASPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int datatype;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);
 
-    int rank;
-    int dims[64];
+    int rank = 0;
+    int dims[64] = {0};
 
-    env.backend->readData(env.context, field, timebase, &data, &datatype, &rank, dims);
+    Context* ctx = nullptr;
+    if (!array_ctx_stack_.empty()) {
+        ctx = array_ctx_stack_.top().get();
+    } else if (op_ctx_) {
+        ctx = op_ctx_.get();
+    } else {
+        RAISE_PLUGIN_ERROR("no operation or arraystruct context");
+    }
 
-    setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
+    env.backend->readData(ctx, field, timebase, &data, &datatype, &rank, dims);
+
+    if (data == nullptr) {
+        RAISE_PLUGIN_ERROR("no data returned");
+    }
+
+    initDataBlock(idam_plugin_interface->data_block);
+
+    if (rank == 0) {
+        if (datatype == CHAR_DATA) {
+            setReturnDataString(idam_plugin_interface->data_block, reinterpret_cast<char*>(data), nullptr);
+        } else if (datatype == INTEGER_DATA) {
+            setReturnDataIntScalar(idam_plugin_interface->data_block, *reinterpret_cast<int*>(data), nullptr);
+        } else if (datatype == DOUBLE_DATA) {
+            setReturnDataDoubleScalar(idam_plugin_interface->data_block, *reinterpret_cast<double*>(data), nullptr);
+        } else {
+            RAISE_PLUGIN_ERROR("invalid data type");
+        }
+    } else {
+        std::vector<size_t> shape;
+        for (int i = 0; i < rank; ++i) {
+            shape.push_back(dims[i]);
+        }
+        if (datatype == INTEGER_DATA) {
+            setReturnDataIntArray(idam_plugin_interface->data_block, reinterpret_cast<int*>(data), rank, shape.data(),
+                    nullptr);
+        } else if (datatype == DOUBLE_DATA) {
+            setReturnDataDoubleArray(idam_plugin_interface->data_block, reinterpret_cast<double*>(data), rank,
+                    shape.data(), nullptr);
+        } else {
+            RAISE_PLUGIN_ERROR("invalid data type");
+        }
+    }
+
     return 0;
 }
 
@@ -379,8 +428,7 @@ bool is_integer(const std::string& string)
     return end != nullptr && *end == '\0';
 }
 
-ArraystructContext* build_arraystruct_context(const char* path, const char* timebase, const PulseContext& ctx,
-                                              const std::string& dataobject, int access)
+ArraystructContext* IMASPlugin::build_arraystruct_context(const char* path, const char* timebase)
 {
     std::vector<std::string> tokens;
 
@@ -390,28 +438,24 @@ ArraystructContext* build_arraystruct_context(const char* path, const char* time
         tokens.push_back(fragment);
     }
 
-    OperationContext opCtx(ctx, dataobject, access);
-    ArraystructContext* arrCtx = nullptr;
-    std::string prev;
+    ArraystructContext* arr_ctx = nullptr;
 
     for (const auto& token : tokens) {
-        if (is_integer(token)) {
-            if (prev.empty()) {
-                addIdamError(CODEERRORTYPE, __func__, 999, "Invalid path found in arraystruct context");
-                return nullptr;
+        if (array_ctx_stack_.empty()) {
+            arr_ctx = new ArraystructContext(*op_ctx_, token, timebase, arr_ctx);
+        } else if (array_ctx_stack_.top()->getPath() == token) {
+            arr_ctx = array_ctx_stack_.top().get();
+        } else if (arr_ctx != nullptr) {
+            if (is_integer(token)) {
+                auto index = static_cast<int>(std::strtol(token.c_str(), nullptr, 10)) - 1;
+                arr_ctx->nextIndex(index - arr_ctx->getIndex());
+            } else {
+                arr_ctx = new ArraystructContext(*op_ctx_, token, timebase, arr_ctx);
             }
-            auto index = static_cast<int>(std::strtol(token.c_str(), nullptr, 10));
-            auto temp = new ArraystructContext(opCtx, prev, timebase, arrCtx->getParent(), index);
-            delete arrCtx;
-            arrCtx = temp;
-        } else {
-            arrCtx = new ArraystructContext(opCtx, token, timebase, arrCtx);
         }
-
-        prev = token;
     }
 
-    return arrCtx;
+    return arr_ctx;
 }
 
 int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
@@ -452,14 +496,13 @@ int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_inte
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
-    auto pulseCtx = dynamic_cast<PulseContext*>(env.context);
-    OperationContext opCtx(*dynamic_cast<PulseContext*>(env.context), dataObject, access, range, time, interp);
+    ArraystructContext* array_ctx = build_arraystruct_context(path, timebase);
+    
+    array_ctx_stack_.emplace(array_ctx);
 
-    ArraystructContext* arrayCtx = build_arraystruct_context(path, timebase, *pulseCtx, dataObject, access);
+    env.backend->beginArraystructAction(array_ctx, &size);
 
-    env.backend->beginArraystructAction(arrayCtx, &size);
-
-    setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
+    setReturnDataIntScalar(idam_plugin_interface->data_block, size, nullptr);
     return 0;
 }
 
