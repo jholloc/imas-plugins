@@ -10,7 +10,6 @@
 #include <clientserver/initStructs.h>
 #include <clientserver/makeRequestBlock.h>
 #include <clientserver/stringUtils.h>
-#include <clientserver/xmlStructs.h>
 #include <logging/logging.h>
 #include <plugins/udaPlugin.h>
 #include <structures/struct.h>
