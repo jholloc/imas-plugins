@@ -45,57 +45,61 @@ private:
 
 int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    static IMASPlugin plugin{};
+    try {
+        static IMASPlugin plugin{};
 
-    if (idam_plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
-        RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
-    }
+        if (idam_plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
+            RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
+        }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+        idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+        REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    std::string function = request_block->function;
+        std::string function = request_block->function;
 
-    if (idam_plugin_interface->housekeeping || function == "reset") {
-        plugin.reset();
-        return 0;
-    }
+        if (idam_plugin_interface->housekeeping || function == "reset") {
+            plugin.reset();
+            return 0;
+        }
 
-    plugin.init();
+        plugin.init();
 
-    if (function == "init" || function == "initialise") {
-        return 0;
-    }
+        if (function == "init" || function == "initialise") {
+            return 0;
+        }
 
-    if (function == "help") {
-        return plugin.help(idam_plugin_interface);
-    } else if (function == "version") {
-        return plugin.version(idam_plugin_interface);
-    } else if (function == "builddate") {
-        return plugin.build_date(idam_plugin_interface);
-    } else if (function == "defaultmethod") {
-        return plugin.default_method(idam_plugin_interface);
-    } else if (function == "maxinterfaceversion") {
-        return plugin.max_interface_version(idam_plugin_interface);
-    } else if (function == "openPulse") {
-        return plugin.open_pulse(idam_plugin_interface);
-    } else if (function == "closePulse") {
-        return plugin.close_pulse(idam_plugin_interface);
-    } else if (function == "beginAction") {
-        return plugin.begin_action(idam_plugin_interface);
-    } else if (function == "endAction") {
-        return plugin.end_action(idam_plugin_interface);
-    } else if (function == "writeData") {
-        return plugin.write_data(idam_plugin_interface);
-    } else if (function == "readData") {
-        return plugin.read_data(idam_plugin_interface);
-    } else if (function == "deleteData") {
-        return plugin.default_method(idam_plugin_interface);
-    } else if (function == "beginArraystructAction") {
-        return plugin.begin_arraystruct_action(idam_plugin_interface);
-    } else {
-        RAISE_PLUGIN_ERROR("Unknown function requested!");
+        if (function == "help") {
+            return plugin.help(idam_plugin_interface);
+        } else if (function == "version") {
+            return plugin.version(idam_plugin_interface);
+        } else if (function == "builddate") {
+            return plugin.build_date(idam_plugin_interface);
+        } else if (function == "defaultmethod") {
+            return plugin.default_method(idam_plugin_interface);
+        } else if (function == "maxinterfaceversion") {
+            return plugin.max_interface_version(idam_plugin_interface);
+        } else if (function == "openPulse") {
+            return plugin.open_pulse(idam_plugin_interface);
+        } else if (function == "closePulse") {
+            return plugin.close_pulse(idam_plugin_interface);
+        } else if (function == "beginAction") {
+            return plugin.begin_action(idam_plugin_interface);
+        } else if (function == "endAction") {
+            return plugin.end_action(idam_plugin_interface);
+        } else if (function == "writeData") {
+            return plugin.write_data(idam_plugin_interface);
+        } else if (function == "readData") {
+            return plugin.read_data(idam_plugin_interface);
+        } else if (function == "deleteData") {
+            return plugin.delete_data(idam_plugin_interface);
+        } else if (function == "beginArraystructAction") {
+            return plugin.begin_arraystruct_action(idam_plugin_interface);
+        } else {
+            RAISE_PLUGIN_ERROR("Unknown function requested!");
+        }
+    } catch (std::exception& ex) {
+        RAISE_PLUGIN_ERROR(ex.what());
     }
 }
 
@@ -295,15 +299,21 @@ int IMASPlugin::write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int datatype;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);
 
-    int* dims;
-    size_t ndims;
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, dims);
+    PUTDATA_BLOCK* putdata = idam_plugin_interface->request_block->putDataBlockList.putDataBlock;
 
-    auto rank = static_cast<int>(ndims);
+    Context* ctx = nullptr;
+    if (!array_ctx_stack_.empty()) {
+        ctx = array_ctx_stack_.top().get();
+    } else if (op_ctx_) {
+        ctx = op_ctx_.get();
+    } else {
+        RAISE_PLUGIN_ERROR("no operation or arraystruct context");
+    }
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
-    env.backend->writeData(env.context, field, timebase, data, datatype, rank, dims);
+    env.backend->writeData(ctx, field, timebase, reinterpret_cast<void*>(const_cast<char*>(putdata->data)),
+                           datatype, putdata->rank, putdata->shape);
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
     return 0;
@@ -388,31 +398,9 @@ int IMASPlugin::delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* path;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
 
-    const char* dataObject;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, dataObject);
-
-    int access;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, access);
-
-    int range;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, range);
-
-#ifdef FIND_REQUIRED_DOUBLE_VALUE
-    double time;
-    FIND_REQUIRED_DOUBLE_VALUE(request_block->nameValueList, time);
-#else
-    float time;
-    FIND_REQUIRED_FLOAT_VALUE(request_block->nameValueList, time);
-#endif
-
-    int interp;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
-
     LLenv env = Lowlevel::getLLenv(ctxId);
 
-    OperationContext opCtx(*dynamic_cast<PulseContext*>(env.context), dataObject, access, range, time, interp);
-
-    env.backend->deleteData(&opCtx, path);
+    env.backend->deleteData(op_ctx_.get(), path);
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
     return 0;
@@ -498,9 +486,9 @@ int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_inte
 
     ArraystructContext* array_ctx = build_arraystruct_context(path, timebase);
     
-    array_ctx_stack_.emplace(array_ctx);
-
     env.backend->beginArraystructAction(array_ctx, &size);
+
+    array_ctx_stack_.emplace(array_ctx);
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, size, nullptr);
     return 0;
