@@ -391,7 +391,7 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
     }
 
     auto request =
-            boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
+            boost::format("%s::read(experiment='%s', element='%s/Shape_of', shot=%d, indices='%s', dtype=%d, IDS_version='')")
             % plugin_name % pulse.tokamak % element_ss.str() % pulse.shot % indices_ss.str() % uda_type;
     std::cout << request.str() << std::endl;
 
