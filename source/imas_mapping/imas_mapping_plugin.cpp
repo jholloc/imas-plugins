@@ -64,7 +64,8 @@ public:
 
 private:
     uda::imas_mapping::MachineMapping machine_mapping_;
-    std::vector<std::string> path_stack_;
+    std::string ids_;
+    std::vector<std::pair<std::string, std::string>> arraystruct_stack_;
     std::unordered_map<int, Pulse> pulses_;
     int next_pulse_ = 0;
 };
@@ -262,7 +263,7 @@ int MappingPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("invalid ctxId");
     }
 
-    path_stack_.emplace_back(dataObject);
+    ids_ = dataObject;
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
     return 0;
@@ -282,7 +283,11 @@ int MappingPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("invalid ctxId");
     }
 
-    path_stack_.pop_back();
+    if (arraystruct_stack_.empty()) {
+        ids_ = "";
+    } else {
+        arraystruct_stack_.pop_back();
+    }
 
     setReturnDataIntScalar(idam_plugin_interface->data_block, ctxId, nullptr);
     return 0;
@@ -358,17 +363,6 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
         tokens.push_back(fragment);
     }
 
-    int pos = 1;
-    while (pos < (path_stack_.size() - 1) && pos < tokens.size() && path_stack_[pos] == tokens[pos - 1]) {
-        ++pos;
-    }
-
-    while (path_stack_.size() != pos) {
-        path_stack_.pop_back();
-    }
-
-    std::copy(tokens.begin() + (pos - 1), tokens.end(), std::back_inserter(path_stack_));
-
     auto plugin_name = machine_mapping_.plugin(pulse.tokamak);
 
     int uda_type = UDA_TYPE_INT;
@@ -379,20 +373,22 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
     const char* element_delim = "";
     const char* indices_delim = "";
 
-    for (const auto& el : path_stack_) {
+    for (const auto& el : tokens) {
         if (is_integer(el)) {
             element_ss << element_delim << "#";
             indices_ss << indices_delim << el;
-            indices_delim = ",";
+            indices_delim = ";";
         } else {
             element_ss << element_delim << el;
         }
         element_delim = "/";
     }
 
+    arraystruct_stack_.emplace_back(element_ss.str(), indices_ss.str());
+
     auto request =
-            boost::format("%s::read(experiment='%s', element='%s/Shape_of', shot=%d, indices='%s', dtype=%d, IDS_version='')")
-            % plugin_name % pulse.tokamak % element_ss.str() % pulse.shot % indices_ss.str() % uda_type;
+            boost::format("%s::read(experiment='%s', element='%s/%s/Shape_of', shot=%d, indices='%s', dtype=%d, IDS_version='')")
+            % plugin_name % pulse.tokamak % ids_ % element_ss.str() % pulse.shot % indices_ss.str() % uda_type;
     std::cout << request.str() << std::endl;
 
     return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
@@ -502,6 +498,13 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int datatype;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);
 
+    int index;
+    bool is_index = FIND_INT_VALUE(request_block->nameValueList, index);
+
+    if (!arraystruct_stack_.empty() && !is_index) {
+        RAISE_PLUGIN_ERROR("no index given while reading an arraystruct field");
+    }
+
     if (pulses_.count(ctxId) == 0) {
         RAISE_PLUGIN_ERROR("invalid ctxId");
     }
@@ -510,30 +513,25 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     auto plugin_name = machine_mapping_.plugin(pulse.tokamak);
 
-    std::stringstream element_ss;
-    std::stringstream indices_ss;
+    std::string element;
+    std::string indices;
 
-    const char* element_delim = "";
-    const char* indices_delim = "";
-
-    for (const auto& el : path_stack_) {
-        if (is_integer(el)) {
-            element_ss << element_delim << "#";
-            indices_ss << indices_delim << el;
-            indices_delim = ",";
+    if (arraystruct_stack_.empty()) {
+        element = field;
+    } else {
+        element = arraystruct_stack_.back().first + "/#/" + field;
+        if (arraystruct_stack_.back().second.empty()) {
+            indices = std::to_string(index);
         } else {
-            element_ss << element_delim << el;
+            indices = arraystruct_stack_.back().second + ";" + std::to_string(index);
         }
-        element_delim = "/";
     }
-
-    element_ss << "/" << field;
 
     int uda_type = convert_IMAS_to_UDA_type(datatype);
 
     auto request =
-            boost::format("%s::read(experiment='%s', element='%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
-            % plugin_name % pulse.tokamak % element_ss.str() % pulse.shot % indices_ss.str() % uda_type;
+            boost::format("%s::read(experiment='%s', element='%s/%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
+            % plugin_name % pulse.tokamak % ids_ % element % pulse.shot % indices % uda_type;
     std::cout << request.str() << std::endl;
 
     return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
