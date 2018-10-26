@@ -68,11 +68,9 @@ int GetDynamicData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, i
 		return status;
 
 	} else if (strcmp(fun_name, "ece_t_e_time") == 0) {
-		ece_t_e_time(shotNumber, data_block, nodeIndices);
-		return 0;
+		return ece_t_e_time(shotNumber, data_block, nodeIndices);
 	} else if (strcmp(fun_name, "ece_time") == 0) {
-		ece_time(shotNumber, data_block, nodeIndices);
-		return 0;
+		return ece_time(shotNumber, data_block, nodeIndices);
 	} else if (strcmp(fun_name, "ece_frequencies") == 0) {
 		return ece_frequencies(shotNumber, data_block, nodeIndices);
 	} else if (strcmp(fun_name, "ece_frequencies_time") == 0) {
@@ -91,11 +89,7 @@ int GetDynamicData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, i
 		return soft_x_rays_channels_power_density_time(shotNumber, data_block, nodeIndices); //TODO
 	} else if (strcmp(fun_name, "flt1D") == 0) {
 		return flt1D(mapfun, shotNumber, data_block, nodeIndices); //TODO
-	} /*else if (strcmp(fun_name, "flt1D_contrib") == 0) {
-		return flt1D_contrib(mapfun, shotNumber, data_block, nodeIndices); //TODO
-	} *//*else if (strcmp(fun_name, "summary_global_quantities_tau_resistance_value") == 0) {
-		return summary_global_quantities_tau_resistance_value(shotNumber, data_block, nodeIndices); //TODO
-	} */else if (strcmp(fun_name, "summary_global_quantities_v_loop_value") == 0) {
+	} else if (strcmp(fun_name, "summary_global_quantities_v_loop_value") == 0) {
 		return summary_global_quantities_v_loop_value(shotNumber, data_block, nodeIndices); //TODO
 	} else if (strcmp(fun_name, "summary_global_quantities_b0_value") == 0) {
 		return summary_global_quantities_b0_value(shotNumber, data_block, nodeIndices); //TODO
@@ -106,56 +100,53 @@ int GetDynamicData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, i
 	} else if (strcmp(fun_name, "summary_time") == 0) {
 		return summary_time(shotNumber, data_block, nodeIndices); //TODO
 	}else if (strcmp(fun_name, "lh_antennas_power") == 0) {
-		lh_antennas_power(shotNumber, data_block, nodeIndices);
-		return 0;
+		return lh_antennas_power(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_power_forward") == 0) {
-		lh_antennas_power_forward(shotNumber, data_block, nodeIndices);
+		return lh_antennas_power_forward(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_power_reflected") == 0) {
-		lh_antennas_power_reflected(shotNumber, data_block, nodeIndices);
+		return lh_antennas_power_reflected(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_reflection_coefficient") == 0) {
-		lh_antennas_reflection_coefficient(shotNumber, data_block, nodeIndices);
+		return lh_antennas_reflection_coefficient(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_power") == 0) {
-		lh_antennas_modules_power(shotNumber, data_block, nodeIndices);
+		return lh_antennas_modules_power(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_power_forward") == 0) {
-		lh_antennas_modules_power_forward(shotNumber, data_block, nodeIndices);
+		return lh_antennas_modules_power_forward(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_power_reflected") == 0) {
-		lh_antennas_modules_power_reflected(shotNumber, data_block, nodeIndices);
+		return lh_antennas_modules_power_reflected(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_reflection_coefficient") == 0) {
-		lh_antennas_modules_reflection_coefficient(shotNumber, data_block, nodeIndices);
+		return lh_antennas_modules_reflection_coefficient(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_phase") == 0) {
-		lh_antennas_modules_phase(shotNumber, data_block, nodeIndices);
+		return lh_antennas_modules_phase(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_phase_average") == 0) {
-		lh_antennas_phase_average(shotNumber, data_block, nodeIndices);
-		return 0;
+		return lh_antennas_phase_average(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_n_parallel_peak") == 0) {
-		lh_antennas_n_parallel_peak(shotNumber, data_block, nodeIndices);
+		return lh_antennas_n_parallel_peak(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_position_r") == 0) {
-		lh_antennas_position_r(shotNumber, data_block, nodeIndices);
+		return lh_antennas_position_r(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_position_z") == 0) {
-		lh_antennas_position_z(shotNumber, data_block, nodeIndices);
+		return lh_antennas_position_z(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_pressure_tank") == 0) {
-		lh_antennas_pressure_tank(shotNumber, data_block, nodeIndices); //TODO
+		return lh_antennas_pressure_tank(shotNumber, data_block, nodeIndices); //TODO
 	}else if (strcmp(fun_name, "barometry_gauge_pressure_data") == 0) {
-		barometry_gauge_pressure_data(shotNumber, data_block, nodeIndices); //TODO
+		return barometry_gauge_pressure_data(shotNumber, data_block, nodeIndices); //TODO
 	}else if (strcmp(fun_name, "barometry_gauge_pressure_time") == 0) {
-		barometry_gauge_pressure_time(shotNumber, data_block, nodeIndices); //TODO
+		return barometry_gauge_pressure_time(shotNumber, data_block, nodeIndices); //TODO
 	}/*else if (strcmp(fun_name, "test_fun") == 0) {
 		return test_fun(shotNumber, data_block, nodeIndices); //TODO
 	}*/
 	else {
 		const char* errorMsg = "WEST:ERROR: mapped C function not found in west_dynamic_data.c !\n";
-		UDA_LOG(UDA_LOG_DEBUG, "%s", errorMsg);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
+		char msg[1000];
+		strcpy(msg, errorMsg);
+		sprintf(msg, ",function:%s,shot:%d\n", fun_name, shotNumber);
+		UDA_LOG(UDA_LOG_ERROR,"%s\n", msg);
+		UDA_LOG(UDA_LOG_DEBUG,"%s\n", msg);
 	}
-
-
 	free(fun_name);
 	free(TOP_collections_parameters);
 	free(attributes);
 	free(normalizationAttributes);
-
 	return 0;
-
 }
 
 int flt1D(const char* mappingValue, int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
@@ -171,51 +162,13 @@ int flt1D(const char* mappingValue, int shotNumber, DATA_BLOCK* data_block, int*
 	int status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, normalizationFactor);
 	if (status != 0) {
 		int err = 901;
-		char* errorMsg = "WEST:ERROR (flt1D): unable to get object : ";
-		strcat(errorMsg, object_name);
-		strcat(errorMsg, " for shot : ");
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
+		char errorMsg[1000];
+		strcpy(errorMsg, "WEST:ERROR (flt1D): unable to get object:");
+		sprintf(errorMsg, "%s,shot:%d\n", object_name, shotNumber);
+		//UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
 		addIdamError(CODEERRORTYPE, errorMsg, err, "");
 	}
 	free(diagnostic);
 	free(object_name);
 	return status;
 }
-
-/*int flt1D_contrib(const char* mappingValue, int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
-{
-	UDA_LOG(UDA_LOG_DEBUG, "Calling flt1D_contrib\n");
-	char* diagnostic = NULL;
-	char* object_name = NULL;
-	int extractionIndex;
-
-	char* diagnostic2 = NULL;
-	char* object_name2 = NULL;
-	int extractionIndex2;
-
-	tokenize1DArcadeParameters2(mappingValue, &diagnostic, &object_name, &extractionIndex, &diagnostic2, &object_name2, &extractionIndex2);
-
-	UDA_LOG(UDA_LOG_DEBUG, "setting UDA block in flt1D_contrib\n");
-
-	int status = setUDABlockSignalFromArcade2(shotNumber, object_name, extractionIndex, object_name2, extractionIndex2, data_block, nodeIndices, 1);
-	UDA_LOG(UDA_LOG_DEBUG, "after setting UDA block in flt1D_contrib\n");
-	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (flt1D_contrib): unable to get object : ";
-		strcat(errorMsg, object_name);
-		strcat(errorMsg, " for shot : ");
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
-	}
-	free(diagnostic);
-	free(object_name);
-	free(diagnostic2);
-	free(object_name2);
-	return status;
-}*/
-

@@ -61,12 +61,20 @@ void somme2(float* s, float* data1, float* data2, float* data3, int len);
 float factUpper(int shotNumber);
 float factLower(int shotNumber);
 
-void passive_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
-void passive_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
-void passive_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
-void passive_current_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int passive_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int passive_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int passive_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int passive_current_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int passive_current(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int passive_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+
+void pf_passive_throwsIdamError(int status, char* methodName, char* object_name, int shotNumber) {
+	int err = 901;
+	char msg[1000];
+	sprintf(msg, "%s(%s),object:%s,shot:%d,err:%d\n", "WEST:ERROR", methodName, object_name, shotNumber, status);
+	//UDA_LOG(UDA_LOG_ERROR, "%s", msg);
+	addIdamError(CODEERRORTYPE, msg, err, "");
+}
 
 int pf_passive_current_data(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
@@ -78,59 +86,63 @@ int pf_passive_current_time(int shotNumber, DATA_BLOCK* data_block, int* nodeInd
 	return passive_time(shotNumber, data_block, nodeIndices);
 }
 
-void pf_passive_loop_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_passive_loop_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	passive_name(shotNumber, data_block, nodeIndices);
+	return passive_name(shotNumber, data_block, nodeIndices);
 }
 
-void pf_passive_loop_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_passive_loop_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	pf_passive_loop_name(shotNumber, data_block, nodeIndices);
+	return pf_passive_loop_name(shotNumber, data_block, nodeIndices);
 }
 
-void pf_passive_element_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_passive_element_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int element_number = 1;
 	char s[100];
 	sprintf(s, "%d", element_number);
 	setReturnDataString(data_block, s, NULL);
+	return 0;
 }
 
-void pf_passive_element_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_passive_element_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	pf_passive_element_name(shotNumber, data_block, nodeIndices);
+	return pf_passive_element_name(shotNumber, data_block, nodeIndices);
 }
 
-void pf_passive_elements_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) //TODO
+int pf_passive_elements_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) //TODO
 {
 	int len = 1;
 	setReturnDataIntScalar(data_block, len, NULL);
+	return 0;
 }
 
-void pf_passive_loops_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) //TODO
+int pf_passive_loops_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) //TODO
 {
 	int len = 34;
 	setReturnDataIntScalar(data_block, len, NULL);
+	return 0;
 }
 
-void pf_passive_R(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_passive_R(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	passive_r(shotNumber, data_block, nodeIndices);
+	return passive_r(shotNumber, data_block, nodeIndices);
 }
 
-void pf_passive_Z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_passive_Z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	passive_z(shotNumber, data_block, nodeIndices);
+	return passive_z(shotNumber, data_block, nodeIndices);
 }
 
-void pf_passive_turns(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_passive_turns(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	setReturnDataFloatScalar(data_block, 1, NULL);
+	return 0;
 }
 
 
 
-void passive_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int passive_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int k = nodeIndices[0]; //starts from 1
 	char s[100];
@@ -151,12 +163,17 @@ void passive_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 		sprintf(s, "Lower divertor casing, centre part (loop %d)", k - 29);
 	} else if (k > 32 && k <= 34) {
 		sprintf(s, "Lower divertor casing, low field side part (loop %d)", k - 32);
+	} else {
+		int status = -1;
+		pf_passive_throwsIdamError(status,"passive_name", "wrong k index", shotNumber);
+		return status;
 	}
 
 	setReturnDataString(data_block, s, NULL);
+	return 0;
 }
 
-void passive_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int passive_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int k = nodeIndices[0]; //starts from 1
 	float* r = NULL;
@@ -178,11 +195,16 @@ void passive_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 		r[0] = Rinf2[k - 30];
 	} else if (k > 32 && k <= 34) {
 		r[0] = Rinf3[k - 33];
+	} else {
+		int status = -1;
+		pf_passive_throwsIdamError(status, "passive_r", "wrong k index", shotNumber);
+		return status;
 	}
 	SetStatic1DData(data_block, 1, r);
+	return 0;
 }
 
-void passive_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int passive_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int k = nodeIndices[0]; //starts from 1
 	float* z = NULL;
@@ -204,15 +226,20 @@ void passive_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 		z[0] = Zinf2[k - 30];
 	} else if (k > 32 && k <= 34) {
 		z[0] = Zinf3[k - 33];
+	} else {
+		int status = -1;
+		pf_passive_throwsIdamError(status, "passive_z", "wrong k index", shotNumber);
+		return status;
 	}
 	SetStatic1DData(data_block, 1, z);
+	return 0;
 }
 
-void passive_current_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int passive_current_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-
 	int len = 34;
 	setReturnDataIntScalar(data_block, len, NULL);
+	return 0;
 }
 
 int passive_current(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
@@ -223,13 +250,7 @@ int passive_current(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 	int len;
 	int status = getCurrent(shotNumber, data_block, nodeIndices, &data, &time, &len);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (passive_current): unable to get pf_passive current for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "passive_current", "", shotNumber);
 		free(data);
 		free(time);
 		return status;
@@ -277,7 +298,8 @@ int getCurrent(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, float**
 int passive_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 
-	int k = nodeIndices[0]; //starts from 1
+	//int k = nodeIndices[0]; //starts from 1
+	int k = 1;
 	int len;
 	float* data = NULL;
 	float* time = NULL;
@@ -302,13 +324,7 @@ int passive_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 	}
 
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (passive_current): unable to get pf_passive time for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "passive_current", "", shotNumber);
 		free(data);
 		free(time);
 		return status;
@@ -326,11 +342,10 @@ int passive_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 		float time_i = time[i];
 		if (abs(time_ref_i - time_i) > p)  {
 			int err = 901;
-			char* errorMsg = "WEST:ERROR (passive_time): time data for pf_passive currents differ for shot : ";
-			char shotStr[6];
-			sprintf(shotStr, "%d", shotNumber);
-			strcat(errorMsg, shotStr);
-			UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
+			char errorMsg[1000];
+			strcpy(errorMsg, "WEST:ERROR (passive_time): time data for pf_passive currents differ");
+			sprintf(errorMsg, ",shot:%d", shotNumber);
+			//UDA_LOG(UDA_LOG_ERROR, "%s\n", errorMsg);
 			addIdamError(CODEERRORTYPE, errorMsg, err, "");
 			free(data);
 			free(time);
@@ -352,7 +367,8 @@ int getIFREEB(int shotNumber, int extractionIndex, float** time, float** data, i
 			extractionIndex); //Concatenate nomsigp_to_extract avec !extractionIndex, example: !1, !2, ...
 	int rang[2] = { 0, 0 };
 	int status = readSignal(nomsigp_to_extract, shotNumber, 0, rang, time, data, len);
-	multiplyFloat(*data, normalizationFactor, *len);
+	if (status == 0)
+		multiplyFloat(*data, normalizationFactor, *len);
 	return status;
 }
 
@@ -401,13 +417,7 @@ float factUpper(int shotNumber)
 	float* I_case_upper_time = NULL;
 	int status = I_case_upper(shotNumber, &I_case_upper_time, &I_case_upper_data, &I_case_upper_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factUpper): unable to get I_case_upper for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factUpper,I_case_upper", "", shotNumber);
 		free(I_case_upper_data);
 		free(I_case_upper_time);
 	}
@@ -417,13 +427,7 @@ float factUpper(int shotNumber)
 	float* coeff1_time = NULL;
 	status = getIDCOEF(shotNumber, 19, &coeff1_time, &coeff1_data, &coeff_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factUpper): error calling getIDCOEF(19) for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factUpper,getIDCOEF(19)", "", shotNumber);
 		free(I_case_upper_data);
 		free(I_case_upper_time);
 		free(coeff1_data);
@@ -433,13 +437,7 @@ float factUpper(int shotNumber)
 	float* coeff2_time = NULL;
 	status = getIDCOEF(shotNumber, 20, &coeff2_time, &coeff2_data, &coeff_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factUpper): error calling getIDCOEF(20) for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factUpper,getIDCOEF(20)", "", shotNumber);
 		free(I_case_upper_data);
 		free(I_case_upper_time);
 		free(coeff1_data);
@@ -451,13 +449,7 @@ float factUpper(int shotNumber)
 	float* coeff3_time = NULL;
 	status = getIDCOEF(shotNumber, 21, &coeff3_time, &coeff3_data, &coeff_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factUpper): error calling getIDCOEF(21) for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factUpper,getIDCOEF(21)", "", shotNumber);
 		free(I_case_upper_data);
 		free(I_case_upper_time);
 		free(coeff1_data);
@@ -483,13 +475,7 @@ float factLower(int shotNumber)
 	float* I_case_lower_time = NULL;
 	int status = I_case_lower(shotNumber, &I_case_lower_time, &I_case_lower_data, &I_case_lower_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factLower): error calling I_case_lower for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factLower,I_case_lower", "", shotNumber);
 		free(I_case_lower_data);
 		free(I_case_lower_time);
 	}
@@ -499,13 +485,7 @@ float factLower(int shotNumber)
 	float* coeff1_time = NULL;
 	status = getIDCOEF(shotNumber, 22, &coeff1_time, &coeff1_data, &coeff_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factLower): error calling getIDCOEF(22) for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factLower,getIDCOEF(22)", "", shotNumber);
 		free(I_case_lower_data);
 		free(I_case_lower_time);
 		free(coeff1_data);
@@ -516,13 +496,7 @@ float factLower(int shotNumber)
 	float* coeff2_time = NULL;
 	status = getIDCOEF(shotNumber, 23, &coeff2_time, &coeff2_data, &coeff_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factLower): error calling getIDCOEF(23) for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factLower,getIDCOEF(23)", "", shotNumber);
 		free(I_case_lower_data);
 		free(I_case_lower_time);
 		free(coeff1_data);
@@ -535,13 +509,7 @@ float factLower(int shotNumber)
 	float* coeff3_time = NULL;
 	status = getIDCOEF(shotNumber, 24, &coeff3_time, &coeff3_data, &coeff_len, 1.);
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (factLower): error calling getIDCOEF(24) for pf_passive for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_passive_throwsIdamError(status, "factLower,getIDCOEF(24)", "", shotNumber);
 		free(I_case_lower_data);
 		free(I_case_lower_time);
 		free(coeff1_data);

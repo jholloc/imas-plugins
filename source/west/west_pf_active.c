@@ -46,8 +46,15 @@ const char* COILS_NAMES[] = { "A", "Bh", "Dh", "Eh", "Fh", "Fb", "Eb", "Db", "Bb
 		"Divertor_bottom2_LFS" };
 
 int get_pf_current(int shotNumber, int extractionIndex, float** time, float** data, int* len, float normalizationFactor);
-void pf_active(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, int index);
+int pf_active(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, int index);
 
+void pf_active_throwsIdamError(int status, char* methodName, char* object_name, int shotNumber) {
+	int err = 901;
+	char msg[1000];
+	sprintf(msg, "%s(%s),object:%s,shot:%d,err:%d\n", "WEST:ERROR", methodName, object_name, shotNumber, status);
+	//UDA_LOG(UDA_LOG_ERROR, "%s", msg);
+	addIdamError(CODEERRORTYPE, msg, err, "");
+}
 
 int pf_active_current_data(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
@@ -72,13 +79,7 @@ int pf_active_current_data(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 		status = get_pf_current(shotNumber, 13, &time, &data, &len, 1000.);
 	}
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (pf_active_current_data): unable to get pf_active current for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_active_throwsIdamError(status, "pf_active_current_data", "", shotNumber);
 		free(time);
 		free(data);
 		return status;
@@ -89,7 +90,8 @@ int pf_active_current_data(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 
 int pf_active_current_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	int index = nodeIndices[0]; //starts from 1
+	//int index = nodeIndices[0]; //starts from 1
+	int index = 1;
 	float *time = NULL;
 	float *data = NULL;
 	int len;
@@ -109,14 +111,14 @@ int pf_active_current_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 	else if (index == 16 || index == 17) {
 		status = get_pf_current(shotNumber, 13, &time, &data, &len, 1000.);
 	}
+	else {
+		pf_active_throwsIdamError(status, "pf_active_current_time", "wrong index", shotNumber);
+		free(time);
+		free(data);
+		return status;
+	}
 	if (status != 0) {
-		int err = 901;
-		char* errorMsg = "WEST:ERROR (pf_active_current_time): unable to get pf_active_current_time for shot : ";
-		char shotStr[6];
-		sprintf(shotStr, "%d", shotNumber);
-		strcat(errorMsg, shotStr);
-		UDA_LOG(UDA_LOG_ERROR, "%s", errorMsg);
-		addIdamError(CODEERRORTYPE, errorMsg, err, "");
+		pf_active_throwsIdamError(status, "pf_active_current_time", "get_pf_current", shotNumber);
 		free(time);
 		free(data);
 		return status;
@@ -133,7 +135,8 @@ int get_pf_current(int shotNumber, int extractionIndex, float** time, float** da
 	addExtractionChars(nomsigp_to_extract, nomsigp, extractionIndex); //Concatenate nomsigp_to_extract avec !extractionIndex, example: !1, !2, ...
 	int rang[2] = { 0, 0 };
 	int status = readSignal(nomsigp_to_extract, shotNumber, 0, rang, time, data, len);
-	multiplyFloat(*data, normalizationFactor, *len);
+	if (status == 0)
+		multiplyFloat(*data, normalizationFactor, *len);
 	return status;
 }
 
@@ -145,57 +148,61 @@ int pf_active_coil_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices
 	return 0;
 }
 
-void pf_active_coil_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_coil_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	pf_active_coil_name(shotNumber, data_block, nodeIndices);
+	return pf_active_coil_name(shotNumber, data_block, nodeIndices);
 }
 
-void pf_active_element_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_element_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int element_number = nodeIndices[1]; //starts from 1
 	char s[100];
 	sprintf(s, "%d", element_number);
 	setReturnDataString(data_block, s, NULL);
+	return 0;
 }
 
-void pf_active_element_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_element_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	pf_active_element_name(shotNumber, data_block, nodeIndices);
+	return 0;
 }
 
-void pf_active_elements_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_elements_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int len = 1;
 	setReturnDataIntScalar(data_block, len, NULL);
+	return 0;
 }
 
-void pf_active_coils_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_coils_shapeOf(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int len = 17;
 	setReturnDataIntScalar(data_block, len, NULL);
+	return 0;
 }
 
-void pf_active_R(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_R(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	pf_active(shotNumber, data_block, nodeIndices, 0);
+	return pf_active(shotNumber, data_block, nodeIndices, 0);
 }
 
-void pf_active_Z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_Z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	pf_active(shotNumber, data_block, nodeIndices, 1);
+	return pf_active(shotNumber, data_block, nodeIndices, 1);
 }
 
-void pf_active_W(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_W(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	pf_active(shotNumber, data_block, nodeIndices, 2);
+	return pf_active(shotNumber, data_block, nodeIndices, 2);
 }
 
-void pf_active_H(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_H(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-	pf_active(shotNumber, data_block, nodeIndices, 3);
+	return pf_active(shotNumber, data_block, nodeIndices, 3);
 }
 
-void pf_active_turns(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int pf_active_turns(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int coil_number = nodeIndices[0]; //starts from 1
 	float r;
@@ -235,11 +242,16 @@ void pf_active_turns(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 		r = (float)Xl3[index];
 	} else if (coil_number == 17) {
 		r = (float)Xl4[index];
+	} else {
+		int status = -1;
+		pf_active_throwsIdamError(status, "pf_active", "wrong coil_number index", shotNumber);
+		return status;
 	}
 	setReturnDataFloatScalar(data_block, r, NULL);
+	return 0;
 }
 
-void pf_active(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, int index)
+int pf_active(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, int index)
 {
 	int coil_number = nodeIndices[0]; //starts from 1
 	float r;
@@ -278,7 +290,12 @@ void pf_active(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, int ind
 		r = Xl3[index];
 	} else if (coil_number == 17) {
 		r = Xl4[index];
+	} else {
+		int status = -1;
+		pf_active_throwsIdamError(status, "pf_active", "wrong coil_number index", shotNumber);
+		return status;
 	}
 	setReturnDataFloatScalar(data_block, r, NULL);
+	return 0;
 }
 
