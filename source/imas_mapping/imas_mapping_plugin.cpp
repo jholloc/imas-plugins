@@ -384,14 +384,21 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
         element_delim = "/";
     }
 
-    arraystruct_stack_.emplace_back(element_ss.str(), indices_ss.str());
-
     auto request =
             boost::format("%s::read(experiment='%s', element='%s/%s/Shape_of', shot=%d, indices='%s', dtype=%d, IDS_version='')")
             % plugin_name % pulse.tokamak % ids_ % element_ss.str() % pulse.shot % indices_ss.str() % uda_type;
     std::cout << request.str() << std::endl;
 
-    return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+    int rc = callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+    if (rc == 0
+            && idam_plugin_interface->data_block != nullptr
+            && idam_plugin_interface->data_block->data_type == UDA_TYPE_INT
+            && idam_plugin_interface->data_block->data != nullptr
+            && *(int*)idam_plugin_interface->data_block->data > 0) {
+        arraystruct_stack_.emplace_back(element_ss.str(), indices_ss.str());
+    }
+
+    return rc;
 }
 
 size_t extract_array_indices(const char* input, char** output, int** indices)
