@@ -4,9 +4,11 @@
 if( NOT DEFINED BUILD_PLUGINS )
   set( BUILD_PLUGINS
     exp2imas
-    imas
+    imas_remote
+    imas_old
     imas_mapping
     imasdd
+    jet_magnetics
     mast_imas
     source
     west

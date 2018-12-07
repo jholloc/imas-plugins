@@ -1,5 +1,4 @@
-#ifndef IMAS_PLUGINS_MACHINE_MAPPING_H
-#define IMAS_PLUGINS_MACHINE_MAPPING_H
+#include "machine_mapping.h"
 
 #include <string>
 #include <unordered_map>
@@ -70,4 +69,22 @@ private:
 }
 }
 
-#endif // IMAS_PLUGINS_MACHINE_MAPPING_H
+MACHINE_MAPPING* new_mapping()
+{
+    return new uda::imas_mapping::MachineMapping{};
+}
+
+void free_mapping(MACHINE_MAPPING* mapping)
+{
+    delete mapping;
+}
+
+const char* mapping_host(MACHINE_MAPPING* mapping, const char* machine, const char* ids)
+{
+    return mapping->host(machine, ids).c_str();
+}
+
+const char* mapping_plugin(MACHINE_MAPPING* mapping, const char* machine, const char* ids)
+{
+    return mapping->plugin(machine, ids).c_str();
+}

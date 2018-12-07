@@ -363,7 +363,7 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
         tokens.push_back(fragment);
     }
 
-    auto plugin_name = machine_mapping_.plugin(pulse.tokamak);
+    auto plugin_name = machine_mapping_.plugin(pulse.tokamak, ids_);
 
     int uda_type = UDA_TYPE_INT;
 
@@ -518,7 +518,7 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     Pulse pulse = pulses_.find(ctxId)->second;
 
-    auto plugin_name = machine_mapping_.plugin(pulse.tokamak);
+    auto plugin_name = machine_mapping_.plugin(pulse.tokamak, ids_);
 
     std::string element;
     std::string indices;
@@ -569,7 +569,7 @@ int MappingPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* user;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
 
-    auto plugin_name = machine_mapping_.plugin(expName);
+    auto plugin_name = machine_mapping_.plugin(expName, ids_);
 
     auto element = std::string(group) + "/" + variable;
 
@@ -610,7 +610,7 @@ int MappingPlugin::get_dim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* user;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
 
-    auto plugin_name = machine_mapping_.plugin(expName);
+    auto plugin_name = machine_mapping_.plugin(expName, ids_);
 
     auto element = std::string(group) + "/" + variable + "/Shape_of";
 

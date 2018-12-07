@@ -16,7 +16,7 @@ endif()
 include( plugins )
 
 uda_plugin(
-  NAME IMAS
+  NAME IMAS_REMOTE
   VERSION 1.0.0
   ENTRY_FUNC imasPlugin
   DESCRIPTION ""
