@@ -14,10 +14,10 @@ elseif( NOT LIBXML2_FOUND )
 elseif( NOT LIBSSH_FOUND )
   message( WARNING "Libssh not found - skipping exp2imas plugin" )
   return()
-elseif( NOT GTK3_FOUND )
+#elseif( NOT GTK3_FOUND )
   # Currently does not work without GTK3 gui
-  message( WARNING "GTK3 not found - skipping exp2imas plugin" )
-  return()
+  #message( WARNING "GTK3 not found - skipping exp2imas plugin" )
+  #return()
 endif()
 
 include( plugins )
