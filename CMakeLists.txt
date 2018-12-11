@@ -20,6 +20,8 @@ project( imas_plugins )
 
 set( CMAKE_CXX_STANDARD 11 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
+set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -pthread" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -pthread" )
 
 include( LibXml2StrPrintfConfig )
 

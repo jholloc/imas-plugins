@@ -59,7 +59,7 @@ enum class Section
 
 class Filter {
 public:
-    explicit Filter(tinyxml2::XMLElement* element)
+    explicit Filter(const tinyxml2::XMLElement* element)
     {
         if (element == nullptr) {
             throw std::runtime_error("null element");
@@ -67,23 +67,27 @@ public:
         _dda = element->Attribute("dda") != nullptr ? element->Attribute("dda") : "";
         _dtype = element->Attribute("dtype") != nullptr ? element->Attribute("dtype") : "";
         _sorted = element->Attribute("sorted") != nullptr ? element->Attribute("sorted") : "";
+        _match = element->Attribute("match") != nullptr ? element->Attribute("match") : "";
     }
 
     template <typename T>
-    std::vector<T> insert_matches(std::vector<T>& filtered, const std::vector<T>& items) const {
+    std::vector<T> insert_matches(std::vector<T>& container, const std::vector<T>& items) const {
+        std::vector<T> filtered;
         std::copy_if(items.begin(), items.end(), std::back_inserter(filtered), [this](const T& loop){ return match(loop); });
 
         if (_sorted == "dtype") {
-            std::sort(filtered.begin(), filtered.end(), [](const T& lhs, const T& rhs){ return lhs.dtype.compare(rhs.dtype); });
+            std::sort(filtered.begin(), filtered.end(), [](const T& lhs, const T& rhs){ return lhs.dtype < rhs.dtype; });
         }
 
-        return filtered;
+        std::copy(filtered.begin(), filtered.end(), std::back_inserter(container));
+        return container;
     }
 
 private:
     std::string _dda;
     std::string _dtype;
     std::string _sorted;
+    std::string _match;
 
     bool match(const FluxLoop& loop) const
     {
@@ -97,23 +101,26 @@ private:
 
     bool match(const std::string& dda, const std::string& dtype) const
     {
+        bool match_dda = true;
+        bool match_dtype = true;
+
         if (!_dda.empty() && dda != _dda) {
-            return false;
+            match_dda = false;
         }
 
         if (!_dtype.empty()) {
-            if (_dtype[0] == '!') {
-                if (dtype ==  _dtype.substr(1)) {
-                    return false;
-                }
-            } else {
-                if (dtype != _dtype) {
-                    return false;
-                }
+            std::vector<std::string> dtype_tokens;
+            boost::split(dtype_tokens, _dtype, boost::is_any_of("|"), boost::token_compress_on);
+
+            match_dtype = false;
+            for (const auto& dtype_token : dtype_tokens) {
+                std::string dtype_fragment = dtype.substr(0, dtype.find('(', 0));
+                bool match_not = dtype_token[0] == '!';
+                match_dtype |= match_not ? (dtype_fragment != dtype_token.substr(1)) : (dtype_fragment == dtype_token);
             }
         }
 
-        return true;
+        return _match == "ANY" ? (match_dda || match_dtype) : (match_dda && match_dtype);
     }
 
 };
@@ -161,19 +168,29 @@ private:
     void load_filters()
     {
         tinyxml2::XMLDocument document;
-        document.LoadFile("/Users/jhollocombe/Projects/iter-plugins/source/jet_magnetics/sensors.xml");
+        tinyxml2::XMLError err = document.LoadFile("/home/jholloc/Projects/iter-plugins/source/jet_magnetics/sensors.xml");
 
-        tinyxml2::XMLNode* root = document.FirstChildElement("filters")->FirstChildElement("flux_loops");
+        if (err != tinyxml2::XMLError::XML_SUCCESS) {
+            throw std::runtime_error{ document.ErrorIDToName(err) };
+        }
 
-        for (tinyxml2::XMLNode* child = root->FirstChild(); child != root->LastChild(); child->NextSibling()) {
-            auto el = dynamic_cast<tinyxml2::XMLElement*>(child);
+        const tinyxml2::XMLNode* root = document.FirstChildElement("filters")->FirstChildElement("flux_loops");
+
+        if (root == nullptr) {
+            throw std::runtime_error{ "flux_loops element not found" };
+        }
+
+        for (const tinyxml2::XMLElement* el = root->FirstChildElement(); el != nullptr; el = el->NextSiblingElement()) {
             _flux_loop_filters.emplace_back(Filter{ el });
         }
 
         root = document.FirstChildElement("filters")->FirstChildElement("bpol_probes");
 
-        for (tinyxml2::XMLNode* child = root->FirstChild(); child != root->LastChild(); child->NextSibling()) {
-            auto el = dynamic_cast<tinyxml2::XMLElement*>(child);
+        if (root == nullptr) {
+            throw std::runtime_error{ "bpol_probes element not found" };
+        }
+
+        for (const tinyxml2::XMLElement* el = root->FirstChildElement(); el != nullptr; el = el->NextSiblingElement()) {
             _bpol_probe_filters.emplace_back(Filter{ el });
         }
     }
@@ -181,12 +198,12 @@ private:
     void load_data()
     {
 
-        std::ifstream infile("/Users/jhollocombe/Projects/iter-plugins/source/jet_magnetics/sensors_200c_detail.txt");
+        std::ifstream infile("/home/jholloc/Projects/iter-plugins/source/jet_magnetics/sensors_200c_detail.txt");
 
         Section section = Section::NONE;
 
         std::string line;
-        while (std::getline(infile, line))
+        while (std::getline(infile, line, '\r'))
         {
             boost::trim(line);
 
@@ -224,12 +241,12 @@ private:
                 auto factor = strtof(tokens[i++].c_str(), nullptr);
                 auto rel_err = strtof(tokens[i++].c_str(), nullptr);
                 auto abs_err = strtof(tokens[i++].c_str(), nullptr);
-                auto name = tokens[i++];
-                auto desc = tokens[i++];
+                auto name = boost::trim_copy(tokens[i++]);
+                auto desc = boost::trim_copy(tokens[i++]);
                 auto oct = strtol(tokens[i++].c_str(), nullptr, 10);
-                auto magn = tokens[i++];
-                auto dda = tokens[i++];
-                auto dtype = tokens[i++];
+                auto magn = boost::trim_copy(tokens[i++]);
+                auto dda = boost::trim_copy(tokens[i++]);
+                auto dtype = boost::trim_copy(tokens[i++]);
                 auto source = std::string("PPF/MAGN/") + magn;
                 _flux_loops.emplace_back(FluxLoop{ num, { r, 0 }, { z, 0 }, factor, rel_err, abs_err, name, desc, oct, magn, dda, dtype, source });
             } else if (section == Section::SADDLE) {
@@ -242,12 +259,13 @@ private:
                 auto factor = strtof(tokens[i++].c_str(), nullptr);
                 auto rel_err = strtof(tokens[i++].c_str(), nullptr);
                 auto abs_err = strtof(tokens[i++].c_str(), nullptr);
-                auto name = tokens[i++];
-                auto desc = tokens[i++];
+                auto name = boost::trim_copy(tokens[i++]);
+                auto desc = boost::trim_copy(tokens[i++]);
                 auto oct = strtol(tokens[i++].c_str(), nullptr, 10);
-                auto magn = tokens[i++];
-                auto dda = tokens[i++];
-                auto dtype = tokens[i++];
+                auto tor_ang = strtof(tokens[i++].c_str(), nullptr);
+                auto magn = boost::trim_copy(tokens[i++]);
+                auto dda = boost::trim_copy(tokens[i++]);
+                auto dtype = boost::trim_copy(tokens[i++]);
                 auto source = std::string("PPF/MAGN/") + magn;
                 _flux_loops.emplace_back(FluxLoop{ num, { r1, r2 }, { z1, z2 }, factor, rel_err, abs_err, name, desc, oct, magn, dda, dtype, source });
             } else if (section == Section::PICK_UP) {
@@ -259,13 +277,13 @@ private:
                 auto factor = strtof(tokens[i++].c_str(), nullptr);
                 auto rel_err = strtof(tokens[i++].c_str(), nullptr);
                 auto abs_err = strtof(tokens[i++].c_str(), nullptr);
-                auto name = tokens[i++];
-                auto desc = tokens[i++];
+                auto name = boost::trim_copy(tokens[i++]);
+                auto desc = boost::trim_copy(tokens[i++]);
                 auto oct = strtol(tokens[i++].c_str(), nullptr, 10);
                 auto tor_ang = strtof(tokens[i++].c_str(), nullptr);
-                auto magn = tokens[i++];
-                auto dda = tokens[i++];
-                auto dtype = tokens[i++];
+                auto magn = boost::trim_copy(tokens[i++]);
+                auto dda = boost::trim_copy(tokens[i++]);
+                auto dtype = boost::trim_copy(tokens[i++]);
                 _pickups.emplace_back(PickUp{ num, r, z, pol_ang, factor, rel_err, abs_err, name, desc, oct, tor_ang, magn, dda, dtype });
             }
         }
@@ -332,8 +350,8 @@ namespace {
 // Help: A Description of library functionality
 int JetMagneticsPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    const char* help = "\ntsPlugin: this plugin maps Tore Supra data to IDS\n\n";
-    const char* desc = "tsPlugin: help = plugin used for mapping Tore Supra experimental data to IDS";
+    const char* help = "\nJetMagneticsPlugin: this plugin maps JET magnetics machine description data to IDS\n\n";
+    const char* desc = "JetMagneticsPlugin: help = plugin used for mapping JET magnetics md to IDS";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }

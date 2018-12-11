@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <filters>
   <flux_loops>
-    <match dda="MNJ3" dtype="!BSAD"/>
-    <match dda="MNJ3" dtype="BSAD" sorted="dtype"/>
+    <filter dda="MNJ8" dtype="FLME"/>
+    <filter dda="MNJ3" dtype="!BSAD"/>
+    <filter dda="MNJ3" dtype="BSAD" sorted="dtype"/>
   </flux_loops>
   <bpol_probes>
-    <match dda="MNJ3" dtype="PLB"/>
-    <match dda="MNJ8" dtype="UPC|UNC|IC"/>
-    <match dda="MNJ1" dtype="TPC|TNC"/>
+    <filter dda="MNJ3" dtype="PLB" match="ANY"/>
+    <filter dda="MNJ8" dtype="UPC|UNC|IC"/>
+    <filter dda="MNJ1" dtype="TPC|TNC"/>
   </bpol_probes>
 </filters>

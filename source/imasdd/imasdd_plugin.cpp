@@ -35,9 +35,7 @@
 #include <clientserver/copyStructs.h>
 #include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
-#if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
-#  include <plugins/pluginUtils.h>
-#endif
+#include <plugins/pluginUtils.h>
 
 #include "pugixml.hpp"
 
