@@ -35,7 +35,7 @@
 #include <clientserver/copyStructs.h>
 #include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
-#include <plugins/pluginUtils.h>
+//#include <plugins/pluginUtils.h>
 
 #include "pugixml.hpp"
 
@@ -205,18 +205,18 @@ void get_requests(std::vector<std::string>& requests, const std::string& ids, co
         //          << ", variable=" << path << name
         //          << ")"
         //          << std::endl;
-        out << "imas::get(group='" << ids
+        out << "imas_mapping::get(group='" << ids
             << "', variable='" << path << name << "/Shape_of', type=int, rank=0"
-            << ", idx=0, expName='JET', shot=84600"
+            << ", idx=0, expName='JET', shot=84600, run=0, user=''"
             << ")";
         requests.push_back(out.str()); 
         name = path + name + "/#/";
     } else { 
-        out << "imas::get(group='" << ids
+        out << "imas_mapping::get(group='" << ids
             << "', variable='" << path << name
             << "', type='" << get_type(dtype)
             << "', rank=" << get_rank(dtype)
-            << ", idx=0, expName='JET', shot=84600"
+            << ", idx=0, expName='JET', shot=84600, run=0, user=''"
             << ")";
         requests.push_back(out.str()); 
         name = path + name + "/";
@@ -228,19 +228,8 @@ void get_requests(std::vector<std::string>& requests, const std::string& ids, co
     }
 }
 
-void call_plugin(const std::string& plugin_name, const std::string& request, IDAM_PLUGIN_INTERFACE* plugin_interface)
+int call_plugin(const std::string& plugin_name, const std::string& request, IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    //if (request.find("flux_loop/Shape_of") != std::string::npos) {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 36, nullptr);
-    //} else if (request.find("bpol_probe/Shape_of") != std::string::npos) {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 71, nullptr);
-    //} else if (request.find("position/Shape_of") != std::string::npos) {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 1, nullptr);
-    //} else {
-    //    setReturnDataIntScalar(plugin_interface->data_block, 1, nullptr);
-    //}
-    //return;
-
     REQUEST_BLOCK new_request{};
     copyRequestBlock(&new_request, *plugin_interface->request_block);
 
@@ -252,14 +241,16 @@ void call_plugin(const std::string& plugin_name, const std::string& request, IDA
 
     int plugin_id = findPluginIdByFormat(plugin_name.c_str(), plugin_interface->pluginList);
     if (plugin_id < 0) {
-        throw std::runtime_error("cannot find " + plugin_name + " plugin");
+        RAISE_PLUGIN_ERROR("cannot find plugin");
     }
 
     PLUGIN_DATA* plugin = &plugin_interface->pluginList->plugin[plugin_id];
     int rc = plugin->idamPlugin(plugin_interface);
     if (rc < 0) {
-        throw std::runtime_error("call to plugin " + plugin_name + " failed");
+        RAISE_PLUGIN_ERROR("call to plugin failed");
     }
+
+    return 0;
 }
 
 void expand_request(std::vector<std::string>& requests, size_t depth, const std::string& request, const std::vector<int>& sizes)
@@ -323,8 +314,11 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
             IDAM_PLUGIN_INTERFACE new_plugin_interface = *plugin_interface;
             DATA_BLOCK result{};
             new_plugin_interface.data_block = &result;
-            call_plugin("imas", request, &new_plugin_interface);
-            int size = *(int*)result.data;
+            int rc = call_plugin("imas_mapping", request, &new_plugin_interface);
+            int size = 0;
+            if (!rc) {
+                size = *(int*)result.data;
+            }
 
             if (depth < sizes.size()) {
                 sizes.pop_back();
@@ -345,7 +339,7 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         DATA_BLOCK result{};
         new_plugin_interface.data_block = &result;
 
-        call_plugin("imas", request, &new_plugin_interface);
+        call_plugin("imas_mapping", request, &new_plugin_interface);
 
         memcpy(&list[i], &result, sizeof(DATA_BLOCK));
         ++i;

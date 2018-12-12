@@ -463,7 +463,7 @@ char* indices_to_string(const int* indices, size_t num_indices)
 
 int convert_IMAS_to_UDA_type(const std::string& type)
 {
-    if (type == "integer") {
+    if (type == "integer" || type == "int") {
         return UDA_TYPE_INT;
     } else if (type == "float") {
         return UDA_TYPE_FLOAT;

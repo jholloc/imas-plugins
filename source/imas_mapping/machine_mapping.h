@@ -33,7 +33,7 @@ public:
 
             tokenizer tokens{ line, sep };
             std::vector<std::string> words(tokens.begin(), tokens.end());
-            if (words.size() != 3) {
+            if (words.size() != 4) {
                 throw std::runtime_error(std::string("bad line in ") + file_name + ": " + line);
             }
 
