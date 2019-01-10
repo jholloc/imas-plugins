@@ -1,6 +1,0 @@
-# Machine   IDS         Host        Plugin
-JET         magnetics   -           JET_MAGNETICS
-JET         *           -           EXP2IMAS
-ASDEX       *           -           EXP2IMAS
-TCV         *           -           EXP2IMAS
-WEST        *           -           WEST

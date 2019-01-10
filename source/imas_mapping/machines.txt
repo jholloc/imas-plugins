@@ -4,3 +4,4 @@ JET         *           -           EXP2IMAS
 ASDEX       *           -           EXP2IMAS
 TCV         *           -           EXP2IMAS
 WEST        *           -           WEST
+HL2A        *           -           HL2A

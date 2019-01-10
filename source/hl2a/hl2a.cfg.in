@@ -1,0 +1,2 @@
+export UDA_HL2A_MAPPING_FILE=$HOME/TESTCRON2/uda/source/plugins/hl2a/HL2A_mappings/IDAM_mapping.xml
+export UDA_WEST_MAPPING_FILE_DIRECTORY=$HOME/TESTCRON2/uda/source/plugins/hl2a/HL2A_mappings
