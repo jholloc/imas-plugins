@@ -27,12 +27,10 @@ int GetHL2AData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, int*
     UDA_LOG(UDA_LOG_DEBUG, "UDA request: %s\n", fun_name);
 
 
-    if        (strcmp(fun_name, "magnetics_ids_properties_homogeneous_time") == 0) {
+    if (strcmp(fun_name, "magnetics_ids_properties_homogeneous_time") == 0) {
         magnetics_ids_properties_homogeneous_time(shotNumber, data_block, nodeIndices);
     } else if (strcmp(fun_name, "magnetics_flux_loop_shape_of") == 0) {
         magnetics_flux_loop_shape_of(shotNumber, data_block, nodeIndices);
-    } else if (strcmp(fun_name, "magnetics_flux_loop_name") == 0) {
-        magnetics_flux_loop_name(shotNumber, data_block, nodeIndices);
     } else if (strcmp(fun_name, "magnetics_flux_loop_position_shape_of") == 0) {
         magnetics_flux_loop_position_shape_of(shotNumber, data_block, nodeIndices);
     } else if (strcmp(fun_name, "magnetics_flux_loop_position_r") == 0) {

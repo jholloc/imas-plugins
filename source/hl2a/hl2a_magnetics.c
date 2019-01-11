@@ -26,7 +26,6 @@ void magnetics_flux_loop_shape_of(int shotNumber, DATA_BLOCK* data_block, int* n
    setReturnDataIntScalar(data_block, N, NULL); //returns N flux loops
 }
 
-
 void magnetics_flux_loop_position_shape_of(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
    int N = 3;
@@ -110,8 +109,6 @@ void magnetics_flux_loop_flux_data(int shotNumber, DATA_BLOCK* data_block, int* 
     }
     const size_t* shape = &N;
     setReturnDataFloatArray(data_block, data, 1, shape, "");
-    //SetDynData2(data_block, N, data);
-    
 }
 
 void magnetics_flux_loop_flux_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
@@ -137,7 +134,4 @@ void magnetics_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
     const size_t* shape = &N;
     setReturnDataFloatArray(data_block, time, 1, shape, ""); 
 }
-
-
-
 

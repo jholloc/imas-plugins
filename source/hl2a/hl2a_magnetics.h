@@ -13,4 +13,5 @@ void magnetics_flux_loop_flux_data(int shotNumber, DATA_BLOCK* data_block, int* 
 void magnetics_flux_loop_flux_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 void magnetics_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 
+
 #endif // IDAM_PLUGIN_HL2A_MAGNETICS_H
