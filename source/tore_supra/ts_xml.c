@@ -29,6 +29,8 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     xmlXPathContextPtr xpathCtx;
     xmlXPathObjectPtr xpathObj;
 
+    UDA_LOG(UDA_LOG_DEBUG, "TORE: Entering in execute_xpath_expression...\n");
+
     initDataBlock(data_block);
 
     assert(filename);
@@ -41,6 +43,8 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
         return -1;
     }
 
+    UDA_LOG(UDA_LOG_DEBUG, "TORE: XML file successfully parsed.\n");
+
     /* Create xpath evaluation context */
     xpathCtx = xmlXPathNewContext(doc);
     if (xpathCtx == NULL) {
@@ -48,6 +52,8 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
         xmlFreeDoc(doc);
         return -1;
     }
+
+    UDA_LOG(UDA_LOG_DEBUG, "TORE: XPath context successfully created.\n");
 
     // Defaults
     int dim = 1; //we always return an array with dimension >= 1
@@ -105,12 +111,16 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     /* Evaluate xpath expression for requesting the data  */
     xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx);
 
+    UDA_LOG(UDA_LOG_DEBUG, "TORE: Evaluate xpath expression for requesting the data...\n");
+
     if (xpathObj == NULL) {
         fprintf(stderr, "Error: unable to evaluate xpath expression \"%s\"\n", xpathExpr);
         xmlXPathFreeContext(xpathCtx);
         xmlFreeDoc(doc);
         return -1;
     }
+
+    UDA_LOG(UDA_LOG_DEBUG, "TORE: xpath expression successfully evaluated: %s\n", xpathExpr);
 
     xmlNodeSetPtr nodes = xpathObj->nodesetval;
 
@@ -119,6 +129,7 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     int err = 0;
 
     if (size == 0) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE: ts_xml plugin : error in XPath request\n");
         fprintf(stderr, "ts_xml plugin : error in XPath request  \n");
         xmlXPathFreeContext(xpathCtx);
         xmlFreeDoc(doc);
@@ -130,6 +141,7 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     cur = nodes->nodeTab[0];
 
     if (cur->name == NULL) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE: null pointer (nodes->nodeTab[nodeindex]->name)\n");
         fprintf(stderr, "Error: null pointer (nodes->nodeTab[nodeindex]->name) \n");
         xmlXPathFreeContext(xpathCtx);
         xmlFreeDoc(doc);
@@ -139,6 +151,8 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     data_block->rank = 1;
     data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
 
+    UDA_LOG(UDA_LOG_DEBUG, "TORE:setting UDA data_block...\n");
+
     int i;
     for (i = 0; i < data_block->rank; i++) {
         initDimBlock(&data_block->dims[i]);
@@ -147,20 +161,29 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     int data_type = convertToInt(type);
 
     if (data_type == UDA_TYPE_DOUBLE) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:conversion in double\n");
         data_block->data_type = UDA_TYPE_DOUBLE;
         data_block->data = malloc(dim * sizeof(double));
         char** data = getContent(cur, dim);
         for (i = 0; i < dim; i++) {
             ((double*)data_block->data)[i] = atof(data[i]);
         }
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:successfull conversion in double\n");
     } else if (data_type == UDA_TYPE_FLOAT) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:conversion in float\n");
         data_block->data_type = UDA_TYPE_FLOAT;
         data_block->data = malloc(dim * sizeof(float));
         char** data = getContent(cur, dim);
         for (i = 0; i < dim; i++) {
             ((float*)data_block->data)[i] = (float)atof(data[i]);
         }
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:successfull conversion in float\n");
+        /*for (i = 0; i < dim; i++) {
+   	   UDA_LOG(UDA_LOG_DEBUG, "TORE:data=%f\n", (float)atof(data[i][0]);
+        }*/
+
     } else if (data_type == UDA_TYPE_LONG) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:conversion in long\n");
         data_block->data_type = UDA_TYPE_LONG;
         data_block->data = malloc(dim * sizeof(long));
         char** data = getContent(cur, dim);
@@ -168,6 +191,7 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
             ((long*)data_block->data)[i] = atol(data[i]);
         }
     } else if (data_type == UDA_TYPE_INT) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:conversion in int\n");
         data_block->data_type = UDA_TYPE_INT;
         data_block->data = malloc(dim * sizeof(int));
         char** data = getContent(cur, dim);
@@ -175,6 +199,7 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
             ((int*)data_block->data)[i] = atoi(data[i]);
         }
     } else if (data_type == UDA_TYPE_SHORT) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:conversion in short\n");
         data_block->data_type = UDA_TYPE_SHORT;
         data_block->data = malloc(dim * sizeof(short));
         char** data = getContent(cur, dim);
@@ -182,11 +207,14 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
             ((short*)data_block->data)[i] = (short)atoi(data[i]);
         }
     } else if (data_type == UDA_TYPE_STRING) {
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:conversion in string\n");
         data_block->data_type = UDA_TYPE_STRING;
         data_block->data = strdup((char*)cur->children->content);
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:conversion in string --> %s\n", data_block->data);
 
     } else {
         err = 999;
+        UDA_LOG(UDA_LOG_DEBUG, "TORE:Unsupported data type\n");
         addIdamError(CODEERRORTYPE, "tore_supra : Unsupported data type", err, "");
     }
 
@@ -207,6 +235,7 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     xmlXPathFreeObject(xpathObj);
     xmlXPathFreeContext(xpathCtx);
     xmlFreeDoc(doc);
+    UDA_LOG(UDA_LOG_DEBUG, "TORE:returning from execute_xpath_expression\n");
 
     return 0;
 }

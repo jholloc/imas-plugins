@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <mdslib.h>
 
+#include <clientserver/initStructs.h>
+#include <clientserver/udaTypes.h>
+#include <clientserver/errorLog.h>
+#include <logging/logging.h>
+#include <clientserver/stringUtils.h>
+
 #define status_ok(status) (((status) & 1) == 1)
 
 int get_signal_length(const char *signal)
@@ -35,14 +41,20 @@ int get_signal_length(const char *signal)
 int ts_mds_get(const char *signalName, int shot, float **time, float **data, int *len)
 {
 
+   UDA_LOG(UDA_LOG_DEBUG, "TORE: Entering in ts_mds_get()\n");
+
     int dtype_float = DTYPE_FLOAT;
     int null = 0;
     int status;
     /* Connect to MDSplus */
     int socket = MdsConnect("altair.partenaires.cea.fr:8000");
+    UDA_LOG(UDA_LOG_DEBUG, "TORE: MDS+ socket connection successfull ?\n");
     if (socket == -1) {
+            UDA_LOG(UDA_LOG_DEBUG, "TORE: Error connecting to altair.partenaires.cea.fr.\n");
 	    fprintf(stderr, "Error connecting to altair.partenaires.cea.fr.\n");
     	return -1;
+    } else {
+      UDA_LOG(UDA_LOG_DEBUG, "TORE: Connection to altair.partenaires.cea.fr:8000 successfull\n");
     }
 
     char buf[1024];
@@ -52,6 +64,8 @@ int ts_mds_get(const char *signalName, int shot, float **time, float **data, int
     *len = get_signal_length(buf);
 
     if (len < 0) {
+            UDA_LOG(UDA_LOG_DEBUG, "TORE: Unable to get signal length of %s\n", signalName);
+            UDA_LOG(UDA_LOG_ERROR, "TORE: Unable to get signal length of %s\n", signalName);
 	    fprintf(stderr, "Unable to get signal length.\n");
 	    return -1;
     }
