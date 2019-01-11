@@ -15,5 +15,5 @@ export PKG_CONFIG_PATH=/home/LF218007/public/UDA_TUTORIAL/uda/lib/pkgconfig
 
 cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=/home/LF218007/public/UDA_TUTORIAL/uda \
-    -DBUILD_PLUGINS=imas_mapping\;hl2a \
+    -DBUILD_PLUGINS=imas_mapping\;hl2a\;tore_supra \
 #    -DLIBTS_ROOT=/Home/devarc/PortageMatlab7/tslib_client2013 \
