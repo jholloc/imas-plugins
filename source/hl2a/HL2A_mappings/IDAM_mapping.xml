@@ -2,7 +2,7 @@
 <mappings>
 <mapping key="magnetics/ids_properties/homogeneous_time" value="magnetics_ids_properties_homogeneous_time" type="static"/>
 <mapping key="magnetics/flux_loop/Shape_of" value="magnetics_flux_loop_shape_of" type="static"/>
-<mapping key="magnetics/flux_loop/#/name" value="magnetics_flux_loop_name" type="static"/>
+<!--mapping key="magnetics/flux_loop/#/name" value="magnetics_flux_loop_name" type="static"/ -->
 <mapping key="magnetics/flux_loop/#/position/Shape_of" value="magnetics_flux_loop_position_shape_of" type="static"/>
 <mapping key="magnetics/flux_loop/#/position/#/r" value="magnetics_flux_loop_position_r" type="static"/>
 <mapping key="magnetics/flux_loop/#/position/#/z" value="magnetics_flux_loop_position_z" type="static"/>

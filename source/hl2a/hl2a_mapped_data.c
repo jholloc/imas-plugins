@@ -52,9 +52,9 @@ int GetHL2AData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, int*
     } else if (strcmp(fun_name, "soft_x_rays_channel_power_density_data") == 0) {
         soft_x_rays_channel_power_density_data(shotNumber, data_block, nodeIndices);
     } else {
-        const char* errorMsg = "HL2A:ERROR: mapped C function not found in hl2a_dynamic_data.c !\n";
-	    UDA_LOG(UDA_LOG_DEBUG, "%s\n", errorMsg);
-	    UDA_LOG(UDA_LOG_ERROR, "%s\n", errorMsg);
+        const char* errorMsg = "HL2A:ERROR: mapped C function not found in hl2a_mapped_data.c";
+	    UDA_LOG(UDA_LOG_DEBUG, "%s:%s\n", errorMsg, fun_name);
+	    UDA_LOG(UDA_LOG_ERROR, "%s:%s\n", errorMsg, fun_name);
         return status;
       }
     free(fun_name);
