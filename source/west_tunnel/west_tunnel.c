@@ -214,9 +214,12 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int shot;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
 
-    int rank;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, rank);
-
+    int rank = 0;
+    if (strstr(element, "/data") != NULL || strstr(element, "/time") != NULL) {
+        rank = 1;
+    }
+    //FIND_REQUIRED_INT_VALUE(request_block->nameValueList, rank);
+    
     int dtype;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
 
@@ -227,7 +230,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int i;
     for (i = 0; i < nindices; i++) {
         char replace[10];
-        sprintf(replace, "%d", indices[i] + 1);
+        sprintf(replace, "%d", indices[i]);
         char* old = copy;
         copy = StringReplace(copy, "#", replace);
         free(old);
@@ -244,6 +247,8 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     char request[1024];
     sprintf(request, "imas::get(idx=-1, group='%s', variable='%s', expName='%s', type=%s, rank=%d, shot=%d, run=0)", group, variable, expName, type, rank, shot);
+
+    //printf("%s\n", request);
 
     free(group);
     free(variable);

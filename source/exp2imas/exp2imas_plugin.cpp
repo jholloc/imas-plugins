@@ -43,6 +43,7 @@ int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+int do_close(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::string& request);
 char* deblank(char* token);
 xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_indices);
@@ -132,6 +133,8 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         err = do_maxinterfaceversion(idam_plugin_interface);
     } else if (STR_IEQUALS(request_block->function, "read")) {
         err = do_read(idam_plugin_interface);
+    } else if (STR_IEQUALS(request_block->function, "close")) {
+        err = do_close(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
@@ -882,6 +885,12 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     free(xPath);
     return err;
+}
+
+int do_close(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+    mds_close();
+    return 0;
 }
 
 xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, const char* attribute)

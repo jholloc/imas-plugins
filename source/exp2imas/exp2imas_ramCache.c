@@ -23,6 +23,9 @@ RAM_CACHE* ram_cache_new(size_t max_items)
 
 void ram_cache_add(RAM_CACHE* cache, const char* key, void* value, size_t value_nbytes)
 {
+    if (cache == NULL) {
+        return;
+    }
     free(cache->keys[cache->current_idx]);
     free(cache->values[cache->current_idx]);
 
@@ -35,6 +38,9 @@ void ram_cache_add(RAM_CACHE* cache, const char* key, void* value, size_t value_
 
 void* ram_cache_get(RAM_CACHE* cache, const char* key)
 {
+    if (cache == NULL) {
+        return NULL;
+    }
     size_t i;
     for (i = 0; i < cache->max_items; ++i) {
         if (StringEquals(cache->keys[i], key)) {

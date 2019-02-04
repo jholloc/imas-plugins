@@ -12,6 +12,8 @@ if( NOT DEFINED BUILD_PLUGINS )
     mast_imas
     source
     west
+    imas_uda
+    imas_partial
   )
 endif()
 

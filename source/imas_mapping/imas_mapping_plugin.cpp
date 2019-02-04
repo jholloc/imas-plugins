@@ -285,6 +285,11 @@ int MappingPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     if (arraystruct_stack_.empty()) {
         ids_ = "";
+        auto expName = pulses_.at(ctxId).tokamak;
+        auto plugin_name = machine_mapping_.plugin(expName, ids_);
+        auto request = boost::format("%s::close()") % plugin_name;
+        std::cout << request.str() << std::endl;
+        callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
     } else {
         arraystruct_stack_.pop_back();
     }

@@ -256,7 +256,7 @@
           <flag type="xs:integer" documentation="Integer identifier" path="wall2d/limiter/limiter_id/flag">1</flag>
           <description type="xs:string" documentation="Verbose description of identifier" path="wall2d/limiter/limiter_id/description">Single limiter PFC and the vessel. The first and last points of elements are not coincident</description>
         </limiter_id>
-        <limiter_unit type="struct_array" documentation="Vector of limiting surfaces. Replicate this limiter_unit element ncomponents times. Each unit contains a plasma facing component that can have dedicated number of points.  Array of structures (ncomponents)" path="wall2d/limiter/limiter_unit" dim="28" index="1">
+        <limiter_unit type="struct_array" documentation="Vector of limiting surfaces. Replicate this limiter_unit element ncomponents times. Each unit contains a plasma facing component that can have dedicated number of points.  Array of structures (ncomponents)" path="wall2d/limiter/limiter_unit" dim="1" index="1">
           <name type="xs:string" documentation="Name or description of the limiter_unit" path="wall2d/limiter/limiter_unit/name">contour</name>
           <closed type="xs:string" documentation="Identify whether the contour is closed (y) or open (n)" path="wall2d/limiter/limiter_unit/closed">y</closed>
           <position type="structure" documentation="Position (R,Z coordinates) of a limiting surface. No need to repeat first point for closed contours [m]; Vector(npoints)">

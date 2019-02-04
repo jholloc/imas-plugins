@@ -11,6 +11,8 @@
 #include "exp2imas_ssh.h"
 #include "exp2imas_ssh_server.h"
 
+static MDSplus::Connection* conn = nullptr;
+
 static int get_signal_length(MDSplus::Connection& conn, std::string signal)
 {
     signal += "; SIZE(_sig);";
@@ -39,10 +41,14 @@ static void* server_task(void* ptr)
     return nullptr;
 }
 
+int mds_close()
+{
+    delete conn;
+    conn = nullptr;
+}
+
 int mds_get(const char* experiment, const char* signalName, int shot, float** time, float** data, int* len, int* time_len, int time_dim)
 {
-    static MDSplus::Connection* conn = nullptr;
-
     if (conn == nullptr) {
 
         char host[100];
@@ -62,7 +68,7 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
                 thread_data.ssh_host = "lac911.epfl.ch";
                 thread_data.mds_host = "tcvdata.epfl.ch";
             } else if (StringIEquals(experiment, "AUG")) {
-                thread_data.ssh_host = "gate2.aug.ipp.mpg.de";
+                thread_data.ssh_host = "gate1.aug.ipp.mpg.de";
                 thread_data.mds_host = "mdsplus.aug.ipp.mpg.de";
             }
 
@@ -178,10 +184,10 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
     }
 
     if (StringIEquals(experiment, "TCV")) {
-        const char* tree = "tcv_shot";
+        std::string buf = "TreeOpen('tcv_shot'," + std::to_string(shot) + ")";
 
         try {
-            conn->openTree((char*)tree, shot);
+            conn->get(buf.c_str());
         } catch (MDSplus::MdsException& ex) {
             UDA_LOG(UDA_LOG_ERROR, "Error opening tree for shot %d: %s.\n", shot, ex.what());
             return -1;
@@ -211,7 +217,16 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
                 *time = (float*)malloc(sz);
                 memcpy(*time, fdata, sz);
                 MDSplus::deleteData(ret);
+            } else if (ret->dtype == DTYPE_DOUBLE || ret->dtype == DTYPE_D) {
+                double* ddata = ret->getDoubleArray(time_len);
+                size_t sz = *time_len * sizeof(float);
+                *time = (float*)malloc(sz);
+                for (int i = 0; i < *time_len; ++i) {
+                    (*time)[i] = ddata[i];
+                }
+                MDSplus::deleteData(ret);
             } else {
+                fprintf(stderr, " -> data returned in wrong format\n");
                 MDSplus::deleteData(ret);
                 return -1;
             }
@@ -235,7 +250,16 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
             *data = (float*)malloc(sz);
             memcpy(*data, fdata, sz);
             MDSplus::deleteData(ret);
+        } else if (ret->dtype == DTYPE_DOUBLE || ret->dtype == DTYPE_D) {
+            double* ddata = ret->getDoubleArray(len);
+            size_t sz = *len * sizeof(float);
+            *data = (float*)malloc(sz);
+            for (int i = 0; i < *time_len; ++i) {
+                (*time)[i] = ddata[i];
+            }
+            MDSplus::deleteData(ret);
         } else {
+            fprintf(stderr, " -> data returned in wrong format\n");
             MDSplus::deleteData(ret);
             return -1;
         }
