@@ -26,7 +26,7 @@
  */
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/Shape_of', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/Shape_of', type=int, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe count", "[IMAS][TCV][BPOL]" )
 {
@@ -36,7 +36,7 @@ TEST_CASE( "Test bpol_probe count", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/Shape_of', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/Shape_of', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -57,7 +57,7 @@ TEST_CASE( "Test bpol_probe count", "[IMAS][TCV][BPOL]" )
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/name', type=string, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/name', type=string, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe name", "[IMAS][TCV][BPOL]" )
 {
@@ -67,7 +67,7 @@ TEST_CASE( "Test bpol_probe name", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/name', expName='TCV', type=string, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/name', expName='TCV', type=string, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -87,7 +87,7 @@ TEST_CASE( "Test bpol_probe name", "[IMAS][TCV][BPOL]" )
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/identifier', type=string, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/identifier', type=string, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe identifier", "[IMAS][TCV][BPOL]" )
 {
@@ -97,7 +97,7 @@ TEST_CASE( "Test bpol_probe identifier", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/identifier', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/identifier', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -117,10 +117,10 @@ TEST_CASE( "Test bpol_probe identifier", "[IMAS][TCV][BPOL]" )
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle_error_lower', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle_error_upper', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle', type=double, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle_error_lower', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle_error_upper', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/toroidal_angle', type=float, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe toroidal_angle", "[IMAS][TCV][BPOL]" )
 {
@@ -130,7 +130,7 @@ TEST_CASE( "Test bpol_probe toroidal_angle", "[IMAS][TCV][BPOL]" )
 
 	uda::Client client;
 
-	const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/toroidal_angle', expName='TCV', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+	const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/toroidal_angle', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
 	REQUIRE( result.errorCode() == 0 );
 	REQUIRE( result.errorMessage().empty() );
@@ -139,22 +139,22 @@ TEST_CASE( "Test bpol_probe toroidal_angle", "[IMAS][TCV][BPOL]" )
 
 	REQUIRE( data != nullptr );
 	REQUIRE( !data->isNull() );
-	REQUIRE( data->type().name() == typeid(double).name() );
+	REQUIRE( data->type().name() == typeid(float).name() );
 
 	auto val = dynamic_cast<uda::Scalar*>(data);
 
 	REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-	REQUIRE( val->type().name() == typeid(double).name() );
-	REQUIRE( val->as<double>() == Approx(0.0) );
+	REQUIRE( val->type().name() == typeid(float).name() );
+	REQUIRE( val->as<float>() == Approx(0.0) );
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle_error_lower', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle_error_upper', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle', type=double, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle_error_lower', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle_error_upper', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/poloidal_angle', type=float, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe poloidal_angle", "[IMAS][TCV][BPOL]" )
 {
@@ -164,14 +164,14 @@ TEST_CASE( "Test bpol_probe poloidal_angle", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    double expected_vals[] = { 1.570796, 1.570796, 1.570796, 1.570796, 1.570796 };
+    float expected_vals[] = { 1.570796, 1.570796, 1.570796, 1.570796, 1.570796 };
 
     int index = 1;
     for (auto expected_val : expected_vals) {
 
-        std::string signal = "imas::get(idx=0, group='magnetics', variable='bpol_probe/"
+        std::string signal = "imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/"
                              + std::to_string(index)
-                             + "/poloidal_angle', expName='TCV', type=double, rank=0, shot=" + SHOT_NUM + ", )";
+                             + "/poloidal_angle', expName='TCV', type=float, rank=0, shot=" + SHOT_NUM + ", run=0, user='g2amerle' )";
 
         const uda::Result& result = client.get(signal, "");
         ++index;
@@ -183,23 +183,23 @@ TEST_CASE( "Test bpol_probe poloidal_angle", "[IMAS][TCV][BPOL]" )
 
         REQUIRE(data != nullptr);
         REQUIRE(!data->isNull());
-        REQUIRE(data->type().name() == typeid(double).name());
+        REQUIRE(data->type().name() == typeid(float).name());
 
         auto val = dynamic_cast<uda::Scalar*>(data);
 
         REQUIRE(val != nullptr);
         REQUIRE(!val->isNull());
 
-        REQUIRE(val->type().name() == typeid(double).name());
-        REQUIRE(val->as<double>() == Approx(expected_val));
+        REQUIRE(val->type().name() == typeid(float).name());
+        REQUIRE(val->as<float>() == Approx(expected_val));
     }
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area_error_lower', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area_error_upper', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area', type=double, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area_error_lower', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area_error_upper', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/area', type=float, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe area", "[IMAS][TCV][BPOL]" )
 {
@@ -209,7 +209,7 @@ TEST_CASE( "Test bpol_probe area", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/area', expName='TCV', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/area', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -218,22 +218,22 @@ TEST_CASE( "Test bpol_probe area", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto val = dynamic_cast<uda::Scalar*>(data);
 
     REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-    REQUIRE( val->type().name() == typeid(double).name() );
-    REQUIRE( val->as<double>() == Approx(9.200040E-03) );
+    REQUIRE( val->type().name() == typeid(float).name() );
+    REQUIRE( val->as<float>() == Approx(9.200040E-03) );
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r_error_lower', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r_error_upper', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r', type=double, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r_error_lower', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r_error_upper', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/r', type=float, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe position r", "[IMAS][TCV][BPOL]" )
 {
@@ -243,7 +243,7 @@ TEST_CASE( "Test bpol_probe position r", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/position/r', expName='TCV', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/position/r', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -252,22 +252,22 @@ TEST_CASE( "Test bpol_probe position r", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto val = dynamic_cast<uda::Scalar*>(data);
 
     REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-    REQUIRE( val->type().name() == typeid(double).name() );
-    REQUIRE( val->as<double>() == Approx(6.060000E-01) );
+    REQUIRE( val->type().name() == typeid(float).name() );
+    REQUIRE( val->as<float>() == Approx(6.060000E-01) );
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z_error_lower', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z_error_upper', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z', type=double, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z_error_lower', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z_error_upper', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/z', type=float, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe position z", "[IMAS][TCV][BPOL]" )
 {
@@ -277,7 +277,7 @@ TEST_CASE( "Test bpol_probe position z", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/position/z', expName='TCV', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/position/z', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -286,22 +286,22 @@ TEST_CASE( "Test bpol_probe position z", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto val = dynamic_cast<uda::Scalar*>(data);
 
     REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-    REQUIRE( val->type().name() == typeid(double).name() );
-    REQUIRE( val->as<double>() == Approx(0.0) );
+    REQUIRE( val->type().name() == typeid(float).name() );
+    REQUIRE( val->as<float>() == Approx(0.0) );
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi_error_lower', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi_error_upper', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi', type=double, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi_error_lower', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi_error_upper', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/position/phi', type=float, rank=0, shot=84600, )
  */
 //TEST_CASE( "Test bpol_probe position phi", "[IMAS][TCV][BPOL]" )
 //{
@@ -311,7 +311,7 @@ TEST_CASE( "Test bpol_probe position z", "[IMAS][TCV][BPOL]" )
 //
 //    uda::Client client;
 //
-//    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/position/phi', expName='TCV', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+//    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/position/phi', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 //
 //    REQUIRE( result.errorCode() == 0 );
 //    REQUIRE( result.errorMessage().empty() );
@@ -320,22 +320,22 @@ TEST_CASE( "Test bpol_probe position z", "[IMAS][TCV][BPOL]" )
 //
 //    REQUIRE( data != nullptr );
 //    REQUIRE( !data->isNull() );
-//    REQUIRE( data->type().name() == typeid(double).name() );
+//    REQUIRE( data->type().name() == typeid(float).name() );
 //
 //    auto val = dynamic_cast<uda::Scalar*>(data);
 //
 //    REQUIRE( val != nullptr );
 //    REQUIRE( !val->isNull() );
 //
-//    REQUIRE( val->type().name() == typeid(double).name() );
-//    REQUIRE( val->as<double>() == Approx(0.0) );
+//    REQUIRE( val->type().name() == typeid(float).name() );
+//    REQUIRE( val->as<float>() == Approx(0.0) );
 //}
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length_error_lower', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length_error_upper', type=double, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length', type=double, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length_error_lower', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length_error_upper', type=float, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/length', type=float, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe length", "[IMAS][TCV][BPOL]" )
 {
@@ -345,7 +345,7 @@ TEST_CASE( "Test bpol_probe length", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/length', expName='TCV', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/length', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -354,19 +354,19 @@ TEST_CASE( "Test bpol_probe length", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto val = dynamic_cast<uda::Scalar*>(data);
 
     REQUIRE( val != nullptr );
     REQUIRE( !val->isNull() );
 
-    REQUIRE( val->type().name() == typeid(double).name() );
-    REQUIRE( val->as<double>() == Approx(2.400000E-02) );
+    REQUIRE( val->type().name() == typeid(float).name() );
+    REQUIRE( val->as<float>() == Approx(2.400000E-02) );
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/turns', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/turns', type=int, rank=0, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe turns", "[IMAS][TCV][BPOL]" )
 {
@@ -376,14 +376,14 @@ TEST_CASE( "Test bpol_probe turns", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    REQUIRE_THROWS(client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/turns', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", )", ""));
+    REQUIRE_THROWS(client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/turns', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", ""));
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data_error_index', type=int, rank=0, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data_error_lower', type=double, rank=1, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data_error_upper', type=double, rank=1, shot=84600, )
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data', type=double, rank=1, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data_error_index', type=int, rank=0, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data_error_lower', type=float, rank=1, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data_error_upper', type=float, rank=1, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/data', type=float, rank=1, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe field", "[IMAS][TCV][BPOL]" )
 {
@@ -393,7 +393,7 @@ TEST_CASE( "Test bpol_probe field", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/field/data', expName='TCV', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/field/data', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -402,19 +402,19 @@ TEST_CASE( "Test bpol_probe field", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
     REQUIRE( arr != nullptr );
     REQUIRE( !arr->isNull() );
 
-    std::vector<double> expected{ -9.2233e-05, -4.32263e-05, -1.58328e-05, -1.77596e-05, 3.31738e-05 };
+    std::vector<float> expected{ -9.2233e-05, -4.32263e-05, -1.58328e-05, -1.77596e-05, 3.31738e-05 };
 
     REQUIRE( arr->size() == 49820 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
+    REQUIRE( arr->type().name() == typeid(float).name() );
 
-    auto vals = arr->as<double>();
+    auto vals = arr->as<float>();
     vals.resize(5);
 
     REQUIRE( vals == ApproxVector(expected) );
@@ -428,7 +428,7 @@ TEST_CASE( "Test bpol_probe field error upper", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/field/data_error_upper', expName='TCV', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/field/data_error_upper', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -437,19 +437,19 @@ TEST_CASE( "Test bpol_probe field error upper", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
     REQUIRE( arr != nullptr );
     REQUIRE( !arr->isNull() );
 
-    std::vector<double> expected{ 0.0049077668, 0.0049704704, 0.0050860341, 0.0049997908, 0.0049978639 };
+    std::vector<float> expected{ 0.0049077668, 0.0049704704, 0.0050860341, 0.0049997908, 0.0049978639 };
 
     REQUIRE( arr->size() == 49820 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
+    REQUIRE( arr->type().name() == typeid(float).name() );
 
-    auto vals = arr->as<double>();
+    auto vals = arr->as<float>();
     vals.resize(5);
 
     REQUIRE( vals == ApproxVector(expected) );
@@ -463,7 +463,7 @@ TEST_CASE( "Test bpol_probe field error lower", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/field/data_error_lower', expName='TCV', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/field/data_error_lower', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -472,26 +472,26 @@ TEST_CASE( "Test bpol_probe field error lower", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
     REQUIRE( arr != nullptr );
     REQUIRE( !arr->isNull() );
 
-    std::vector<double> expected{ -0.005092233, -0.0050295293, -0.0049139657, -0.0050002094, -0.0050021359 };
+    std::vector<float> expected{ -0.005092233, -0.0050295293, -0.0049139657, -0.0050002094, -0.0050021359 };
 
     REQUIRE( arr->size() == 49820 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
+    REQUIRE( arr->type().name() == typeid(float).name() );
 
-    auto vals = arr->as<double>();
+    auto vals = arr->as<float>();
     vals.resize(5);
 
     REQUIRE( vals == ApproxVector(expected) );
 }
 
 /*
- * imas::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/time', type=double, rank=1, shot=84600, )
+ * imas_mapping::get(expName='TCV', idx=0, group='magnetics', variable='bpol_probe/#/field/time', type=float, rank=1, shot=84600, )
  */
 TEST_CASE( "Test bpol_probe time", "[IMAS][TCV][BPOL]" )
 {
@@ -501,7 +501,7 @@ TEST_CASE( "Test bpol_probe time", "[IMAS][TCV][BPOL]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='bpol_probe/1/field/time', expName='TCV', type=double, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='bpol_probe/1/field/time', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -510,19 +510,19 @@ TEST_CASE( "Test bpol_probe time", "[IMAS][TCV][BPOL]" )
 
     REQUIRE( data != nullptr );
     REQUIRE( !data->isNull() );
-    REQUIRE( data->type().name() == typeid(double).name() );
+    REQUIRE( data->type().name() == typeid(float).name() );
 
     auto arr = dynamic_cast<uda::Array*>(data);
 
     REQUIRE( arr != nullptr );
     REQUIRE( !arr->isNull() );
 
-    std::vector<double> expected{ -1.358f, -1.3579f, -1.3578f, -1.3577f, -1.3576f };
+    std::vector<float> expected{ -1.358f, -1.3579f, -1.3578f, -1.3577f, -1.3576f };
 
     REQUIRE( arr->size() == 49820 );
-    REQUIRE( arr->type().name() == typeid(double).name() );
+    REQUIRE( arr->type().name() == typeid(float).name() );
 
-    auto vals = arr->as<double>();
+    auto vals = arr->as<float>();
     vals.resize(5);
 
     REQUIRE( vals == ApproxVector(expected) );
@@ -548,7 +548,7 @@ TEST_CASE( "Test flux_loop count", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/Shape_of', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/Shape_of', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -576,7 +576,7 @@ TEST_CASE( "Test flux_loop name", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/name', expName='TCV', type=string, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/name', expName='TCV', type=string, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -603,7 +603,7 @@ TEST_CASE( "Test flux_loop identifier", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/identifier', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/identifier', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
@@ -632,7 +632,7 @@ TEST_CASE( "Test flux_loop position count", "[IMAS][TCV][FLUX]" )
     uda::Client client;
 
     const uda::Result& result = client.get(
-            "imas::get(idx=0, group='magnetics', variable='flux_loop/1/position/Shape_of', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", )",
+            "imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/position/Shape_of', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')",
             "");
 
     REQUIRE(result.errorCode() == 0);
@@ -661,7 +661,7 @@ TEST_CASE( "Test flux_loop position r", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result_x = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/position/1/r', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_x = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/position/1/r', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_x.errorCode() == 0 );
     REQUIRE( result_x.errorMessage().empty() );
@@ -680,7 +680,7 @@ TEST_CASE( "Test flux_loop position r", "[IMAS][TCV][FLUX]" )
     REQUIRE( val->type().name() == typeid(float).name() );
     REQUIRE( val->as<float>() == Approx(0.584f) );
 
-    const uda::Result& result_y = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/2/position/1/r', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_y = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/2/position/1/r', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_y.errorCode() == 0 );
     REQUIRE( result_y.errorMessage().empty() );
@@ -708,7 +708,7 @@ TEST_CASE( "Test flux_loop position z", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result_x = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/position/1/z', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_x = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/position/1/z', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_x.errorCode() == 0 );
     REQUIRE( result_x.errorMessage().empty() );
@@ -727,7 +727,7 @@ TEST_CASE( "Test flux_loop position z", "[IMAS][TCV][FLUX]" )
     REQUIRE( val->type().name() == typeid(float).name() );
     REQUIRE( val->as<float>() == Approx(0.0f) );
 
-    const uda::Result& result_y = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/2/position/1/z', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_y = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/2/position/1/z', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_y.errorCode() == 0 );
     REQUIRE( result_y.errorMessage().empty() );
@@ -755,7 +755,7 @@ TEST_CASE( "Test flux_loop position phi", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    REQUIRE_THROWS(client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/position/1/phi', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", )", ""));
+    REQUIRE_THROWS(client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/position/1/phi', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", ""));
 }
 
 TEST_CASE( "Test flux_loop flux", "[IMAS][TCV][FLUX]" )
@@ -766,7 +766,7 @@ TEST_CASE( "Test flux_loop flux", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result_1 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_1 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_1.errorCode() == 0 );
     REQUIRE( result_1.errorMessage().empty() );
@@ -792,7 +792,7 @@ TEST_CASE( "Test flux_loop flux", "[IMAS][TCV][FLUX]" )
 
     REQUIRE( vals == ApproxVector(expected) );
 
-    const uda::Result& result_36 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/36/flux/data', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_36 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/36/flux/data', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_36.errorCode() == 0 );
     REQUIRE( result_36.errorMessage().empty() );
@@ -827,7 +827,7 @@ TEST_CASE( "Test flux_loop flux error upper", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result_1 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_upper', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_1 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_upper', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_1.errorCode() == 0 );
     REQUIRE( result_1.errorMessage().empty() );
@@ -853,7 +853,7 @@ TEST_CASE( "Test flux_loop flux error upper", "[IMAS][TCV][FLUX]" )
 
     REQUIRE( vals == ApproxVector(expected) );
 
-    const uda::Result& result_36 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/36/flux/data_error_upper', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_36 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/36/flux/data_error_upper', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_36.errorCode() == 0 );
     REQUIRE( result_36.errorMessage().empty() );
@@ -888,7 +888,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result_1 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_lower', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_1 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_lower', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_1.errorCode() == 0 );
     REQUIRE( result_1.errorMessage().empty() );
@@ -914,7 +914,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][TCV][FLUX]" )
 
     REQUIRE( vals == ApproxVector(expected) );
 
-    const uda::Result& result_36 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/36/flux/data_error_lower', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_36 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/36/flux/data_error_lower', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_36.errorCode() == 0 );
     REQUIRE( result_36.errorMessage().empty() );
@@ -951,7 +951,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][TCV][FLUX]" )
 //
 //    uda::Client client;
 //
-////    const uda::Result& error_index = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_index', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", )", "");
+////    const uda::Result& error_index = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_index', expName='TCV', type=int, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 ////
 ////    REQUIRE( error_index.errorCode() == 0 );
 ////    REQUIRE( error_index.errorMessage().empty() );
@@ -970,7 +970,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][TCV][FLUX]" )
 ////    REQUIRE( val->type().name() == typeid(int).name() );
 ////    REQUIRE( val->as<int>() == 0 );
 //
-//    const uda::Result& error_upper = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_upper', expName='TCV', type=double, rank=0, shot=" SHOT_NUM ", )", "");
+//    const uda::Result& error_upper = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/flux/data_error_upper', expName='TCV', type=float, rank=0, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 //
 //    REQUIRE( error_upper.errorCode() == 0 );
 //    REQUIRE( error_upper.errorMessage().empty() );
@@ -979,7 +979,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][TCV][FLUX]" )
 //
 //    REQUIRE( data != nullptr );
 //    REQUIRE( !data->isNull() );
-//    REQUIRE( data->type().name() == typeid(double).name() );
+//    REQUIRE( data->type().name() == typeid(float).name() );
 //
 //    auto arr = dynamic_cast<uda::Array*>(data);
 //
@@ -987,7 +987,7 @@ TEST_CASE( "Test flux_loop flux error lower", "[IMAS][TCV][FLUX]" )
 //    REQUIRE( !arr->isNull() );
 //
 //    REQUIRE( arr->size() == 1024 );
-//    REQUIRE( arr->type().name() == typeid(double).name() );
+//    REQUIRE( arr->type().name() == typeid(float).name() );
 //    REQUIRE( arr->as<float>()[0] == Approx(0.2953f) );
 //}
 
@@ -999,7 +999,7 @@ TEST_CASE( "Test flux_loop time", "[IMAS][TCV][FLUX]" )
 
     uda::Client client;
 
-    const uda::Result& result_1 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/1/flux/time', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_1 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/1/flux/time', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_1.errorCode() == 0 );
     REQUIRE( result_1.errorMessage().empty() );
@@ -1025,7 +1025,7 @@ TEST_CASE( "Test flux_loop time", "[IMAS][TCV][FLUX]" )
 
     REQUIRE( vals == ApproxVector(expected) );
 
-    const uda::Result& result_36 = client.get("imas::get(idx=0, group='magnetics', variable='flux_loop/36/flux/time', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", )", "");
+    const uda::Result& result_36 = client.get("imas_mapping::get(idx=0, group='magnetics', variable='flux_loop/36/flux/time', expName='TCV', type=float, rank=1, shot=" SHOT_NUM ", run=0, user='g2amerle')", "");
 
     REQUIRE( result_36.errorCode() == 0 );
     REQUIRE( result_36.errorMessage().empty() );
