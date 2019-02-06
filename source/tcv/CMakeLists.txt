@@ -15,7 +15,7 @@ uda_plugin(
   NAME TCV
   ENTRY_FUNC tcvPlugin
   DESCRIPTION "Read TCV data"
-  EXAMPLE "ADAS::adf21()"
+  EXAMPLE "TCV::read()"
   LIBNAME tcv_plugin
   SOURCES tcv_plugin.c tcv_mds.c tcv_xml.c
   CONFIG_FILE tcv.cfg
