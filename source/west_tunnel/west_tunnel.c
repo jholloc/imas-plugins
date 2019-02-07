@@ -98,8 +98,8 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         pthread_t server_thread;
         SERVER_THREAD_DATA thread_data = {};
         thread_data.experiment = "WEST";
-    	thread_data.ssh_host = "andromede1.partenaires.cea.fr";
-    	thread_data.uda_host = "andromede1.partenaires.cea.fr";
+    	thread_data.ssh_host = "altair.partenaires.cea.fr";
+    	thread_data.uda_host = "altair.partenaires.cea.fr";
 
         pthread_create(&server_thread, NULL, server_task, &thread_data);
 
@@ -223,7 +223,8 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int dtype;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
 
-    const char* expName = request_block->archive;
+    const char* experiment = NULL;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, experiment);
 
     char* copy = strdup(element);
 
@@ -246,7 +247,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     char* type = convertIdam2StringType(dtype);
 
     char request[1024];
-    sprintf(request, "imas::get(idx=-1, group='%s', variable='%s', expName='%s', type=%s, rank=%d, shot=%d, run=0)", group, variable, expName, type, rank, shot);
+    sprintf(request, "imas::get(idx=-1, group='%s', variable='%s', expName='%s', type=%s, rank=%d, shot=%d, run=0)", group, variable, experiment, type, rank, shot);
 
     //printf("%s\n", request);
 

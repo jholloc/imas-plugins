@@ -9,6 +9,10 @@ module purge
 module load cineca
 module load itmenv
 module load uda/2.2.3
+module unload imas
+module use /gw/swimas/extra/uda/imas/etc/modulefiles
+
+module load imas/3.21.1-develop-uda
 
 export CC=gcc
 export CXX=g++
