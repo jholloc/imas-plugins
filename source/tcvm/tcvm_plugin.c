@@ -11,6 +11,8 @@
 #include <logging/logging.h>
 #include <plugins/udaPlugin.h>
 
+#include <sys/time.h>
+
 #include "testStart.h"
 
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
@@ -180,43 +182,20 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     if (matlabPtr) {
         testMATLAB(matlabPtr);
-	char *result;
-	runquery(matlabPtr,element,&result);
+	if (dtype == UDA_TYPE_STRING) {
+	    char *result;
 
-	free(data_block->dims);
-	data_block->dims = NULL;
-	
-	data_block->rank = 0;
-	data_block->data_type = UDA_TYPE_STRING;
-	data_block->data_n = 1;
-	data_block->data = strdup(result);
-	
-	strcpy(data_block->data_label, "");
-	strcpy(data_block->data_units, "");
-	strcpy(data_block->data_desc, "");
+	    runquery_s(matlabPtr, element, &result);
 
-        //matlab::data::ArrayFactory factory;
-        
-        //matlab::data::TypedArray<int32_t> indices_a = factory.createArray<int32_t>({ 1,nindices }, {});
-	//int i = 0;
-	//for (auto& elem : indices_a) {
-        //    elem = (* indices + i++);
-	//}
-	//std::vector<matlab::data::Array> args({
-	//    factory.createCharArray(element),
-	//    factory.createScalar<double>(shot),
-	      //   indices_a,
-	//    factory.createScalar<int32_t>(dtype)
-        //});
-        //matlab::data::CharArray out = matlabPtr->feval(u"myFunction", args);
-	//std::cout << "Answer to " << element << " is " << out.toAscii() << std::endl;
+	    setReturnDataString(data_block, result, "");
+	} else {
+	    err = 999;
+	    addIdamError(CODEERRORTYPE, __func__, err, "Unsupported data type");
+	}
     }
 
     // Avoids looking twice for sessions on startup
     first_run = false;
-
-
-
 
     return err;
 }
