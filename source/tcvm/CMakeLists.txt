@@ -7,7 +7,7 @@ set( SOURCES
 )
 
 set( MATLAB
-  /gw/swvend/matlab/r2017b
+  $ENV{MATLAB}
 )
 
 include_directories( SYSTEM )
