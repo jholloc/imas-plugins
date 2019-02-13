@@ -6,7 +6,6 @@
 
 #include <ual_backend.h>
 
-
 namespace {
 
 int read_size_from_backend(LLenv& env, const std::vector<std::string>& tokens, int depth, std::deque<int>& indices, std::shared_ptr<OperationContext> opCtx, std::shared_ptr<ArraystructContext> arrayCtx)
@@ -41,9 +40,11 @@ int read_size_from_backend(LLenv& env, const std::vector<std::string>& tokens, i
         }
 
         arrayCtx = std::make_shared<ArraystructContext>(*opCtx, path, "", arrayCtx.get());
-        int index = indices.front();
-        indices.pop_front();
-        arrayCtx->nextIndex(index - arrayCtx->getIndex());
+        if (indices.size() > 0) {
+            int index = indices.front();
+            indices.pop_front();
+            arrayCtx->nextIndex(index - arrayCtx->getIndex());
+        }
 
         int size = 0;
         env.backend->beginArraystructAction(arrayCtx.get(), &size);
@@ -105,9 +106,11 @@ void* read_data_from_backend(LLenv& env, const std::vector<std::string>& tokens,
         }
 
         arrayCtx = std::make_shared<ArraystructContext>(*opCtx, path, "", arrayCtx.get());
-        int index = indices.front();
-        indices.pop_front();
-        arrayCtx->nextIndex(index - arrayCtx->getIndex());
+        if (indices.size() > 0) {
+            int index = indices.front();
+            indices.pop_front();
+            arrayCtx->nextIndex(index - arrayCtx->getIndex());
+        }
 
         int size = 0;
         env.backend->beginArraystructAction(arrayCtx.get(), &size);

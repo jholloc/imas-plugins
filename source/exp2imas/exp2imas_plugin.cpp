@@ -725,7 +725,11 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
             int j;
             for (j = 0; j < data_n; ++j) {
-                error_arrays[n_arrays][j] = coefa * fdata[i + j * size] + coefb;
+                if (xml_data.time_dim == 1) {
+                    error_arrays[n_arrays][j] = coefa * fdata[i * data_n + j] + coefb;
+                } else {
+                    error_arrays[n_arrays][j] = coefa * fdata[i + j * size] + coefb;
+                }
 
                 double error;
 
