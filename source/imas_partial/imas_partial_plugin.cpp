@@ -20,6 +20,7 @@
 
 #include "access_functions.h"
 #include "pugixml.hpp"
+#include "is_integer.h"
 
 namespace {
 
@@ -39,8 +40,8 @@ public:
     int get(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
 private:
-    pugi::xml_document doc_;
-    LLenv env_;
+    pugi::xml_document doc_ = {};
+    LLenv env_ = {};
 };
 
 } // anon namespace
@@ -164,27 +165,42 @@ int get_rank(const std::string& data_type)
     return std::stoi(tokens.back());
 }
 
-void get_requests(std::vector<std::string>& requests, const std::string& ids, const std::string& path, const pugi::xml_node& node)
+void get_requests(LLenv& env, std::vector<std::string>& requests, std::string ids_path, const pugi::xml_node& node)
 {
-    std::string name = node.attribute("name").value();
     std::string dtype = node.attribute("data_type").value();
 
-    std::stringstream out;
+    if (dtype == "struct_array") {
+        int size = imas_partial::read_size_from_backend(env, ids_path);
 
-    if (dtype == "structure") {
-        name = path + name + "/";
-    } else if (dtype == "struct_array") {
-        out << ids << "/" << path << name << "/Shape_of";
-        requests.push_back(out.str()); 
-        name = path + name + "/#/";
-    } else { 
-        out << ids << "/" << path << name;
-        requests.push_back(out.str()); 
-        name = path + name + "/";
-    }
+        std::vector<std::string> tokens;
+        boost::split(tokens, ids_path, boost::is_any_of("/"), boost::token_compress_on);
 
-    for (const auto& child : node.children("field")) {
-        get_requests(requests, ids, name, child);
+        if (imas_partial::is_integer(tokens.back())) {
+            long val = strtol(tokens.back().c_str(), nullptr, 10);
+            if (val > size) {
+                throw std::range_error("out of range value given in ids_path");
+            }
+            for (const auto& child : node.children("field")) {
+                get_requests(env, requests, ids_path + "/" + child.attribute("name").value(), child);
+            }
+        } else {
+            for (int i = 1; i < size + 1; ++i) {
+                std::string path = ids_path + "/" + std::to_string(i);
+                for (const auto& child : node.children("field")) {
+                    get_requests(env, requests, path + "/" + child.attribute("name").value(), child);
+                }
+            }
+        }
+    } else if (!dtype.empty() && dtype != "structure") {
+        requests.push_back(ids_path);
+
+        for (const auto& child : node.children("field")) {
+            get_requests(env, requests, ids_path + "/" + child.attribute("name").value(), child);
+        }
+    } else {
+        for (const auto& child : node.children("field")) {
+            get_requests(env, requests, ids_path + "/" + child.attribute("name").value(), child);
+        }
     }
 }
 
@@ -204,7 +220,35 @@ void expand_request(std::vector<std::string>& requests, size_t depth, const std:
         expand_request(requests, depth + 1, sub_request, sizes);
     }
 }
-    
+
+pugi::xml_node get_sibling_by_index(pugi::xml_node node, long index)
+{
+    for (long i = 1; i < index; ++i) {
+        node = node.next_sibling();
+    }
+    return node;
+}
+
+int strtoi(const char* str, char** endptr, int base)
+{
+    long num = strtol(str, endptr, base);
+    if (num > std::numeric_limits<int>::max()) {
+        throw std::out_of_range{ std::to_string(num) + " out of range for reading as an integer" };
+    }
+    return static_cast<int>(num);
+}
+
+int imas_to_uda_type(int imas_type)
+{
+    switch (imas_type) {
+        case CHAR_DATA: return UDA_TYPE_CHAR;
+        case INTEGER_DATA: return UDA_TYPE_INT;
+        case DOUBLE_DATA: return UDA_TYPE_DOUBLE;
+        case COMPLEX_DATA: return UDA_TYPE_COMPLEX;
+        default: return UDA_TYPE_UNKNOWN;
+    }
+}
+
 } // anon namespace
 
 int IMASPartialPlugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
@@ -212,9 +256,9 @@ int IMASPartialPlugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     int backendId = ualconst::mdsplus_backend;
     int shot = 1000;
     int run = 0;
-    const char* user = "g2jhollo";
+    const char* user = "jhollocombe";
     const char* tokamak = "test";
-    const char* version = "3.21.1";
+    const char* version = "3";
     
     int ctxId = Lowlevel::beginPulseAction(backendId, shot, run, user, tokamak, version);
     env_ = Lowlevel::getLLenv(ctxId);
@@ -222,7 +266,7 @@ int IMASPartialPlugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     int mode = ualconst::open_pulse;
     const char* options = "";
 
-    PulseContext* pulseCtx = dynamic_cast<PulseContext*>(env_.context);
+    auto pulseCtx = dynamic_cast<PulseContext*>(env_.context);
 
     env_.backend->openPulse(pulseCtx, mode, options);
 
@@ -244,48 +288,71 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         path = &path[1];
     }
 
-    std::vector<std::string> requests;
-
-    std::vector<std::string> tokens;
+    std::deque<std::string> tokens;
     boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
 
-    if (!tokens.empty()) {
-        std::string& ids = tokens[0];
-     
-        auto root = doc_.child("IDSs");
+    auto nodes = doc_.child("IDSs");
+    std::string token;
 
-        auto nodes = root.find_child_by_attribute("IDS", "name", ids.c_str());
-        for (const auto& node : nodes) {
-            get_requests(requests, ids, "", node);
-        }
-    }
+//    std::deque<imas_partial::Range> ranges;
+    std::string ids_path;
+    std::string delim;
 
-    std::deque<int> sizes;
-    std::vector<std::string> total_requests;
+    while (!tokens.empty()) {
+        token = tokens.front();
 
-    for (auto request : requests) {
-        if (request.find("Shape_of") != std::string::npos) {
-            auto depth = std::count(request.begin(), request.end(), '#');
-            request = request.substr(0, request.size() - 9);
-            int size = imas_partial::read_size_from_backend(env_, request, sizes);
-            if (depth < sizes.size()) {
-                sizes.pop_back();
-            }
-            sizes.push_back(size);
+        if (imas_partial::is_integer(token)) {
+            ids_path += delim + token;
         } else {
-            expand_request(total_requests, 0, request, sizes);
+            nodes = nodes.find_child_by_attribute("name", token.c_str());
+            ids_path += delim + token;
         }
+
+        delim = "/";
+        tokens.pop_front();
     }
 
-    auto list = (DATA_BLOCK*)malloc(total_requests.size() * sizeof(DATA_BLOCK));
+    std::vector<std::string> requests;
+
+    get_requests(env_, requests, ids_path, nodes);
+
+    auto list = (DATA_BLOCK*)malloc(requests.size() * sizeof(DATA_BLOCK));
 
     int i = 0;
-    for (const auto& request : total_requests) {
-        std::cout << request << std::endl;
-        void* data = imas_partial::read_data_from_backend(env_, request, sizes);
-
+    for (const auto& request : requests) {
         initDataBlock(&list[i]);
-        // setReturnData...
+
+        std::cout << request << std::endl;
+
+        imas_partial::MDSData mds_data = imas_partial::read_data_from_backend(env_, request);
+
+        DATA_BLOCK* data_block = &list[i];
+        strcpy(data_block->data_label, request.c_str());
+
+        data_block->rank = static_cast<unsigned int>(mds_data.rank);
+        data_block->data = reinterpret_cast<char*>(mds_data.data);
+        data_block->data_type = imas_to_uda_type(mds_data.datatype);
+
+        if (mds_data.rank > 0 && mds_data.dims[0] == 0) {
+            data_block->data_n = 0;
+            data_block->rank = 0;
+        } else if (mds_data.rank > 0) {
+            data_block->data_n = 1;
+            data_block->dims = (DIMS*)calloc(data_block->rank, sizeof(DIMS));
+
+            for (int dim_i = 0; dim_i < data_block->rank; ++dim_i) {
+                DIMS* dim = &data_block->dims[dim_i];
+                initDimBlock(dim);
+                dim->data_type = UDA_TYPE_UNSIGNED_INT;
+                dim->dim_n = mds_data.dims[dim_i];
+                dim->compressed = 1;
+                dim->dim0 = 0;
+                dim->diff = 1;
+                dim->method = 0;
+                data_block->data_n *= mds_data.dims[dim_i];
+            }
+        }
+
         ++i;
     }
 
@@ -302,7 +369,7 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         initDimBlock(&data_block->dims[i]);
 
         data_block->dims[i].data_type = UDA_TYPE_UNSIGNED_INT;
-        data_block->dims[i].dim_n = (int)total_requests.size();
+        data_block->dims[i].dim_n = (int)requests.size();
         data_block->dims[i].compressed = 1;
         data_block->dims[i].dim0 = 0.0;
         data_block->dims[i].diff = 1.0;
@@ -311,7 +378,7 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     data_block->data_type = UDA_TYPE_UNKNOWN;
     data_block->data = (char*)list;
-    data_block->data_n = (int)total_requests.size();
+    data_block->data_n = (int)requests.size();
 
     return 0;
 }

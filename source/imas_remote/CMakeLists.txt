@@ -21,10 +21,10 @@ uda_plugin(
   ENTRY_FUNC imasPlugin
   DESCRIPTION ""
   EXAMPLE ""
-  LIBNAME imas_plugin
+  LIBNAME imas_remote_plugin
   SOURCES
-    imas_plugin.cpp
-    imas_plugin.h
+    imas_remote_plugin.cpp
+    imas_remote_plugin.h
   EXTRA_INCLUDE_DIRS
     ${Boost_INCLUDE_DIRS}
     ${IMAS_LOW_LEVEL_INCLUDE_DIRS}

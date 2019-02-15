@@ -5,5 +5,5 @@ add_definitions( -DSERVERBUILD )
 include_directories( .. )
 link_directories( .. ${UDA_LIBRARY_DIRS} )
 
-add_executable( imasdd_test ${SOURCES} )
-target_link_libraries( imasdd_test imasdd_plugin ${UDA_LIBRARIES} )
+add_executable( imas_partial_test ${SOURCES} )
+target_link_libraries( imas_partial_test imas_partial_plugin ${UDA_LIBRARIES} ${UDA_PLUGINS_LIBRARIES} )
