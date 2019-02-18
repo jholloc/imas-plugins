@@ -18,6 +18,7 @@
 #include <clientserver/udaTypes.h>
 #include <clientserver/copyStructs.h>
 #include <plugins/udaPlugin.h>
+#include <client/makeClientRequestBlock.h>
 #if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
 #  include <plugins/pluginUtils.h>
 #endif
@@ -192,6 +193,47 @@ int MappingPlugin::max_interface_version(IDAM_PLUGIN_INTERFACE* idam_plugin_inte
                                   "Maximum Interface Version");
 }
 
+namespace {
+
+int call_remote_plugin(const IDAM_PLUGIN_INTERFACE* old_plugin_interface, const char* host, const char* request)
+{
+    IDAM_PLUGIN_INTERFACE idam_plugin_interface = *old_plugin_interface;
+    REQUEST_BLOCK request_block = *old_plugin_interface->request_block;
+    idam_plugin_interface.request_block = &request_block;
+
+    makeClientRequestBlock(request, "", &request_block);
+
+    request_block.request = findPluginRequestByFormat("UDA", old_plugin_interface->pluginList);
+
+    if (request_block.request < 0) {
+        RAISE_PLUGIN_ERROR("UDA plugin not found!");
+    }
+
+    strcpy(request_block.server, host);
+
+    int err = 0;
+    int id = findPluginIdByRequest(request_block.request, old_plugin_interface->pluginList);
+    PLUGIN_DATA* plugin = &(old_plugin_interface->pluginList->plugin[id]);
+    if (id >= 0 && plugin->idamPlugin != nullptr) {
+        err = plugin->idamPlugin(&idam_plugin_interface);
+    } else {
+        RAISE_PLUGIN_ERROR("Data Access is not available for this data request!");
+    }
+
+    return err;
+}
+
+int call_plugin(IDAM_PLUGIN_INTERFACE* interface, const std::string& host, const std::string& request) {
+    std::cout << request << std::endl;
+    if (host == "-") {
+        return callPlugin(interface->pluginList, request.c_str(), interface);
+    } else {
+        return call_remote_plugin(interface, host.c_str(), request.c_str());
+    }
+}
+
+} // anon namespace
+
 int MappingPlugin::open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
@@ -288,8 +330,7 @@ int MappingPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         auto expName = pulses_.at(ctxId).tokamak;
         auto plugin_name = machine_mapping_.plugin(expName, ids_);
         auto request = boost::format("%s::close()") % plugin_name;
-        std::cout << request.str() << std::endl;
-        callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+        call_plugin(idam_plugin_interface, machine_mapping_.host(expName, ids_), request.str());
     } else {
         arraystruct_stack_.pop_back();
     }
@@ -394,7 +435,7 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
             % plugin_name % pulse.tokamak % ids_ % element_ss.str() % pulse.shot % indices_ss.str() % uda_type;
     std::cout << request.str() << std::endl;
 
-    int rc = callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+    int rc = call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request.str());
     if (rc == 0
             && idam_plugin_interface->data_block != nullptr
             && idam_plugin_interface->data_block->data_type == UDA_TYPE_INT
@@ -546,7 +587,7 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             % plugin_name % pulse.tokamak % ids_ % element % pulse.shot % indices % uda_type;
     std::cout << request.str() << std::endl;
 
-    return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+    return call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request.str());
 }
 
 int MappingPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
@@ -590,7 +631,7 @@ int MappingPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             % plugin_name % expName % path % shot % indices_string % uda_type;
     std::cout << request.str() << std::endl;
 
-    return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+    return call_plugin(idam_plugin_interface, machine_mapping_.host(expName, ids_), request.str());
 }
 
 int MappingPlugin::get_dim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
@@ -631,7 +672,7 @@ int MappingPlugin::get_dim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             % plugin_name % expName % path % shot % indices_string % uda_type;
     std::cout << request.str() << std::endl;
 
-    return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+    return call_plugin(idam_plugin_interface, machine_mapping_.host(expName, ids_), request.str());
 }
 
 } // anon namespace
