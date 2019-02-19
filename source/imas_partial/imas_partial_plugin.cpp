@@ -268,19 +268,19 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     REQUEST_BLOCK* request_block = plugin_interface->request_block;
 
-    int shot;
+    int shot = 0;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
 
-    int run;
+    int run = 0;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
 
-    const char* user;
+    const char* user = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
 
-    const char* tokamak;
+    const char* tokamak = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
 
-    const char* version;
+    const char* version = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
 
     const char* path = nullptr;
@@ -304,7 +304,6 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     auto nodes = doc_.child("IDSs");
     std::string token;
 
-//    std::deque<imas_partial::Range> ranges;
     std::string ids_path;
     std::string delim;
 
@@ -371,24 +370,21 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     DATA_BLOCK* data_block = plugin_interface->data_block;
     initDataBlock(data_block);
 
-    int rank = 1;
-    data_block->rank = (unsigned int)rank;
-    data_block->dims = (DIMS*)malloc(rank * sizeof(DIMS));
+    data_block->rank = 1;
+    data_block->dims = (DIMS*)malloc(sizeof(DIMS));
 
-    for (i = 0; i < rank; ++i) {
-        initDimBlock(&data_block->dims[i]);
+    initDimBlock(&data_block->dims[i]);
 
-        data_block->dims[i].data_type = UDA_TYPE_UNSIGNED_INT;
-        data_block->dims[i].dim_n = (int)requests.size();
-        data_block->dims[i].compressed = 1;
-        data_block->dims[i].dim0 = 0.0;
-        data_block->dims[i].diff = 1.0;
-        data_block->dims[i].method = 0;
-    }
+    data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
+    data_block->dims[0].dim_n = static_cast<int>(requests.size());
+    data_block->dims[0].compressed = 1;
+    data_block->dims[0].dim0 = 0.0;
+    data_block->dims[0].diff = 1.0;
+    data_block->dims[0].method = 0;
 
-    data_block->data_type = UDA_TYPE_UNKNOWN;
-    data_block->data = (char*)list;
-    data_block->data_n = (int)(requests.size() * sizeof(DATA_BLOCK));
+    data_block->data_type = UDA_TYPE_UNSIGNED_CHAR;
+    data_block->data = reinterpret_cast<char*>(list);
+    data_block->data_n = static_cast<int>(requests.size() * sizeof(DATA_BLOCK));
 
     return 0;
 }
