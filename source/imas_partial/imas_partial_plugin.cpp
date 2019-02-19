@@ -80,8 +80,6 @@ int imasPartial(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             return plugin.default_method(idam_plugin_interface);
         } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
             return plugin.max_interface_version(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "open")) {
-            return plugin.open(idam_plugin_interface);
         } else if (STR_IEQUALS(request_block->function, "get")) {
             return plugin.get(idam_plugin_interface);
         } else {
@@ -249,36 +247,48 @@ int imas_to_uda_type(int imas_type)
     }
 }
 
-} // anon namespace
-
-int IMASPartialPlugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
+LLenv open_pulse(IDAM_PLUGIN_INTERFACE* plugin_interface, int shot, int run, const char* user, const char* tokamak, const char* version)
 {
-    int backendId = ualconst::mdsplus_backend;
-    int shot = 1000;
-    int run = 0;
-    const char* user = "jhollocombe";
-    const char* tokamak = "test";
-    const char* version = "3";
-    
-    int ctxId = Lowlevel::beginPulseAction(backendId, shot, run, user, tokamak, version);
-    env_ = Lowlevel::getLLenv(ctxId);
+    int ctxId = Lowlevel::beginPulseAction(ualconst::mdsplus_backend, shot, run, user, tokamak, version);
+    LLenv env = Lowlevel::getLLenv(ctxId);
 
     int mode = ualconst::open_pulse;
     const char* options = "";
 
-    auto pulseCtx = dynamic_cast<PulseContext*>(env_.context);
+    auto pulseCtx = dynamic_cast<PulseContext*>(env.context);
 
-    env_.backend->openPulse(pulseCtx, mode, options);
+    env.backend->openPulse(pulseCtx, mode, options);
 
-    return 0;
+    return env;
 }
+
+} // anon namespace
 
 int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     REQUEST_BLOCK* request_block = plugin_interface->request_block;
 
+    int shot;
+    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+
+    int run;
+    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+
+    const char* user;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+
+    const char* tokamak;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
+
+    const char* version;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
+
     const char* path = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
+
+    if (env_.backend == nullptr) {
+        env_ = open_pulse(plugin_interface, shot, run, user, tokamak, version);
+    }
 
     if (path == nullptr || path[0] == '\0') {
         RAISE_PLUGIN_ERROR("invalid path provided");
@@ -378,7 +388,7 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     data_block->data_type = UDA_TYPE_UNKNOWN;
     data_block->data = (char*)list;
-    data_block->data_n = (int)requests.size();
+    data_block->data_n = (int)(requests.size() * sizeof(DATA_BLOCK));
 
     return 0;
 }

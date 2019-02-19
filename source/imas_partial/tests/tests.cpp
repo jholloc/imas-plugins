@@ -41,49 +41,48 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& function, con
 
 TEST_CASE( "get flux_loop flux data", "[MAG]" )
 {
-    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("open", {});
+    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
+        {"shot", "1000"},
+        {"run", "0"},
+        {"user", "jhollocombe"},
+        {"tokamak", "test"},
+        {"version", "3"},
+        {"path", "/magnetics/flux_loop/3/flux/data"}
+    });
 
     int rc = imasPartial(&interface);
-
-    free(interface.request_block);
-    free(interface.data_block);
-
-    interface = generate_plugin_interface("get", {{"path", "/magnetics/flux_loop/3/flux/data"}});
-
-    rc = imasPartial(&interface);
 
     REQUIRE( rc == 0 );
 }
 
 TEST_CASE( "get flux_loop flux", "[MAG]" )
 {
-    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("open", {});
+    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
+            {"shot", "1000"},
+            {"run", "0"},
+            {"user", "jhollocombe"},
+            {"tokamak", "test"},
+            {"version", "3"},
+            {"path", "/magnetics/flux_loop/3/flux"}
+    });
 
     int rc = imasPartial(&interface);
-
-    free(interface.request_block);
-    free(interface.data_block);
-
-    interface = generate_plugin_interface("get", {{"path", "/magnetics/flux_loop/3/flux"}});
-
-    rc = imasPartial(&interface);
 
     REQUIRE( rc == 0 );
 }
 
 TEST_CASE( "get flux_loop", "[MAG]" )
 {
-    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("open", {});
+    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
+            {"shot", "1000"},
+            {"run", "0"},
+            {"user", "jhollocombe"},
+            {"tokamak", "test"},
+            {"version", "3"},
+            {"path", "/magnetics/flux_loop/3"}
+    });
 
     int rc = imasPartial(&interface);
-
-    free(interface.request_block->nameValueList.nameValue);
-    free(interface.request_block);
-    free(interface.data_block);
-
-    interface = generate_plugin_interface("get", {{"path", "/magnetics/flux_loop/3"}});
-
-    rc = imasPartial(&interface);
 
     free(interface.request_block->nameValueList.nameValue);
     free(interface.request_block);
@@ -94,7 +93,14 @@ TEST_CASE( "get flux_loop", "[MAG]" )
 
 TEST_CASE( "get flux_loops", "[MAG]" )
 {
-    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("open", {});
+    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
+            {"shot", "1000"},
+            {"run", "0"},
+            {"user", "jhollocombe"},
+            {"tokamak", "test"},
+            {"version", "3"},
+            {"path", "/magnetics/flux_loop"}
+    });
 
     int rc = imasPartial(&interface);
 
@@ -102,17 +108,9 @@ TEST_CASE( "get flux_loops", "[MAG]" )
     free(interface.request_block);
     free(interface.data_block);
 
-    interface = generate_plugin_interface("get", {{"path", "/magnetics/flux_loop"}});
-
-    rc = imasPartial(&interface);
-
-    free(interface.request_block->nameValueList.nameValue);
-    free(interface.request_block);
-    free(interface.data_block);
-
     REQUIRE( rc == 0 );
 
-    REQUIRE( interface.data_block->data_n == 210 );
+    REQUIRE( interface.data_block->data_n / sizeof(DATA_BLOCK) == 210 );
 
     auto data_blocks = (DATA_BLOCK*)interface.data_block->data;
 
@@ -124,13 +122,16 @@ TEST_CASE( "get flux_loops", "[MAG]" )
 
 TEST_CASE( "get all magnetics", "[MAG]" )
 {
-    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("open", {});
+    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
+            {"shot", "1000"},
+            {"run", "0"},
+            {"user", "jhollocombe"},
+            {"tokamak", "test"},
+            {"version", "3"},
+            {"path", "/magnetics"}
+    });
 
-    int rc = imasPartial(&interface);
-
-    free(interface.request_block->nameValueList.nameValue);
-    free(interface.request_block);
-    free(interface.data_block);
+    int rc = 0;
 
 //    interface = generate_plugin_interface("get", {{"path", "/magnetics"}});
 //
