@@ -7,6 +7,7 @@
 #include <imas_partial_plugin.h>
 #include <clientserver/initStructs.h>
 #include <clientserver/udaTypes.h>
+#include <structures/struct.h>
 
 IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& function, const std::vector<std::pair<std::string, std::string>>& arguments)
 {
@@ -15,10 +16,10 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& function, con
     interface.dbgout = stdout;
     interface.errout = stderr;
 
-    interface.data_block = (DATA_BLOCK*)malloc(sizeof(DATA_BLOCK));
+    interface.data_block = new DATA_BLOCK;
     initDataBlock(interface.data_block);
 
-    interface.request_block = (REQUEST_BLOCK*)malloc(sizeof(REQUEST_BLOCK));
+    interface.request_block = new REQUEST_BLOCK;
     initRequestBlock(interface.request_block);
 
     strcpy(interface.request_block->function, function.c_str());
@@ -36,6 +37,12 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& function, con
         ++i;
     }
 
+    interface.userdefinedtypelist = new USERDEFINEDTYPELIST;
+    initUserDefinedTypeList(interface.userdefinedtypelist);
+
+    interface.logmalloclist = new LOGMALLOCLIST;
+    initLogMallocList(interface.logmalloclist);
+
     return interface;
 }
 
@@ -51,6 +58,12 @@ TEST_CASE( "get flux_loop flux data", "[MAG]" )
     });
 
     int rc = imasPartial(&interface);
+
+    delete interface.request_block->nameValueList.nameValue;
+    delete interface.request_block;
+    delete interface.data_block;
+    delete interface.userdefinedtypelist;
+    delete interface.logmalloclist;
 
     REQUIRE( rc == 0 );
 }
@@ -68,6 +81,12 @@ TEST_CASE( "get flux_loop flux", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
+    delete interface.request_block->nameValueList.nameValue;
+    delete interface.request_block;
+    delete interface.data_block;
+    delete interface.userdefinedtypelist;
+    delete interface.logmalloclist;
+
     REQUIRE( rc == 0 );
 }
 
@@ -84,9 +103,11 @@ TEST_CASE( "get flux_loop", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
-    free(interface.request_block->nameValueList.nameValue);
-    free(interface.request_block);
-    free(interface.data_block);
+    delete interface.request_block->nameValueList.nameValue;
+    delete interface.request_block;
+    delete interface.data_block;
+    delete interface.userdefinedtypelist;
+    delete interface.logmalloclist;
 
     REQUIRE( rc == 0 );
 }
@@ -104,20 +125,28 @@ TEST_CASE( "get flux_loops", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
-    free(interface.request_block->nameValueList.nameValue);
-    free(interface.request_block);
-    free(interface.data_block);
+    delete interface.request_block->nameValueList.nameValue;
+    delete interface.request_block;
+    delete interface.data_block;
+    delete interface.userdefinedtypelist;
+    delete interface.logmalloclist;
 
     REQUIRE( rc == 0 );
 
-    REQUIRE( interface.data_block->data_n / sizeof(DATA_BLOCK) == 210 );
+    REQUIRE( interface.data_block->data_n == 1 );
 
-    auto data_blocks = (DATA_BLOCK*)interface.data_block->data;
+    auto data_list = (DataList*)interface.data_block->data;
 
-    REQUIRE( std::string{data_blocks[14].data_label} == "magnetics/flux_loop/1/flux/data" );
-    REQUIRE( data_blocks[14].data_n == 1000 );
-    REQUIRE( data_blocks[14].data_type == UDA_TYPE_DOUBLE );
-    REQUIRE( ((double*)data_blocks[14].data)[0] == Approx(-10) );
+    REQUIRE( data_list->size == 210 );
+    REQUIRE( data_list->list != nullptr );
+
+    Data* data = &data_list->list[14];
+
+    REQUIRE( std::string{data->name} == "magnetics/flux_loop/1/flux/data" );
+    REQUIRE( data->rank == 1 );
+    REQUIRE( data->dims[0] == 1000 );
+    REQUIRE( data->datatype == 52 );
+    REQUIRE( ((double*)data->data)[0] == Approx(-10) );
 }
 
 TEST_CASE( "get all magnetics", "[MAG]" )
@@ -137,9 +166,11 @@ TEST_CASE( "get all magnetics", "[MAG]" )
 //
 //    rc = imasPartial(&interface);
 //
-//    free(interface.request_block->nameValueList.nameValue);
-//    free(interface.request_block);
-//    free(interface.data_block);
+//    delete interface.request_block->nameValueList.nameValue;
+//    delete interface.request_block;
+//    delete interface.data_block;
+//    delete interface.userdefinedtypelist;
+//    delete interface.logmalloclist;
 
     REQUIRE( rc == 0 );
 }

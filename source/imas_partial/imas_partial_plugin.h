@@ -17,4 +17,17 @@ int imasPartial(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
 }
 #endif
 
+struct Data {
+    const char* name = nullptr;
+    const char* data = nullptr;
+    int rank = 0;
+    int dims[64] = {0};
+    int datatype = 0;
+};
+
+struct DataList {
+    Data* list;
+    int size;
+};
+
 #endif // UDA_PLUGINS_IMAS_PARTIAL_PLUGIN_H

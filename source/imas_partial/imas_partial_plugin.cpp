@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 #include <deque>
 #include <boost/algorithm/string.hpp>
 
@@ -17,6 +18,8 @@
 #include <clientserver/copyStructs.h>
 #include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
+#include <structures/struct.h>
+#include <structures/accessors.h>
 
 #include "access_functions.h"
 #include "pugixml.hpp"
@@ -325,66 +328,108 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     get_requests(env_, requests, ids_path, nodes);
 
-    auto list = (DATA_BLOCK*)malloc(requests.size() * sizeof(DATA_BLOCK));
+    std::vector<imas_partial::MDSData> list;
 
-    int i = 0;
     for (const auto& request : requests) {
-        initDataBlock(&list[i]);
-
         std::cout << request << std::endl;
 
         imas_partial::MDSData mds_data = imas_partial::read_data_from_backend(env_, request);
-
-        DATA_BLOCK* data_block = &list[i];
-        strcpy(data_block->data_label, request.c_str());
-
-        data_block->rank = static_cast<unsigned int>(mds_data.rank);
-        data_block->data = reinterpret_cast<char*>(mds_data.data);
-        data_block->data_type = imas_to_uda_type(mds_data.datatype);
-
-        if (mds_data.rank > 0 && mds_data.dims[0] == 0) {
-            data_block->data_n = 0;
-            data_block->rank = 0;
-        } else if (mds_data.rank > 0) {
-            data_block->data_n = 1;
-            data_block->dims = (DIMS*)calloc(data_block->rank, sizeof(DIMS));
-
-            for (int dim_i = 0; dim_i < data_block->rank; ++dim_i) {
-                DIMS* dim = &data_block->dims[dim_i];
-                initDimBlock(dim);
-                dim->data_type = UDA_TYPE_UNSIGNED_INT;
-                dim->dim_n = mds_data.dims[dim_i];
-                dim->compressed = 1;
-                dim->dim0 = 0;
-                dim->diff = 1;
-                dim->method = 0;
-                data_block->data_n *= mds_data.dims[dim_i];
-            }
-        }
-
-        ++i;
+        list.push_back(mds_data);
     }
 
     closeIdamError();
 
+    USERDEFINEDTYPE data_usertype;
+    initUserDefinedType(&data_usertype);
+
+    strcpy(data_usertype.name, "Data");
+    strcpy(data_usertype.source, "IMAS_PARTIAL");
+    data_usertype.ref_id = 0;
+    data_usertype.imagecount = 0; // No Structure Image data
+    data_usertype.image = nullptr;
+    data_usertype.size = sizeof(Data); // Structure size
+    data_usertype.idamclass = UDA_TYPE_COMPOUND;
+
+    addStructureField(&data_usertype, "name", "data name", UDA_TYPE_STRING, true, 0, nullptr, offsetof(Data, name));
+    addStructureField(&data_usertype, "data", "data pointer", UDA_TYPE_CHAR, true, 0, nullptr, offsetof(Data, data));
+    addStructureField(&data_usertype, "rank", "data rank", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, rank));
+    int shape[] = { 64 };
+    addStructureField(&data_usertype, "dims", "data dimensions", UDA_TYPE_INT, false, 1, shape, offsetof(Data, dims));
+    addStructureField(&data_usertype, "datatype", "data type", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, datatype));
+
+    addUserDefinedType(plugin_interface->userdefinedtypelist, data_usertype);
+
+    USERDEFINEDTYPE data_list_usertype;
+    initUserDefinedType(&data_list_usertype);
+
+    strcpy(data_list_usertype.name, "DataList");
+    strcpy(data_list_usertype.source, "IMAS_PARTIAL");
+    data_list_usertype.ref_id = 0;
+    data_list_usertype.imagecount = 0; // No Structure Image data
+    data_list_usertype.image = nullptr;
+    data_list_usertype.size = sizeof(DataList);  // Structure size
+    data_list_usertype.idamclass = UDA_TYPE_COMPOUND;
+
+    COMPOUNDFIELD list_field;
+    initCompoundField(&list_field);
+
+    strcpy(list_field.name, "list");
+    list_field.atomictype = UDA_TYPE_UNKNOWN;
+    strcpy(list_field.type, "Data");
+    strcpy(list_field.desc, "list of data");
+    list_field.pointer = 1;
+    list_field.count = 1;
+    list_field.rank = 0;
+    list_field.shape = nullptr;
+    list_field.size = sizeof(Data*);
+    list_field.offset = (int)offsetof(DataList, list);
+    list_field.offpad = (int)padding(offsetof(DataList, list), list_field.type);
+    list_field.alignment = getalignmentof(list_field.type);
+    addCompoundField(&data_list_usertype, list_field);
+
+    COMPOUNDFIELD size_field;
+    initCompoundField(&size_field);
+
+    int offset = (int)offsetof(DataList, size);
+    defineField(&size_field, "size", "number of data", &offset, SCALARINT);
+    addCompoundField(&data_list_usertype, size_field);
+
+    addUserDefinedType(plugin_interface->userdefinedtypelist, data_list_usertype);
+
+    std::vector<Data> data(list.size());
+    for (int i = 0; i < list.size(); ++i) {
+        data[i].name = strdup(requests[i].c_str());
+        addMalloc(plugin_interface->logmalloclist, (void*)data[i].name, 1, strlen(data[i].name) + 1, "char");
+
+        size_t size = 1;
+        for (int j = 0; j < list[i].rank; ++j) {
+            size *= list[i].dims[j];
+            data[i].dims[j] = list[i].dims[j];
+        }
+        data[i].rank = list[i].rank;
+
+        data[i].data = (const char*)list[i].data;
+        addMalloc(plugin_interface->logmalloclist, (void*)data[i].data, 1, size, "char");
+
+        data[i].datatype = list[i].datatype;
+    }
+
+    auto data_list = new DataList{ data.data(), (int)data.size() };
+    addMalloc(plugin_interface->logmalloclist, (void*)data_list, 1, sizeof(DataList), "DataList");
+    addMalloc(plugin_interface->logmalloclist, (void*)data_list->list, data_list->size, sizeof(Data), "Data");
+
     DATA_BLOCK* data_block = plugin_interface->data_block;
     initDataBlock(data_block);
 
-    data_block->rank = 1;
-    data_block->dims = (DIMS*)malloc(sizeof(DIMS));
+    data_block->data_type = UDA_TYPE_COMPOUND;
+    data_block->rank = 0;
+    data_block->data_n = 1;
+    data_block->dims = nullptr;
+    data_block->data = (char*)data_list;
 
-    initDimBlock(&data_block->dims[i]);
-
-    data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
-    data_block->dims[0].dim_n = static_cast<int>(requests.size());
-    data_block->dims[0].compressed = 1;
-    data_block->dims[0].dim0 = 0.0;
-    data_block->dims[0].diff = 1.0;
-    data_block->dims[0].method = 0;
-
-    data_block->data_type = UDA_TYPE_UNSIGNED_CHAR;
-    data_block->data = reinterpret_cast<char*>(list);
-    data_block->data_n = static_cast<int>(requests.size() * sizeof(DATA_BLOCK));
+    data_block->opaque_type = UDA_OPAQUE_TYPE_STRUCTURES;
+    data_block->opaque_count = 1;
+    data_block->opaque_block = (void*)findUserDefinedType(plugin_interface->userdefinedtypelist, "DataList", 0);
 
     return 0;
 }
