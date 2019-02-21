@@ -19,7 +19,7 @@ int imasPartial(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
 
 struct Data {
     const char* name = nullptr;
-    const char* data = nullptr;
+    const unsigned char* data = nullptr;
     int rank = 0;
     int dims[64] = {0};
     int datatype = 0;

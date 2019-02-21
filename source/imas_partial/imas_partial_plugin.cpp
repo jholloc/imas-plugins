@@ -250,6 +250,18 @@ int imas_to_uda_type(int imas_type)
     }
 }
 
+int imas_type_size(int imas_type)
+{
+    switch (imas_type) {
+        case CHAR_DATA: return sizeof(char);
+        case INTEGER_DATA: return sizeof(int);
+        case DOUBLE_DATA: return sizeof(double);
+        case COMPLEX_DATA: return sizeof(Complex);
+        default:
+            throw std::runtime_error("unknown imas type");
+    }
+}
+
 LLenv open_pulse(IDAM_PLUGIN_INTERFACE* plugin_interface, int shot, int run, const char* user, const char* tokamak, const char* version)
 {
     int ctxId = Lowlevel::beginPulseAction(ualconst::mdsplus_backend, shot, run, user, tokamak, version);
@@ -350,8 +362,25 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     data_usertype.size = sizeof(Data); // Structure size
     data_usertype.idamclass = UDA_TYPE_COMPOUND;
 
-    addStructureField(&data_usertype, "name", "data name", UDA_TYPE_STRING, true, 0, nullptr, offsetof(Data, name));
-    addStructureField(&data_usertype, "data", "data pointer", UDA_TYPE_CHAR, true, 0, nullptr, offsetof(Data, data));
+//    addStructureField(&data_usertype, "name", "data name", UDA_TYPE_STRING, true, 0, nullptr, offsetof(Data, name));
+
+    COMPOUNDFIELD name_field;
+    initCompoundField(&name_field);
+    strcpy(name_field.name, "name");
+    name_field.atomictype = UDA_TYPE_STRING;
+    strcpy(name_field.type, "STRING");
+    strcpy(name_field.desc, "data name");
+    name_field.pointer = 1;
+    name_field.count = 1;
+    name_field.rank = 0;
+    name_field.shape = nullptr;
+    name_field.size = name_field.count * sizeof(char*);
+    name_field.offset = offsetof(Data, name);
+    name_field.offpad = padding(offsetof(Data, name), name_field.type);
+    name_field.alignment = getalignmentof(name_field.type);
+    addCompoundField(&data_usertype, name_field);
+
+    addStructureField(&data_usertype, "data", "data pointer", UDA_TYPE_UNSIGNED_CHAR, true, 0, nullptr, offsetof(Data, data));
     addStructureField(&data_usertype, "rank", "data rank", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, rank));
     int shape[] = { 64 };
     addStructureField(&data_usertype, "dims", "data dimensions", UDA_TYPE_INT, false, 1, shape, offsetof(Data, dims));
@@ -396,27 +425,33 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     addUserDefinedType(plugin_interface->userdefinedtypelist, data_list_usertype);
 
-    std::vector<Data> data(list.size());
+    Data* data = (Data*)calloc(list.size(), sizeof(Data));
+    addMalloc(plugin_interface->logmalloclist, (void*)data, (int)list.size(), sizeof(Data), "Data");
+
     for (int i = 0; i < list.size(); ++i) {
-        data[i].name = strdup(requests[i].c_str());
-        addMalloc(plugin_interface->logmalloclist, (void*)data[i].name, 1, strlen(data[i].name) + 1, "char");
+        Data* dp = &data[i];
+        memset(dp->dims, '\0', 64 * sizeof(int));
+
+        dp->name = strdup(requests[i].c_str());
+        addMalloc(plugin_interface->logmalloclist, (void*)dp->name, 1, strlen(dp->name) + 1, "char");
 
         size_t size = 1;
         for (int j = 0; j < list[i].rank; ++j) {
             size *= list[i].dims[j];
-            data[i].dims[j] = list[i].dims[j];
+            dp->dims[j] = list[i].dims[j];
         }
-        data[i].rank = list[i].rank;
+        dp->rank = list[i].rank;
 
-        data[i].data = (const char*)list[i].data;
-        addMalloc(plugin_interface->logmalloclist, (void*)data[i].data, 1, size, "char");
+        size_t sz = size * imas_type_size(list[i].datatype);
+        dp->data = (unsigned char*)malloc(sz);
+        memcpy((void*)dp->data, list[i].data, sz);
+        addMalloc(plugin_interface->logmalloclist, (void*)dp->data, (int)sz, 1, "unsigned char");
 
-        data[i].datatype = list[i].datatype;
+        dp->datatype = list[i].datatype;
     }
 
-    auto data_list = new DataList{ data.data(), (int)data.size() };
+    auto data_list = new DataList{ data, (int)list.size() };
     addMalloc(plugin_interface->logmalloclist, (void*)data_list, 1, sizeof(DataList), "DataList");
-    addMalloc(plugin_interface->logmalloclist, (void*)data_list->list, data_list->size, sizeof(Data), "Data");
 
     DATA_BLOCK* data_block = plugin_interface->data_block;
     initDataBlock(data_block);
