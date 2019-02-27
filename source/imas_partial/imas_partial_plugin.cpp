@@ -47,6 +47,117 @@ private:
     LLenv env_ = {};
 };
 
+#ifndef addStructureField
+
+const char* udaNameType(UDA_TYPE type)
+{
+    switch (type) {
+        case UDA_TYPE_CHAR:
+            return "char";
+        case UDA_TYPE_SHORT:
+            return "short";
+        case UDA_TYPE_INT:
+            return "int";
+        case UDA_TYPE_LONG:
+            return "int";
+        case UDA_TYPE_LONG64:
+            return "long long";
+        case UDA_TYPE_FLOAT:
+            return "float";
+        case UDA_TYPE_DOUBLE:
+            return "double";
+        case UDA_TYPE_UNSIGNED_CHAR:
+            return "unsigned char";
+        case UDA_TYPE_UNSIGNED_SHORT:
+            return "unsigned short";
+        case UDA_TYPE_UNSIGNED_INT:
+            return "unsigned int";
+        case UDA_TYPE_UNSIGNED_LONG:
+            return "unsigned int";
+        case UDA_TYPE_UNSIGNED_LONG64:
+            return "unsigned long long";
+        case UDA_TYPE_STRING:
+            return "char";
+        default:
+            return "unknown";
+    }
+}
+
+size_t getPtrSizeOf(UDA_TYPE data_type)
+{
+    switch (data_type) {
+        case UDA_TYPE_FLOAT:
+            return sizeof(float*);
+        case UDA_TYPE_DOUBLE:
+            return sizeof(double*);
+        case UDA_TYPE_CHAR:
+            return sizeof(char*);
+        case UDA_TYPE_SHORT:
+            return sizeof(short*);
+        case UDA_TYPE_INT:
+            return sizeof(int*);
+        case UDA_TYPE_LONG:
+            return sizeof(long*);
+        case UDA_TYPE_LONG64:
+            return sizeof(long long*);
+        case UDA_TYPE_UNSIGNED_CHAR:
+            return sizeof(unsigned char*);
+        case UDA_TYPE_UNSIGNED_SHORT:
+            return sizeof(unsigned short*);
+        case UDA_TYPE_UNSIGNED_INT:
+            return sizeof(unsigned int*);
+        case UDA_TYPE_UNSIGNED_LONG:
+            return sizeof(unsigned long*);
+        case UDA_TYPE_UNSIGNED_LONG64:
+            return sizeof(unsigned long long*);
+        case UDA_TYPE_STRING:
+            return sizeof(char*);
+        case UDA_TYPE_COMPLEX:
+            return sizeof(COMPLEX*);
+        case UDA_TYPE_DCOMPLEX:
+            return sizeof(DCOMPLEX*);
+        default:
+            return 0;
+    }
+}
+
+void addStructureField(USERDEFINEDTYPE* user_type, const char* name, const char* desc, UDA_TYPE data_type, bool is_pointer, int rank, int* shape, size_t offset)
+{
+    COMPOUNDFIELD field;
+    initCompoundField(&field);
+
+    strcpy(field.name, name);
+    field.atomictype = data_type;
+    if (data_type == UDA_TYPE_STRING) {
+        strcpy(field.type, "STRING");
+    } else {
+        strcpy(field.type, udaNameType(data_type));
+    }
+    if (is_pointer) {
+        strcpy(&field.type[strlen(field.type)], " *");
+    }
+    strcpy(field.desc, desc);
+    field.pointer = is_pointer;
+    field.rank = rank;
+    field.count = 1;
+    if (shape != NULL) {
+        field.shape = (int*)malloc(field.rank * sizeof(int));
+        int i;
+        for (i = 0; i < rank; ++i) {
+            field.shape[i] = shape[i];
+            field.count *= shape[i];
+        }
+    }
+    field.size = is_pointer ? (int)getPtrSizeOf(data_type) : (field.count * (int)getSizeOf(data_type));
+    field.offset = (int)offset;
+    field.offpad = (int)padding(offset, field.type);
+    field.alignment = getalignmentof(field.type);
+
+    addCompoundField(user_type, field);
+}
+
+#endif
+
 } // anon namespace
 
 int imasPartial(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
