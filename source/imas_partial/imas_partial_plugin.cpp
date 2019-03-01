@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <deque>
 #include <boost/algorithm/string.hpp>
@@ -131,7 +132,7 @@ void addStructureField(USERDEFINEDTYPE* user_type, const char* name, const char*
     if (data_type == UDA_TYPE_STRING) {
         strcpy(field.type, "STRING");
     } else {
-        strcpy(field.type, udaNameType(data_type));
+        strcpy(field.type, ::udaNameType(data_type));
     }
     if (is_pointer) {
         strcpy(&field.type[strlen(field.type)], " *");
@@ -140,7 +141,7 @@ void addStructureField(USERDEFINEDTYPE* user_type, const char* name, const char*
     field.pointer = is_pointer;
     field.rank = rank;
     field.count = 1;
-    if (shape != NULL) {
+    if (shape != nullptr) {
         field.shape = (int*)malloc(field.rank * sizeof(int));
         int i;
         for (i = 0; i < rank; ++i) {
@@ -148,7 +149,7 @@ void addStructureField(USERDEFINEDTYPE* user_type, const char* name, const char*
             field.count *= shape[i];
         }
     }
-    field.size = is_pointer ? (int)getPtrSizeOf(data_type) : (field.count * (int)getSizeOf(data_type));
+    field.size = is_pointer ? (int)::getPtrSizeOf(data_type) : (field.count * (int)getSizeOf(data_type));
     field.offset = (int)offset;
     field.offpad = (int)padding(offset, field.type);
     field.alignment = getalignmentof(field.type);
@@ -277,12 +278,14 @@ int get_rank(const std::string& data_type)
     return std::stoi(tokens.back());
 }
 
-void get_requests(LLenv& env, std::vector<std::string>& requests, std::string ids_path, const pugi::xml_node& node)
+void get_requests(LLenv& env, std::vector<std::string>& requests, std::map<std::string, int> sizes,
+        std::string ids_path, const pugi::xml_node& node)
 {
     std::string dtype = node.attribute("data_type").value();
 
     if (dtype == "struct_array") {
         int size = imas_partial::read_size_from_backend(env, ids_path);
+        sizes[ids_path] = size;
 
         std::vector<std::string> tokens;
         boost::split(tokens, ids_path, boost::is_any_of("/"), boost::token_compress_on);
@@ -293,13 +296,13 @@ void get_requests(LLenv& env, std::vector<std::string>& requests, std::string id
                 throw std::range_error("out of range value given in ids_path");
             }
             for (const auto& child : node.children("field")) {
-                get_requests(env, requests, ids_path + "/" + child.attribute("name").value(), child);
+                get_requests(env, requests, sizes, ids_path + "/" + child.attribute("name").value(), child);
             }
         } else {
             for (int i = 1; i < size + 1; ++i) {
                 std::string path = ids_path + "/" + std::to_string(i);
                 for (const auto& child : node.children("field")) {
-                    get_requests(env, requests, path + "/" + child.attribute("name").value(), child);
+                    get_requests(env, requests, sizes, path + "/" + child.attribute("name").value(), child);
                 }
             }
         }
@@ -307,11 +310,11 @@ void get_requests(LLenv& env, std::vector<std::string>& requests, std::string id
         requests.push_back(ids_path);
 
         for (const auto& child : node.children("field")) {
-            get_requests(env, requests, ids_path + "/" + child.attribute("name").value(), child);
+            get_requests(env, requests, sizes, ids_path + "/" + child.attribute("name").value(), child);
         }
     } else {
         for (const auto& child : node.children("field")) {
-            get_requests(env, requests, ids_path + "/" + child.attribute("name").value(), child);
+            get_requests(env, requests, sizes, ids_path + "/" + child.attribute("name").value(), child);
         }
     }
 }
@@ -432,11 +435,15 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::string ids_path;
     std::string delim;
+    std::vector<std::string> size_requests;
 
     while (!tokens.empty()) {
         token = tokens.front();
 
         if (imas_partial::is_integer(token)) {
+            if (tokens.size() != 1) {
+                size_requests.push_back(ids_path);
+            }
             ids_path += delim + token;
         } else {
             nodes = nodes.find_child_by_attribute("name", token.c_str());
@@ -447,17 +454,33 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         tokens.pop_front();
     }
 
+    std::map<std::string, int> sizes;
+
+    for (const auto& request : size_requests) {
+        int size = imas_partial::read_size_from_backend(env_, request);
+        sizes[request] = size;
+    }
+
     std::vector<std::string> requests;
 
-    get_requests(env_, requests, ids_path, nodes);
+    get_requests(env_, requests, sizes, ids_path, nodes);
 
-    std::vector<imas_partial::MDSData> list;
+    std::map<std::string, imas_partial::MDSData> results;
+
+    for (const auto& pair : sizes) {
+        std::cout << pair.first << " = " << pair.second << std::endl;
+        imas_partial::MDSData data{};
+        data.datatype = INTEGER_DATA;
+        data.data = malloc(sizeof(int));
+        *((int*)data.data) = pair.second;
+        results[pair.first] = data;
+    }
 
     for (const auto& request : requests) {
         std::cout << request << std::endl;
 
         imas_partial::MDSData mds_data = imas_partial::read_data_from_backend(env_, request);
-        list.push_back(mds_data);
+        results[request] = mds_data;
     }
 
     closeIdamError();
@@ -491,11 +514,11 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     name_field.alignment = getalignmentof(name_field.type);
     addCompoundField(&data_usertype, name_field);
 
-    addStructureField(&data_usertype, "data", "data pointer", UDA_TYPE_UNSIGNED_CHAR, true, 0, nullptr, offsetof(Data, data));
-    addStructureField(&data_usertype, "rank", "data rank", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, rank));
+    ::addStructureField(&data_usertype, "data", "data pointer", UDA_TYPE_UNSIGNED_CHAR, true, 0, nullptr, offsetof(Data, data));
+    ::addStructureField(&data_usertype, "rank", "data rank", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, rank));
     int shape[] = { 64 };
-    addStructureField(&data_usertype, "dims", "data dimensions", UDA_TYPE_INT, false, 1, shape, offsetof(Data, dims));
-    addStructureField(&data_usertype, "datatype", "data type", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, datatype));
+    ::addStructureField(&data_usertype, "dims", "data dimensions", UDA_TYPE_INT, false, 1, shape, offsetof(Data, dims));
+    ::addStructureField(&data_usertype, "datatype", "data type", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, datatype));
 
     addUserDefinedType(plugin_interface->userdefinedtypelist, data_usertype);
 
@@ -536,32 +559,39 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     addUserDefinedType(plugin_interface->userdefinedtypelist, data_list_usertype);
 
-    Data* data = (Data*)calloc(list.size(), sizeof(Data));
-    addMalloc(plugin_interface->logmalloclist, (void*)data, (int)list.size(), sizeof(Data), "Data");
+    Data* data = (Data*)calloc(results.size(), sizeof(Data));
+    addMalloc(plugin_interface->logmalloclist, (void*)data, (int)results.size(), sizeof(Data), "Data");
 
-    for (int i = 0; i < list.size(); ++i) {
+    size_t i = 0;
+    for (const auto& pair : results) {
         Data* dp = &data[i];
         memset(dp->dims, '\0', 64 * sizeof(int));
 
-        dp->name = strdup(requests[i].c_str());
+        dp->name = strdup(pair.first.c_str());
         addMalloc(plugin_interface->logmalloclist, (void*)dp->name, 1, strlen(dp->name) + 1, "char");
 
         size_t size = 1;
-        for (int j = 0; j < list[i].rank; ++j) {
-            size *= list[i].dims[j];
-            dp->dims[j] = list[i].dims[j];
+        for (int j = 0; j < pair.second.rank; ++j) {
+            size *= pair.second.dims[j];
+            dp->dims[j] = pair.second.dims[j];
         }
-        dp->rank = list[i].rank;
+        dp->rank = pair.second.rank;
 
-        size_t sz = size * imas_type_size(list[i].datatype);
-        dp->data = (unsigned char*)malloc(sz);
-        memcpy((void*)dp->data, list[i].data, sz);
-        addMalloc(plugin_interface->logmalloclist, (void*)dp->data, (int)sz, 1, "unsigned char");
+        if (pair.second.data != nullptr) {
+            size_t sz = size * imas_type_size(pair.second.datatype);
+            dp->data = (unsigned char*)malloc(sz);
+            memcpy((void*)dp->data, pair.second.data, sz);
+            addMalloc(plugin_interface->logmalloclist, (void*)dp->data, (int)sz, 1, "unsigned char");
+            dp->datatype = pair.second.datatype;
+        } else {
+            dp->data = nullptr;
+            dp->datatype = UDA_TYPE_VOID;
+        }
 
-        dp->datatype = list[i].datatype;
+        ++i;
     }
 
-    auto data_list = new DataList{ data, (int)list.size() };
+    auto data_list = new DataList{ data, (int)results.size() };
     addMalloc(plugin_interface->logmalloclist, (void*)data_list, 1, sizeof(DataList), "DataList");
 
     DATA_BLOCK* data_block = plugin_interface->data_block;

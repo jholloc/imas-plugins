@@ -140,7 +140,7 @@ TEST_CASE( "get flux_loops", "[MAG]" )
     REQUIRE( data_list->size == 210 );
     REQUIRE( data_list->list != nullptr );
 
-    Data* data = &data_list->list[14];
+    Data* data = &data_list->list[0];
 
     REQUIRE( std::string{data->name} == "magnetics/flux_loop/1/flux/data" );
     REQUIRE( data->rank == 1 );

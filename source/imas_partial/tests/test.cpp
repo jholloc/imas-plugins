@@ -33,7 +33,7 @@ TEST_CASE( "get flux_loop flux data", "[MAG]" )
     uda::TreeNode child = tree.child(0);
 
     REQUIRE( child.name() == "data" );
-    REQUIRE( child.numChildren() == 1 );
+    REQUIRE( child.numChildren() == 2 );
     REQUIRE( child.atomicCount() == 1 );
     REQUIRE( child.atomicNames()[0] == "size" );
     REQUIRE( child.atomicPointers()[0] == false );
@@ -44,9 +44,57 @@ TEST_CASE( "get flux_loop flux data", "[MAG]" )
     REQUIRE( !size.isNull() );
 
     REQUIRE( size.type().name() == typeid(int).name() );
-    REQUIRE( size.as<int>() == 1 );
+    REQUIRE( size.as<int>() == 2 );
 
-    for (int i = 0; i < size.as<int>(); ++i) {
+    {
+        int i = 0;
+        uda::TreeNode list = child.child(i);
+
+        REQUIRE( list.name() == "list" );
+        REQUIRE( list.numChildren() == 0 );
+        REQUIRE( list.atomicCount() == 5 );
+
+        std::vector<std::string> exp_names = { "name", "data", "rank", "dims", "datatype" };
+        REQUIRE( list.atomicNames() == exp_names );
+
+        std::vector<bool> exp_pointers = { true, true, false, false, false };
+        REQUIRE( list.atomicPointers() == exp_pointers );
+
+        std::vector<std::string> exp_types = { "STRING", "unsigned char *", "int", "int", "int" };
+        REQUIRE( list.atomicTypes() == exp_types );
+
+        std::vector<size_t> exp_ranks = { 0, 0, 0, 1, 0 };
+        REQUIRE( list.atomicRank() == exp_ranks );
+
+        uda::Scalar name = list.atomicScalar("name");
+        REQUIRE( !name.isNull() );
+        REQUIRE( std::string{ name.as<char*>() } == "magnetics/flux_loop" );
+
+        uda::Vector data = list.atomicVector("data");
+        REQUIRE( !data.isNull() );
+        REQUIRE( data.size() == sizeof(int) );
+        REQUIRE( data.type().name() == typeid(unsigned char).name() );
+        std::vector<unsigned char> bytes = data.as<unsigned char>();
+        auto id = reinterpret_cast<int*>(bytes.data());
+        REQUIRE( *id == 10 );
+
+        uda::Scalar rank = list.atomicScalar("rank");
+        REQUIRE( !rank.isNull() );
+        REQUIRE( rank.as<int>() == 0 );
+
+        uda::Vector dims = list.atomicVector("dims");
+        REQUIRE( !dims.isNull() );
+        std::vector<int> exp_dims = { 0 };
+        exp_dims.resize(64, 0);
+        REQUIRE( dims.as<int>() == exp_dims );
+
+        uda::Scalar datatype = list.atomicScalar("datatype");
+        REQUIRE( !datatype.isNull() );
+        REQUIRE( datatype.as<int>() == 51 );
+    }
+
+    {
+        int i = 1;
         uda::TreeNode list = child.child(i);
 
         REQUIRE( list.name() == "list" );
