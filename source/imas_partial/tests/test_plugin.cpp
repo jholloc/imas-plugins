@@ -48,10 +48,12 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& function, con
 
 TEST_CASE( "get flux_loop flux data", "[MAG]" )
 {
+    auto user = getenv("USER");
+
     IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
         {"shot", "1000"},
         {"run", "0"},
-        {"user", "jhollocombe"},
+        {"user", user},
         {"tokamak", "test"},
         {"version", "3"},
         {"path", "/magnetics/flux_loop/3/flux/data"}
@@ -70,10 +72,12 @@ TEST_CASE( "get flux_loop flux data", "[MAG]" )
 
 TEST_CASE( "get flux_loop flux", "[MAG]" )
 {
+    auto user = getenv("USER");
+    
     IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
             {"shot", "1000"},
             {"run", "0"},
-            {"user", "jhollocombe"},
+            {"user", user},
             {"tokamak", "test"},
             {"version", "3"},
             {"path", "/magnetics/flux_loop/3/flux"}
@@ -92,10 +96,12 @@ TEST_CASE( "get flux_loop flux", "[MAG]" )
 
 TEST_CASE( "get flux_loop", "[MAG]" )
 {
+    auto user = getenv("USER");
+
     IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
             {"shot", "1000"},
             {"run", "0"},
-            {"user", "jhollocombe"},
+            {"user", user},
             {"tokamak", "test"},
             {"version", "3"},
             {"path", "/magnetics/flux_loop/3"}
@@ -114,10 +120,12 @@ TEST_CASE( "get flux_loop", "[MAG]" )
 
 TEST_CASE( "get flux_loops", "[MAG]" )
 {
+    auto user = getenv("USER");
+
     IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
             {"shot", "1000"},
             {"run", "0"},
-            {"user", "jhollocombe"},
+            {"user", user},
             {"tokamak", "test"},
             {"version", "3"},
             {"path", "/magnetics/flux_loop"}
@@ -151,10 +159,12 @@ TEST_CASE( "get flux_loops", "[MAG]" )
 
 TEST_CASE( "get all magnetics", "[MAG]" )
 {
+    auto user = getenv("USER");
+
     IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
             {"shot", "1000"},
             {"run", "0"},
-            {"user", "jhollocombe"},
+            {"user", user},
             {"tokamak", "test"},
             {"version", "3"},
             {"path", "/magnetics"}

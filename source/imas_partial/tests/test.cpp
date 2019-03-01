@@ -20,7 +20,11 @@ TEST_CASE( "get flux_loop flux data", "[MAG]" )
 
     uda::Client client;
 
-    const uda::Result& result = client.get("IMAS_PARTIAL::get(shot=1000, run=0, user=jhollocombe, tokamak=test, version=3, path=/magnetics/flux_loop/3/flux/data)", "");
+    auto user = getenv("USER");
+    std::string request = std::string("IMAS_PARTIAL::get(shot=1000, run=0, user=") + user
+            + ", tokamak=test, version=3, path=/magnetics/flux_loop/3/flux/data)";
+
+    const uda::Result& result = client.get(request, "");
 
     REQUIRE( result.errorCode() == 0 );
     REQUIRE( result.errorMessage().empty() );
