@@ -121,7 +121,7 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 	}
 	else {
 		nomsigp = strdup("GTXMH2");
-		extractionIndex = CHANNELS_COUNT + 1 - index;
+		extractionIndex = index - GTXMH1_CHANNELS_COUNT;
 	}
 	UDA_LOG(UDA_LOG_DEBUG, "reading channels_power_density...\n");
 	int status = channels_power_density(shotNumber, nomsigp, extractionIndex, &time, &data, &len);
