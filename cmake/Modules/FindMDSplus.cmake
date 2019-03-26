@@ -28,7 +28,7 @@ find_path( MDSPLUS_INCLUDES mdslib.h
   PATH_SUFFIXES include )
 
 set( MDS_LIBS
-  MdsObjectsCppShr
+  MdsObjectsCppShr MdsLib
 )
 
 set( MDSPLUS_LIBRARIES "" )
