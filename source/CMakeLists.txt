@@ -5,6 +5,7 @@ if( NOT DEFINED BUILD_PLUGINS )
   set( BUILD_PLUGINS
     exp2imas
     imas_remote
+    imas_local
     imas_old
     imas_mapping
     imasdd

@@ -583,8 +583,9 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int uda_type = convert_IMAS_to_UDA_type(datatype);
 
     auto request =
-            boost::format("%s::read(experiment='%s', element='%s/%s', shot=%d, indices='%s', dtype=%d, IDS_version='')")
-            % plugin_name % pulse.tokamak % ids_ % element % pulse.shot % indices % uda_type;
+            boost::format("%s::read(experiment='%s', element='%s/%s', shot=%d, indices='%s', dtype=%d, IDS_version='%s', run=%d, user='%s')")
+            % plugin_name % pulse.tokamak % ids_ % element % pulse.shot % indices % uda_type
+            % pulse.version % pulse.run % pulse.user;
     std::cout << request.str() << std::endl;
 
     return call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request.str());
