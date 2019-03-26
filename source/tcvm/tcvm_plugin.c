@@ -198,8 +198,9 @@ int do_read(Engine *ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     size_t rank;
     const size_t* dims = NULL;
 
-    runquery(ep, element, shot, indices, nindices, dtype, &result, &rank, &dims);
+    err = runquery(ep, element, shot, indices, nindices, dtype, &result, &rank, &dims);
     
+    if ( err > 0 ) return err;
     switch (dtype) {
       case UDA_TYPE_INT :
 	setReturnDataIntArray(data_block, result, rank, dims, " ");
