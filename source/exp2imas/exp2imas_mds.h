@@ -6,7 +6,8 @@ extern "C" {
 #endif
 
 int
-mds_get(const char* experiment, const char* signalName, int shot, float** time, float** data, int* len, int* time_len, int time_dim);
+mds_get(const char* experiment, const char* signalName, int shot, int run,
+        float** time, float** data, int* len, int* time_len, int time_dim);
 int mds_close();
 
 #ifdef __cplusplus

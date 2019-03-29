@@ -48,7 +48,20 @@ int mds_close()
     return 0;
 }
 
-int mds_get(const char* experiment, const char* signalName, int shot, float** time, float** data, int* len, int* time_len, int time_dim)
+int replace(char* out, char* in, const char* replace, const char* with)
+{
+    char* pos = strstr(in, replace);
+    if (pos != nullptr) {
+        char* tmp = StringReplaceAll(in, replace, with);
+        sprintf(out, "%s", tmp);
+        free(tmp);
+    } else {
+        sprintf(out, "%s", in);
+    }
+}
+
+int mds_get(const char* experiment, const char* signalName, int shot, int run,
+            float** time, float** data, int* len, int* time_len, int time_dim)
 {
     if (conn == nullptr) {
 
@@ -122,35 +135,38 @@ int mds_get(const char* experiment, const char* signalName, int shot, float** ti
         sprintf(work, R"(_sig=augdiag(%%SHOT%%,"%s","%s"))", tmp, &tmp[matches[2].rm_so]);
         free(tmp);
     } else if (STR_STARTSWITH(signalName, "%TDI%")) {
-        const char* shot_pos = strstr(signalName, "%SHOT%");
-        if (shot_pos != nullptr) {
-            char shot_str[20];
-            sprintf(shot_str, "%d", shot);
-            char* tmp = StringReplaceAll(signalName, "%SHOT%", shot_str);
-            sprintf(work, "%s", &tmp[5]);
-        } else {
-            sprintf(work, "%s", &signalName[5]);
-        }
+        sprintf(work, "%s", &signalName[5]);
         is_tdi = true;
     } else {
         sprintf(work, "%s", signalName);
     }
 
+    char tmp1[2048];
+    char tmp2[2048];
+    char tmp3[2048];
+
+    char shot_str[10];
+    sprintf(shot_str, "%d", shot);
+    replace(tmp1, work, "%SHOT%", shot_str);
+
+    char run_str[10];
+    sprintf(run_str, "%d", run);
+    replace(tmp2, tmp1, "%SEQUENCE%", run_str);
+
+    const char* username = getenv("UDA_EXP2IMAS_USERNAME");
+    if (username == nullptr) {
+        username = "";
+    }
+    replace(tmp3, tmp2, "%LOCALUSERNAME%", username);
+
     char signal[2048];
 
-    char* shot_pos = strstr(work, "%SHOT%");
-    if (shot_pos != nullptr) {
-        char shot_str[10];
-        sprintf(shot_str, "%d", shot);
-        char* tmp = StringReplaceAll(work, "%SHOT%", shot_str);
-        sprintf(signal, "%s", tmp);
-        free(tmp);
-    } else if (is_tdi) {
-        sprintf(signal, "%s", work);
+    if (is_tdi) {
+        sprintf(signal, "%s", tmp3);
     } else if (StringIEquals(experiment, "JET")) {
-        sprintf(signal, "_sig=jet(\"%s\",%d)", work, shot);
+        sprintf(signal, "_sig=jet(\"%s\",%d)", tmp3, shot);
     } else {
-        sprintf(signal, "_sig=%s", work);
+        sprintf(signal, "_sig=%s", tmp3);
     }
 
     fprintf(stderr, "fetching signal %s", signal);

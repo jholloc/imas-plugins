@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mappings>
-  <mapping key="core_profiles/ids_properties/comment" value="" type=""/>
-  <mapping key="core_profiles/ids_properties/homogeneous_time" value="" type=""/>
-  <mapping key="core_profiles/ids_properties/source" value="" type=""/>
-  <mapping key="core_profiles/ids_properties/provider" value="" type=""/>
-  <mapping key="core_profiles/ids_properties/creation_date" value="" type=""/>
+  <mapping key="core_profiles/ids_properties/comment" value="JET data mapped using UDA and exp2itm mappings 4.10b" type="constant"/>
+  <mapping key="core_profiles/ids_properties/homogeneous_time" value="0" type="constant"/>
+  <mapping key="core_profiles/ids_properties/source" value="//mapping_info/description" type="static"/>
+  <mapping key="core_profiles/ids_properties/provider" value="//mapping_info/provider" type="static"/>
+  <mapping key="core_profiles/ids_properties/creation_date" value="//mapping_info/lastputdate" type="static"/>
 
-  <mapping key="core_profiles/profiles_1d/Shape_of" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/Shape_of" value="1" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm" value="//coreprof/rho_tor_norm/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm_error_upper" value="//coreprof/rho_tor_norm/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm_error_lower" value="//coreprof/rho_tor_norm/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_norm_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor" value="//coreprof/rho_tor_norm/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_error_upper" value="//coreprof/rho_tor_norm/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_error_lower" value="//coreprof/rho_tor_norm/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/grid/rho_tor_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/grid/psi" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/grid/psi_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/grid/psi_error_lower" value="" type=""/>
@@ -32,14 +33,16 @@
   <mapping key="core_profiles/profiles_1d/#/grid/area_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/grid/area_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/grid/area_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/electrons/temperature" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/temperature" value="//coreprof/te/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_error_upper" value="//coreprof/te/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_error_lower" value="//coreprof/te/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_validity" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/temperature_validity" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/electrons/temperature_fit/measured" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/temperature_fit/measured_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/temperature_fit/measured_error_lower" value="" type=""/>
@@ -84,14 +87,16 @@
   <mapping key="core_profiles/profiles_1d/#/electrons/temperature_fit/chi_squared_error_index" value="" type=""/>
 
   <mapping key="core_profiles/profiles_1d/#/electrons/temperature_fit/parameters" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/electrons/density" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/density_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/density_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/density_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/density" value="//coreprof/ne/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/density_error_upper" value="//coreprof/ne/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/density_error_lower" value="//coreprof/ne/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/density_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/electrons/density_validity" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/density_validity" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/electrons/density_fit/measured" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/density_fit/measured_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/density_fit/measured_error_lower" value="" type=""/>
@@ -146,17 +151,19 @@
   <mapping key="core_profiles/profiles_1d/#/electrons/density_fast_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/density_fast_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/density_fast_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure" value="//coreprof/profiles1d/pe/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_error_upper" value="//coreprof/profiles1d/pe/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_error_lower" value="//coreprof/profiles1d/pe/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal" value="//coreprof/profiles1d/pe_th/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal_error_upper" value="//coreprof/profiles1d/pe_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal_error_lower" value="//coreprof/profiles1d/pe_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/electrons/pressure_thermal_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/electrons/pressure_fast_perpendicular" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/pressure_fast_perpendicular_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/pressure_fast_perpendicular_error_lower" value="" type=""/>
@@ -206,33 +213,37 @@
   <mapping key="core_profiles/profiles_1d/#/electrons/collisionality_norm_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/collisionality_norm_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/electrons/collisionality_norm_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/ion/Shape_of" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/Shape_of" value="count(//coreprof/compositions/ions)" type="static"/>
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/Shape_of" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/Shape_of" value="1" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a" value="//coreprof/compositions/nuclei/amn/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a_error_upper" value="//coreprof/compositions/nuclei/amn/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a_error_lower" value="//coreprof/compositions/nuclei/amn/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/a_error_index" value="0" type="fixed"/>
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n" value="1" type="constant"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n_error_upper" value="0" type="constant"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n_error_lower" value="0" type="constant"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/z_n_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/atoms_n" value="" type=""/>
 
   <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/multiplicity" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/multiplicity_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/multiplicity_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/ion/#/element/#/multiplicity_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion" value="1" type="constant"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_error_upper" value="0" type="constant"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_error_lower" value="0" type="constant"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/ion/#/label" value="" type=""/>
 
   <mapping key="core_profiles/profiles_1d/#/ion/#/neutral_index" value="" type=""/>
@@ -246,21 +257,23 @@
   <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_square_1d_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_square_1d_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/ion/#/z_ion_square_1d_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature" value="//coreprof/ti/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_error_upper" value="//coreprof/ti/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_error_lower" value="//coreprof/ti/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_validity" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/temperature_validity" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/density" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/density_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/density_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/ion/#/density_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/density" value="//coreprof/ne/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/density_error_upper" value="/coreprof/ne/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/density_error_lower" value="/coreprof/ne/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/density_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/ion/#/density_validity" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/ion/#/density_validity" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/ion/#/density_fit/measured" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/ion/#/density_fit/measured_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/ion/#/density_fit/measured_error_lower" value="" type=""/>
@@ -832,57 +845,63 @@
   <mapping key="core_profiles/profiles_1d/#/pressure_ion_total_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/pressure_ion_total_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/pressure_ion_total_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/pressure_thermal" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_thermal_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_thermal_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_thermal_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_thermal" value="//coreprof/profiles1d/pr_th/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_thermal_error_upper" value="//coreprof/profiles1d/pr_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_thermal_error_lower" value="//coreprof/profiles1d/pr_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_thermal_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular" value="//coreprof/profiles1d/pr_th/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular_error_upper" value="//coreprof/profiles1d/pr_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular_error_lower" value="//coreprof/profiles1d/pr_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_perpendicular_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/pressure_parallel" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_parallel_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_parallel_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/pressure_parallel_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_parallel" value="//coreprof/profiles1d/pr_th/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_parallel_error_upper" value="//coreprof/profiles1d/pr_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_parallel_error_lower" value="//coreprof/profiles1d/pr_th/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/pressure_parallel_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/j_total" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_total_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_total_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_total_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/j_total" value="//coreprof/profiles1d/jtot/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/j_total_error_upper" value="//coreprof/profiles1d/jtot/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_total_error_lower" value="//coreprof/profiles1d/jtot/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_total_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/current_parallel_inside" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/current_parallel_inside_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/current_parallel_inside_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/current_parallel_inside_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/j_tor" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_tor_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_tor_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_tor_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/j_tor" value="//coreprof/profiles1d/jphi/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/j_tor_error_upper" value="//coreprof/profiles1d/jphi/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_tor_error_lower" value="//coreprof/profiles1d/jphi/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_tor_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/j_ohmic" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_ohmic_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_ohmic_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_ohmic_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/j_ohmic" value="//coreprof/profiles1d/joh/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/j_ohmic_error_upper" value="//coreprof/coreprof/profiles1d/joh/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_ohmic_error_lower" value="//profiles1d/joh/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_ohmic_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/j_non_inductive" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_non_inductive_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_non_inductive_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_non_inductive_error_index" value="" type=""/>
+  <!--
+  <mapping key="core_profiles/profiles_1d/#/j_non_inductive" value="//coreprof/psi/jni/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/j_non_inductive_error_upper" value="//coreprof/psi/jni/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_non_inductive_error_lower" value="//coreprof/psi/jni/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_non_inductive_error_index" value="0" type="constant"/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/j_bootstrap" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_bootstrap_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_bootstrap_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/j_bootstrap_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/j_bootstrap" value="//coreprof/profiles1d/jni/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/j_bootstrap_error_upper" value="//coreprof/profiles1d/jni/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_bootstrap_error_lower" value="//coreprof/profiles1d/jni/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/j_bootstrap_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel" value="//coreprof/profiles1d/sigmar/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel_error_upper" value="//coreprof/profiles1d/sigmar/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel_error_lower" value="//coreprof/profiles1d/sigmar/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/conductivity_parallel_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/profiles_1d/#/e_field_parallel" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/e_field_parallel_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/e_field_parallel_error_lower" value="" type=""/>
@@ -912,24 +931,28 @@
   <mapping key="core_profiles/profiles_1d/#/e_field/toroidal_error_upper" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/e_field/toroidal_error_lower" value="" type=""/>
   <mapping key="core_profiles/profiles_1d/#/e_field/toroidal_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/profiles_1d/#/q" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/q_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/q_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/q_error_index" value="" type=""/>
+  <mapping key="core_profiles/profiles_1d/#/q" value="//coreprof/profiles1d/q/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/q_error_upper" value="//coreprof/profiles1d/q/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/q_error_lower" value="//coreprof/profiles1d/q/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/q_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/profiles_1d/#/magnetic_shear" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/magnetic_shear_error_upper" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/magnetic_shear_error_lower" value="" type=""/>
-  <mapping key="core_profiles/profiles_1d/#/magnetic_shear_error_index" value="" type=""/>
-
+  <mapping key="core_profiles/profiles_1d/#/magnetic_shear" value="//coreprof/profiles1d/shear/value/name" type="dynamic"/>
+  <mapping key="core_profiles/profiles_1d/#/magnetic_shear_error_upper" value="//coreprof/profiles1d/shear/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/magnetic_shear_error_lower" value="//coreprof/profiles1d/shear/value/name" type="error"/>
+  <mapping key="core_profiles/profiles_1d/#/magnetic_shear_error_index" value="0" type="constant"/>
+  
+  <!--
   <mapping key="core_profiles/profiles_1d/#/time" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/global_quantities/ip" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/ip_error_upper" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/ip_error_lower" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/ip_error_index" value="" type=""/>
+  <mapping key="core_profiles/global_quantities/ip" value="//coreprof/globalparam/current_tot/name" type="dynamic"/>
+  <mapping key="core_profiles/global_quantities/ip_error_upper" value="//coreprof/globalparam/current_tot/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/ip_error_lower" value="//coreprof/globalparam/current_tot/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/ip_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/global_quantities/current_non_inductive" value="" type=""/>
   <mapping key="core_profiles/global_quantities/current_non_inductive_error_upper" value="" type=""/>
   <mapping key="core_profiles/global_quantities/current_non_inductive_error_lower" value="" type=""/>
@@ -939,52 +962,60 @@
   <mapping key="core_profiles/global_quantities/current_bootstrap_error_upper" value="" type=""/>
   <mapping key="core_profiles/global_quantities/current_bootstrap_error_lower" value="" type=""/>
   <mapping key="core_profiles/global_quantities/current_bootstrap_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/global_quantities/v_loop" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/v_loop_error_upper" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/v_loop_error_lower" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/v_loop_error_index" value="" type=""/>
+  <mapping key="core_profiles/global_quantities/v_loop" value="//coreprof/globalparam/vloop/name" type="dynamic"/>
+  <mapping key="core_profiles/global_quantities/v_loop_error_upper" value="//coreprof/globalparam/vloop/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/v_loop_error_lower" value="//coreprof/globalparam/vloop/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/v_loop_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/global_quantities/li" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/li_error_upper" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/li_error_lower" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/li_error_index" value="" type=""/>
+  <mapping key="core_profiles/global_quantities/li" value="//coreprof/globalparam/li/name" type="dynamic"/>
+  <mapping key="core_profiles/global_quantities/li_error_upper" value="//coreprof/globalparam/li/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/li_error_lower" value="//coreprof/globalparam/li/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/li_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/global_quantities/li_3" value="" type=""/>
   <mapping key="core_profiles/global_quantities/li_3_error_upper" value="" type=""/>
   <mapping key="core_profiles/global_quantities/li_3_error_lower" value="" type=""/>
   <mapping key="core_profiles/global_quantities/li_3_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/global_quantities/beta_tor" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/beta_tor_error_upper" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/beta_tor_error_lower" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/beta_tor_error_index" value="" type=""/>
-
+  <mapping key="core_profiles/global_quantities/beta_tor" value="//coreprof/globalparam/beta_tor/name" type="dynamic"/>
+  <mapping key="core_profiles/global_quantities/beta_tor_error_upper" value="//coreprof/globalparam/beta_tor/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/beta_tor_error_lower" value="//coreprof/globalparam/beta_tor/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/beta_tor_error_index" value="0" type="constant"/>
+ 
+  <!--
   <mapping key="core_profiles/global_quantities/beta_tor_norm" value="" type=""/>
   <mapping key="core_profiles/global_quantities/beta_tor_norm_error_upper" value="" type=""/>
   <mapping key="core_profiles/global_quantities/beta_tor_norm_error_lower" value="" type=""/>
   <mapping key="core_profiles/global_quantities/beta_tor_norm_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/global_quantities/beta_pol" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/beta_pol_error_upper" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/beta_pol_error_lower" value="" type=""/>
-  <mapping key="core_profiles/global_quantities/beta_pol_error_index" value="" type=""/>
+  <mapping key="core_profiles/global_quantities/beta_pol" value="//coreprof/globalparam/beta_pol/name" type="dynamic"/>
+  <mapping key="core_profiles/global_quantities/beta_pol_error_upper" value="//coreprof/globalparam/beta_pol/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/beta_pol_error_lower" value="//coreprof/globalparam/beta_pol/name" type="error"/>
+  <mapping key="core_profiles/global_quantities/beta_pol_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/global_quantities/energy_diamagnetic" value="" type=""/>
   <mapping key="core_profiles/global_quantities/energy_diamagnetic_error_upper" value="" type=""/>
   <mapping key="core_profiles/global_quantities/energy_diamagnetic_error_lower" value="" type=""/>
   <mapping key="core_profiles/global_quantities/energy_diamagnetic_error_index" value="" type=""/>
+  -->
 
-  <mapping key="core_profiles/vacuum_toroidal_field/r0" value="" type=""/>
-  <mapping key="core_profiles/vacuum_toroidal_field/r0_error_upper" value="" type=""/>
-  <mapping key="core_profiles/vacuum_toroidal_field/r0_error_lower" value="" type=""/>
-  <mapping key="core_profiles/vacuum_toroidal_field/r0_error_index" value="" type=""/>
+  <mapping key="core_profiles/vacuum_toroidal_field/r0" value="//coreprof/toroidal_field/r0/name" type="dynamic"/>
+  <mapping key="core_profiles/vacuum_toroidal_field/r0_error_upper" value="//coreprof/toroidal_field/r0/name" type="error"/>
+  <mapping key="core_profiles/vacuum_toroidal_field/r0_error_lower" value="//coreprof/toroidal_field/r0/name" type="error"/>
+  <mapping key="core_profiles/vacuum_toroidal_field/r0_error_index" value="0" type="constant"/>
 
-  <mapping key="core_profiles/vacuum_toroidal_field/b0" value="" type=""/>
-  <mapping key="core_profiles/vacuum_toroidal_field/b0_error_upper" value="" type=""/>
-  <mapping key="core_profiles/vacuum_toroidal_field/b0_error_lower" value="" type=""/>
-  <mapping key="core_profiles/vacuum_toroidal_field/b0_error_index" value="" type=""/>
+  <mapping key="core_profiles/vacuum_toroidal_field/b0" value="//coreprof/toroidal_field/r0/name" type="dynamic"/>
+  <mapping key="core_profiles/vacuum_toroidal_field/b0_error_upper" value="//coreprof/toroidal_field/r0/name" type="error"/>
+  <mapping key="core_profiles/vacuum_toroidal_field/b0_error_lower" value="//coreprof/toroidal_field/r0/name" type="error"/>
+  <mapping key="core_profiles/vacuum_toroidal_field/b0_error_index" value="0" type="constant"/>
 
+  <!--
   <mapping key="core_profiles/code/name" value="" type=""/>
   <mapping key="core_profiles/code/commit" value="" type=""/>
   <mapping key="core_profiles/code/version" value="" type=""/>
@@ -992,4 +1023,5 @@
   <mapping key="core_profiles/code/parameters" value="" type=""/>
   <mapping key="core_profiles/code/output_flag" value="" type=""/>
   <mapping key="core_profiles/time" value="" type=""/>
+  -->
 </mappings>
