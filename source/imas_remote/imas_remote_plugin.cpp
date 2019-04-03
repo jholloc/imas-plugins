@@ -1,4 +1,4 @@
-#include "imas_plugin.h"
+#include "imas_remote_plugin.h"
 
 #include <memory>
 #include <stack>

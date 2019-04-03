@@ -339,8 +339,15 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             float* data;
             int status =
                     ts_mds_get(signalName, shot, &time, &data, &len);
+   
+            UDA_LOG(UDA_LOG_DEBUG, "TORE: ts_mds_get status of signal %s: %d\n", signalName, status);
+
             if (status != 0) {
                 return status;
+            }
+            else {
+               UDA_LOG(UDA_LOG_DEBUG, "TORE: error getting ts_mds_get status of signal %s\n", signalName);
+               UDA_LOG(UDA_LOG_ERROR, "TORE: error getting ts_mds_get status of signal %s\n", signalName);
             }
 
             free(data_block->dims);

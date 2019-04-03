@@ -471,7 +471,7 @@ size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int*
 
 int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                           XML_MAPPING* mapping,
-                          const char* experiment, const char* element, int shot, const int* indices,
+                          const char* experiment, const char* element, int shot, int run, const int* indices,
                           size_t nindices)
 {
     // DYNAMIC case
@@ -512,7 +512,7 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
 
             char* signalName = signal_names[name_index];
 
-            status = mds_get(experiment, signalName, shot, &time, &fdata, &len, &time_len, xml_data.time_dim);
+            status = mds_get(experiment, signalName, shot, run, &time, &fdata, &len, &time_len, xml_data.time_dim);
 
             if (status != 0) {
                 return status;
@@ -595,7 +595,7 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
 
 int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                         XML_MAPPING* mapping,
-                        const char* experiment, const char* element, int shot, const int* indices,
+                        const char* experiment, const char* element, int shot, int run, const int* indices,
                         size_t nindices)
 {
     // ERROR case
@@ -667,7 +667,7 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         int len = -1;
 
         char* signalName = signal_names[name_index];
-        status = mds_get(experiment, signalName, shot, nullptr, &fdata, &len, nullptr, 0);
+        status = mds_get(experiment, signalName, shot, run, nullptr, &fdata, &len, nullptr, 0);
 
         if (status != 0) {
             return status;
@@ -676,7 +676,7 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         if (StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr) {
             signalName = abserror_signal_names[name_index];
             int abslen = -1;
-            status = mds_get(experiment, signalName, shot, nullptr, &fabserror, &abslen, nullptr, 0);
+            status = mds_get(experiment, signalName, shot, run, nullptr, &fabserror, &abslen, nullptr, 0);
 
             if (status != 0) {
                 return status;
@@ -690,7 +690,7 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         if (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr) {
             signalName = relerror_signal_names[name_index];
             int rellen = -1;
-            status = mds_get(experiment, signalName, shot, nullptr, &frelerror, &rellen, nullptr, 0);
+            status = mds_get(experiment, signalName, shot, run, nullptr, &frelerror, &rellen, nullptr, 0);
 
             if (status != 0) {
                 return status;
@@ -725,7 +725,11 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
             int j;
             for (j = 0; j < data_n; ++j) {
-                error_arrays[n_arrays][j] = coefa * fdata[i + j * size] + coefb;
+                if (xml_data.time_dim == 1) {
+                    error_arrays[n_arrays][j] = coefa * fdata[i * data_n + j] + coefb;
+                } else {
+                    error_arrays[n_arrays][j] = coefa * fdata[i + j * size] + coefb;
+                }
 
                 double error;
 
@@ -822,6 +826,9 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int shot = 0;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
 
+    int run = 0;
+    FIND_INT_VALUE(request_block->nameValueList, run);
+
     int* indices = nullptr;
     size_t nindices = 0;
     FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
@@ -871,11 +878,11 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             err = handle_static(data_block, experiment_mapping_file_name, xPath, mapping, indices, nindices);
             break;
         case DYNAMIC:
-            err = handle_dynamic(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot,
+            err = handle_dynamic(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
                                  indices, nindices);
             break;
         case ERROR:
-            err = handle_error(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot,
+            err = handle_error(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
                                indices, nindices);
             break;
         default:

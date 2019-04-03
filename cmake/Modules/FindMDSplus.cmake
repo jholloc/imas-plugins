@@ -16,7 +16,7 @@
 
 if( MDSPLUS_INCLUDES AND MDSPLUS_LIBRARIES )
   # Already in cache, be silent
-  set( MDSplus_FIND_QUIETLY TRUE )
+  set( MDSPLUS_FIND_QUIETLY TRUE )
 endif( MDSPLUS_INCLUDES AND MDSPLUS_LIBRARIES )
 
 find_path( MDSPLUS_INCLUDES mdslib.h
@@ -45,6 +45,7 @@ foreach( MDS_LIB ${MDS_LIBS} )
 
   if( ${MDS_LIB}-FIND )
     list( APPEND MDSPLUS_LIBRARIES "${${MDS_LIB}-FIND}" )
+    get_filename_component( MDSPLUS_LIBRARY_DIRS "${${MDS_LIB}-FIND}" DIRECTORY )
   else()
     if( MDSplus_FIND_REQUIRED )
       message( FATAL_ERROR "Failed to find MDS library: ${MDS_LIB}" )

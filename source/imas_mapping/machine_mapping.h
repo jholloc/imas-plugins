@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace uda {
 namespace imas_mapping {
@@ -31,8 +32,8 @@ public:
                 continue;
             }
 
-            tokenizer tokens{ line, sep };
-            std::vector<std::string> words(tokens.begin(), tokens.end());
+            std::vector<std::string> words;
+            boost::split(words, line, boost::is_any_of(" \t"), boost::token_compress_on);
             if (words.size() != 4) {
                 throw std::runtime_error(std::string("bad line in ") + file_name + ": " + line);
             }

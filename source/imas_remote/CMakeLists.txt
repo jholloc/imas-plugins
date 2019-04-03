@@ -1,15 +1,19 @@
 find_package( UDA QUIET )
 find_package( Boost QUIET )
 find_package( IMAS QUIET )
+find_package( MDSplus QUIET )
 
 if( NOT UDA_FOUND )
-  message( WARNING "UDA not found - skipping IMAS plugin" )
+  message( WARNING "UDA not found - skipping IMAS_REMOTE plugin" )
   return()
 elseif( NOT Boost_FOUND )
-  message( WARNING "Boost not found - skipping IMAS plugin" )
+  message( WARNING "Boost not found - skipping IMAS_REMOTE plugin" )
   return()
 elseif( NOT IMAS_FOUND )
-  message( WARNING "IMAS not found - skipping IMAS plugin" )
+  message( WARNING "IMAS not found - skipping IMAS_REMOTE plugin" )
+  return()
+elseif( NOT MDSPLUS_FOUND )
+  message( WARNING "MDSplus not found - skipping IMAS_REMOTE plugin" )
   return()
 endif()
 
@@ -21,17 +25,21 @@ uda_plugin(
   ENTRY_FUNC imasPlugin
   DESCRIPTION ""
   EXAMPLE ""
-  LIBNAME imas_plugin
+  LIBNAME imas_remote_plugin
   SOURCES
-    imas_plugin.cpp
-    imas_plugin.h
+    imas_remote_plugin.cpp
+    imas_remote_plugin.h
   EXTRA_INCLUDE_DIRS
     ${Boost_INCLUDE_DIRS}
     ${IMAS_LOW_LEVEL_INCLUDE_DIRS}
     ${UDA_CLIENT_INCLUDE_DIRS}
+    ${MDSPLUS_INCLUDES}
   EXTRA_LINK_DIRS
     ${IMAS_LOW_LEVEL_LIBRARY_DIRS}
+    ${MDSPLUS_LIBRARY_DIRS}
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
     ${IMAS_LOW_LEVEL_LIBRARIES}
+    MdsObjectsCppShr
+    uda_cpp
 )
