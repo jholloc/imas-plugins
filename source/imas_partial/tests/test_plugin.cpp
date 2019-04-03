@@ -145,7 +145,7 @@ TEST_CASE( "get flux_loops", "[MAG]" )
 
     auto data_list = (DataList*)interface.data_block->data;
 
-    REQUIRE( data_list->size == 210 );
+    REQUIRE( data_list->size == 330 );
     REQUIRE( data_list->list != nullptr );
 
     Data* data = &data_list->list[0];
@@ -154,7 +154,7 @@ TEST_CASE( "get flux_loops", "[MAG]" )
     REQUIRE( data->rank == 1 );
     REQUIRE( data->dims[0] == 1000 );
     REQUIRE( data->datatype == 52 );
-    REQUIRE( ((double*)data->data)[0] == Approx(-10) );
+    REQUIRE( ((double*)data->data)[0] == Approx(500.0) );
 }
 
 TEST_CASE( "get all magnetics", "[MAG]" )

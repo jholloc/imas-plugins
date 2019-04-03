@@ -127,7 +127,7 @@ TEST_CASE( "get flux_loop flux data", "[MAG]" )
         REQUIRE( data.type().name() == typeid(unsigned char).name() );
         std::vector<unsigned char> bytes = data.as<unsigned char>();
         auto dd = reinterpret_cast<double*>(bytes.data());
-        std::vector<double> exp_data = { -10, -9.98, -9.96, -9.94, -9.92 };
+        std::vector<double> exp_data = { 500, 500.5, 501, 501.5, 502 };
         REQUIRE( std::vector<double>{ &dd[0], &dd[5] } == ApproxVector(exp_data) );
 
         uda::Scalar rank = list.atomicScalar("rank");

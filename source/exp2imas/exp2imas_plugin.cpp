@@ -578,10 +578,13 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
             initDimBlock(&data_block->dims[i]);
         }
 
-        data_block->dims[0].data_type = UDA_TYPE_FLOAT;
+        data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
         data_block->dims[0].dim_n = data_n;
-        data_block->dims[0].compressed = 0;
+        data_block->dims[0].compressed = 1;
         data_block->dims[0].dim = (char*)nullptr;
+        data_block->dims[0].dim0 = 0.0;
+        data_block->dims[0].diff = 1.0;
+        data_block->dims[0].method = 0;
 
         strcpy(data_block->data_label, "");
         strcpy(data_block->data_units, "");
@@ -795,10 +798,13 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         initDimBlock(&data_block->dims[i]);
     }
 
-    data_block->dims[0].data_type = UDA_TYPE_FLOAT;
+    data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
     data_block->dims[0].dim_n = data_n;
-    data_block->dims[0].compressed = 0;
+    data_block->dims[0].compressed = 1;
     data_block->dims[0].dim = (char*)nullptr;
+    data_block->dims[0].dim0 = 0.0;
+    data_block->dims[0].diff = 1.0;
+    data_block->dims[0].method = 0;
 
     strcpy(data_block->data_label, "");
     strcpy(data_block->data_units, "");
