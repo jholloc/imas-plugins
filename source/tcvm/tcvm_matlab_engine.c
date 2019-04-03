@@ -155,6 +155,9 @@ int dataCharacteristics(mxArray* mdata, int dtype, void **data, size_t *rank, si
   size_t numel;
   const size_t *mdims;
 
+  *dims = NULL;
+  *data = NULL;
+
   if (dtype == 17) {
     // String case
     *data = mxArrayToString(mdata);
@@ -185,7 +188,6 @@ int dataCharacteristics(mxArray* mdata, int dtype, void **data, size_t *rank, si
     }
 
     // Copy dimensions pointer
-    *dims = NULL;
     if (*rank > 0) {
       *dims = malloc(*rank*sizeof(size_t));
       memcpy(*dims,mdims,*rank*sizeof(size_t));
@@ -330,7 +332,7 @@ int runquery(Engine *ep, const char *query, int shot, int *indices, int nindices
     int status    = (int)mxGetScalar(mxGetCell(mansw,1));
     char *message = mxArrayToString(mxGetCell(mansw,2));
     if (status) {
-      fprintf(stderr, "myFunction2 throwed an exception:");
+      fprintf(stderr, "myFunction2 throwed an exception:\n");
       fprintf(stderr, message);
       err = 1;
     } else {
