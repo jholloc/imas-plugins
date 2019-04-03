@@ -13,7 +13,7 @@
 
 #include <sys/time.h>
 
-#include "testStart.h"
+#include "tcvm_matlab_engine.h"
 
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
@@ -41,6 +41,7 @@ int tcvmPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
   static short init = 0;
 
   static Engine *ep = NULL;
+  static char* matlabDirName = NULL;
 
   // ----------------------------------------------------------------------------------------
   // Heap Housekeeping
@@ -69,8 +70,10 @@ int tcvmPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
       || STR_IEQUALS(request_block->function, "initialise")) {
     
     if (!ep) {
+      if (!matlabDirName)
+	matlabDirName = getenv("UDA_TCVM_MATLAB_DIR");
       // Start new MATLAB session
-      ep = mystartMATLAB();
+      ep = mystartMATLAB(matlabDirName);
       if (ep) {
 	fprintf(stdout,"Started MATLAB session\n");
       } else {
@@ -162,16 +165,6 @@ int do_read(Engine *ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
   DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-  initDataBlock(data_block);
-
-  data_block->rank = 1;
-  data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
-
-  int i;
-  for (i = 0; i < data_block->rank; i++) {
-    initDimBlock(&data_block->dims[i]);
-  }
-
   REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
   const char* element = NULL;
@@ -196,7 +189,7 @@ int do_read(Engine *ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
   if (ep) {
     void *result = NULL;
     size_t rank;
-    const size_t* dims = NULL;
+    size_t* dims = NULL;
 
     err = runquery(ep, element, shot, indices, nindices, dtype, &result, &rank, &dims);
     
@@ -230,21 +223,11 @@ int do_read_s(Engine *ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
   DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-  initDataBlock(data_block);
-
-  data_block->rank = 1;
-  data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
-
-  int i;
-  for (i = 0; i < data_block->rank; i++) {
-    initDimBlock(&data_block->dims[i]);
-  }
-
   REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
   const char* element;        // will contain the modified IDSRequest
-  // which will be one key of the IDS
-  // requests mapping file
+                              // which will be one key of the IDS
+                              // requests mapping file
   int shot;
   int* indices;
   size_t nindices;
