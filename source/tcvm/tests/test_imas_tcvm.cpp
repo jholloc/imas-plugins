@@ -147,11 +147,11 @@ TEST_CASE( "Test myFunction2 tf/coil/shape_of", "[TCVM][myFunction2][tf]" )
     REQUIRE( !val->isNull() );
 
     REQUIRE( val->type().name() == typeid(int).name() );
-    REQUIRE( val->as<int>() == 1 );
+    REQUIRE( val->as<int>() == 0 );
 }
 
 
-TEST_CASE( "Test myFunction2 tf/r0", "[TCVM][myFuncion2][tf/r0]" )
+TEST_CASE( "Test myFunction2 tf/r0", "[TCVM][myFunction2][tf]" )
 {
 #ifdef FATCLIENT
 #  include "setup.inc"
@@ -180,7 +180,7 @@ TEST_CASE( "Test myFunction2 tf/r0", "[TCVM][myFuncion2][tf/r0]" )
 }
 
 
-TEST_CASE( "Test myFunction2 tf/b_field_tor_vacuum_r/data", "[TCVM][myFunction2][tf/b_field_tor_vacuum_r/data]" )
+TEST_CASE( "Test myFunction2 tf/b_field_tor_vacuum_r/data", "[TCVM][myFunction2][tf]" )
 {
 #ifdef FATCLIENT
 #  include "setup.inc"
@@ -215,7 +215,7 @@ TEST_CASE( "Test myFunction2 tf/b_field_tor_vacuum_r/data", "[TCVM][myFunction2]
 }
 
 
-TEST_CASE( "Test myFunction2 tf/b_field_tor_vacuum_r/time", "[TCVM][myFunction2][tf/b_field_tor_vacuum_r/time]" )
+TEST_CASE( "Test myFunction2 tf/b_field_tor_vacuum_r/time", "[TCVM][myFunction2][tf]" )
 {
 #ifdef FATCLIENT
 #  include "setup.inc"
