@@ -1,0 +1,1 @@
+export UDA_TCVM_MATLAB_DIR=$UDA_PLUGINS_HOME/source/tcvm/matlab
