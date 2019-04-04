@@ -278,7 +278,7 @@ int get_rank(const std::string& data_type)
     return std::stoi(tokens.back());
 }
 
-void get_requests(LLenv& env, std::vector<std::string>& requests, std::map<std::string, int> sizes,
+void get_requests(LLenv& env, std::vector<std::string>& requests, std::map<std::string, int>& sizes,
         std::string ids_path, const pugi::xml_node& node)
 {
     std::string dtype = node.attribute("data_type").value();

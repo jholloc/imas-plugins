@@ -2,6 +2,7 @@
 
 #include <string>
 #include <boost/format.hpp>
+#include <iostream>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -19,6 +20,7 @@ public:
     int default_method(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
     int max_interface_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
     int read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+    int get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
 private:
     bool initialised_ = false;
@@ -55,6 +57,8 @@ int imasUdaPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         return plugin.max_interface_version(idam_plugin_interface);
     } else if (STR_IEQUALS(request_block->function, "read")) {
         return plugin.read(idam_plugin_interface);
+    } else if (STR_IEQUALS(request_block->function, "get")) {
+        return plugin.get(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
@@ -227,3 +231,29 @@ int ImasUdaPlugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
 }
 
+int ImasUdaPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
+
+    initDataBlock(data_block);
+
+    data_block->rank = 0;
+    data_block->dims = nullptr;
+
+    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+
+    const char* group = nullptr;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, group);
+
+    const char* variable = nullptr;
+    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, variable);
+
+    int shot = 0;
+    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+
+    auto request = boost::format("UDA::get(signal=%s/%s, source=%d)") % group % variable % shot;
+
+    std::cerr << request.str() << std::endl;
+
+    return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
+}

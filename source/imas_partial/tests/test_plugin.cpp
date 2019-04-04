@@ -145,10 +145,17 @@ TEST_CASE( "get flux_loops", "[MAG]" )
 
     auto data_list = (DataList*)interface.data_block->data;
 
-    REQUIRE( data_list->size == 330 );
+    REQUIRE( data_list->size == 341 );
     REQUIRE( data_list->list != nullptr );
 
     Data* data = &data_list->list[0];
+
+    REQUIRE( std::string{data->name} == "magnetics/flux_loop" );
+    REQUIRE( data->rank == 0 );
+    REQUIRE( data->datatype == 51 );
+    REQUIRE( ((int*)data->data)[0] == 10 );
+
+    data = &data_list->list[1];
 
     REQUIRE( std::string{data->name} == "magnetics/flux_loop/1/flux/data" );
     REQUIRE( data->rank == 1 );
