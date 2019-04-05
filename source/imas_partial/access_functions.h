@@ -8,12 +8,6 @@
 
 namespace imas_partial {
 
-struct Range {
-    Range(int b, int e) : begin{b}, end{e} {}
-    int begin;
-    int end;
-};
-
 struct MDSData {
     void* data = nullptr;
     int rank = 0;

@@ -191,3 +191,49 @@ TEST_CASE( "get all magnetics", "[MAG]" )
 
     REQUIRE( rc == 0 );
 }
+
+TEST_CASE( "get flux data for a range of flux_loops", "[MAG]" )
+{
+    auto user = getenv("USER");
+
+    IDAM_PLUGIN_INTERFACE interface = generate_plugin_interface("get", {
+            {"shot", "1000"},
+            {"run", "0"},
+            {"user", user},
+            {"tokamak", "test"},
+            {"version", "3"},
+            {"path", "/magnetics/flux_loop/3:5/flux"}
+    });
+
+    int rc = imasPartial(&interface);
+
+    delete interface.request_block->nameValueList.nameValue;
+    delete interface.request_block;
+    delete interface.data_block;
+    delete interface.userdefinedtypelist;
+    delete interface.logmalloclist;
+
+    REQUIRE( rc == 0 );
+
+    REQUIRE( interface.data_block->data_n == 1 );
+
+    auto data_list = (DataList*)interface.data_block->data;
+
+    REQUIRE( data_list->size == 22 );
+    REQUIRE( data_list->list != nullptr );
+
+    Data* data = &data_list->list[0];
+
+    REQUIRE( std::string{data->name} == "magnetics/flux_loop" );
+    REQUIRE( data->rank == 0 );
+    REQUIRE( data->datatype == 51 );
+    REQUIRE( ((int*)data->data)[0] == 10 );
+
+    data = &data_list->list[1];
+
+    REQUIRE( std::string{data->name} == "magnetics/flux_loop/3/flux/data" );
+    REQUIRE( data->rank == 1 );
+    REQUIRE( data->dims[0] == 1000 );
+    REQUIRE( data->datatype == 52 );
+    REQUIRE( ((double*)data->data)[0] == Approx(500.0) );
+}

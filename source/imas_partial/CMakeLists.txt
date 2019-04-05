@@ -31,6 +31,8 @@ uda_plugin(
     imas_partial_plugin.h
     access_functions.cpp
     access_functions.h
+    is_integer.cpp
+    is_integer.h
     pugixml.hpp
     pugiconfig.hpp
   EXTRA_INCLUDE_DIRS
