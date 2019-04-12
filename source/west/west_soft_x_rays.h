@@ -32,4 +32,6 @@ int soft_x_rays_channels_power_density_time(int shotNumber, DATA_BLOCK* data_blo
 
 void soft_x_rays_throwsIdamError(int status, char* methodName, char* object_name, int index, int shotNumber);
 
+void soft_x_rays2_throwsIdamError(int status, char* methodName, char* object_name, int shotNumber);
+
 #endif // IDAM_PLUGIN_WEST_SOFT_X_RAYS_H
