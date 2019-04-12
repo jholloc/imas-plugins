@@ -135,6 +135,14 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 	UDA_LOG(UDA_LOG_DEBUG, "reading channels_power_density...\n");
 	int status = channels_power_density(shotNumber, nomsigp, extractionIndex, &time, &data, &len);
 
+	if (status != 0) {
+			UDA_LOG(UDA_LOG_DEBUG, "reading channels_power_density, error status...\n");
+			soft_x_rays_throwsIdamError(status, "soft_x_rays_channels_power_density_data", nomsigp, extractionIndex, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+
 	UDA_LOG(UDA_LOG_DEBUG, "setting file pointer...\n");
 	FILE* p_file_soft_x_rays_calib_ce_cx_e;
 
@@ -155,33 +163,9 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 	} else {
 		int i = 0;
 		int j = 0;
-		/*while (!feof(p_file_soft_x_rays_calib_ce_cx_e)) {
-			if (fgets(content, sizeof(content), p_file_soft_x_rays_calib_ce_cx_e) != NULL) {
-				const char delim[] = " ";
-				UDA_LOG(UDA_LOG_DEBUG, "reading coefficient Ce[%d]\n", i);
-				//char * c = strtok(content, delim);
-				//UDA_LOG(UDA_LOG_DEBUG, "c = %s\n", c);
-				Ce[i] = atof(strtok(content, delim)); //the Ce coefficient
-				UDA_LOG(UDA_LOG_DEBUG, "Ce[%d] = %f\n", i, Ce[i]);
-				UDA_LOG(UDA_LOG_DEBUG, "reading coefficient Cx[%d]\n", i);
-				Cx[i] = atof(strtok(NULL, delim)); //the Cx coefficient
-				UDA_LOG(UDA_LOG_DEBUG, "Cx[%d] = %f\n", i, Cx[i]);
-				UDA_LOG(UDA_LOG_DEBUG, "reading coefficient E[%d]\n", i);
-				E[i]  = atof(strtok(NULL, delim)); //the E coefficient
-				UDA_LOG(UDA_LOG_DEBUG, "E[%d] = %f\n", i, E[i]);
-				i++;
-			}
-			UDA_LOG(UDA_LOG_DEBUG, "test1\n", i);
-		}*/
 
 		 for(i = 0; i < CHANNELS_COUNT; i++)
 		  {
-		   /* for (j = 0 ; j < WIDTH; j++)
-		    {
-		      fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%lf",&myvariable);
-		      printf("%.15f ",myvariable);
-		    }
-		    printf("\n");*/
 			 fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&Ce[i]);
 			 UDA_LOG(UDA_LOG_DEBUG, "Ce[%d] = %e\n", i, Ce[i]);
 			 fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&Cx[i]);
@@ -198,20 +182,8 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 	UDA_LOG(UDA_LOG_DEBUG, "applying calibration coefficients\n");
 	apply_calibration(calibrated_data, data, Cx[index - 1], Ce[index - 1], E[index - 1], len);
 	UDA_LOG(UDA_LOG_DEBUG, "after applying calibration coefficients\n");
-	if (status != 0) {
-		UDA_LOG(UDA_LOG_DEBUG, "reading channels_power_density, error status...\n");
-		soft_x_rays_throwsIdamError(status, "soft_x_rays_channels_power_density_data", nomsigp, extractionIndex, shotNumber);
-		free(time);
-		free(data);
-		free(calibrated_data);
-		return status;
-	}
-	else {
-		UDA_LOG(UDA_LOG_DEBUG, "setting channels_power_density...\n");
-		setReturnData2DFloat(data_block, 1, len, calibrated_data);
-		//setReturnData2DFloat(data_block, 1, len, data);
-		return 0;
-	}
+	UDA_LOG(UDA_LOG_DEBUG, "setting channels_power_density...\n");
+	setReturnData2DFloat(data_block, 1, len, calibrated_data);
 	return 0;
 }
 
