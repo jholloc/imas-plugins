@@ -34,7 +34,7 @@ int imasUdaPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -93,8 +93,8 @@ void ImasUdaPlugin::reset()
  */
 int ImasUdaPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
-    const char* desc = "templatePlugin: help = description of this plugin";
+    const char* help = PLUGIN_NAME ": Add Functions Names, Syntax, and Descriptions\n\n";
+    const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
@@ -106,7 +106,7 @@ int ImasUdaPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int ImasUdaPlugin::version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
 }
 
 /**

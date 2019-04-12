@@ -82,7 +82,7 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -147,8 +147,8 @@ namespace {
 // Help: A Description of library functionality
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    const char* help = "\ntsPlugin: this plugin maps Tore Supra data to IDS\n\n";
-    const char* desc = "tsPlugin: help = plugin used for mapping Tore Supra experimental data to IDS";
+    const char* help = PLUGIN_NAME ": this plugin maps Tore Supra data to IDS\n\n";
+    const char* desc = PLUGIN_NAME ": help = plugin used for mapping Tore Supra experimental data to IDS";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
@@ -157,7 +157,7 @@ int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     const char* desc = "Plugin version number";
 
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, desc);
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, desc);
 }
 
 // Plugin Build Date

@@ -4,17 +4,21 @@
 if( NOT DEFINED BUILD_PLUGINS )
   set( BUILD_PLUGINS
     exp2imas
-    imas_remote
-    imas_local
-    imas_old
+    hl2a
     imas_mapping
+    imas_old
+    imas_partial
+    imas_remote
+    imas_uda
     imasdd
     jet_magnetics
     mast_imas
     source
+    tcv
+    tcvm
+    tore_supra
     west
-    imas_uda
-    imas_partial
+    west_tunnel
   )
 endif()
 

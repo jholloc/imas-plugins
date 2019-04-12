@@ -13,6 +13,7 @@ include( plugins )
 
 uda_plugin(
   NAME TCV
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC tcvPlugin
   DESCRIPTION "Read TCV data"
   EXAMPLE "TCV::read()"

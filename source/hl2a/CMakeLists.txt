@@ -1,4 +1,3 @@
-
 find_package( LibXml2 QUIET )
 find_package( MDSplus QUIET )
 
@@ -16,6 +15,7 @@ include( plugins )
 
 uda_plugin(
   NAME HL2A
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC hl2aPlugin
   DESCRIPTION "Read HL2A data"
   EXAMPLE "ADAS::adf21()"

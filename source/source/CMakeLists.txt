@@ -4,6 +4,7 @@ add_definitions( -Wno-error )
 
 uda_plugin(
   NAME SOURCE
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC source_plugin
   DESCRIPTION "Local data dource argument Generator for UDA Data requests"
   EXAMPLE "SOURCE::get()"

@@ -11,6 +11,7 @@
 #include <clientserver/stringUtils.h>
 #include <clientserver/udaTypes.h>
 #include <plugins/udaPlugin.h>
+
 #if defined(UDA_VERSION) && UDA_VERSION_MAJOR > 2
 #  include <plugins/pluginUtils.h>
 #endif
@@ -85,32 +86,11 @@ int mastImasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
     housekeeping = idam_plugin_interface->housekeeping;
-
-    // Additional interface components (must be defined at the bottom of the standard data structure)
-    // Versioning must be consistent with the macro THISPLUGIN_MAX_INTERFACE_VERSION and the plugin registration with the server
-
-    //if(idam_plugin_interface->interfaceVersion >= 2){
-    // NEW COMPONENTS
-    //}
-
-    //----------------------------------------------------------------------------------------
-    // Heap Housekeeping
-
-    // Plugin must maintain a list of open file handles and sockets: loop over and close all files and sockets
-    // Plugin must maintain a list of plugin functions called: loop over and reset state and free heap.
-    // Plugin must maintain a list of calls to other plugins: loop over and call each plugin with the housekeeping request
-    // Plugin must destroy lists at end of housekeeping
-
-    // A plugin only has a single instance on a server. For multiple instances, multiple servers are needed.
-    // Plugins can maintain state so recursive calls (on the same server) must respect this.
-    // If the housekeeping action is requested, this must be also applied to all plugins called.
-    // A list must be maintained to register these plugin calls to manage housekeeping.
-    // Calls to plugins must also respect access policy and user authentication policy
 
     if (housekeeping || STR_IEQUALS(request_block->function, "reset")) {
 
@@ -123,9 +103,6 @@ int mastImasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         return 0;
     }
 
-    //----------------------------------------------------------------------------------------
-    // Initialise
-
     if (!init || STR_IEQUALS(request_block->function, "init")
         || STR_IEQUALS(request_block->function, "initialise")) {
 
@@ -134,13 +111,6 @@ int mastImasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             return 0;
         }
     }
-
-    //----------------------------------------------------------------------------------------
-    // Plugin Functions
-    //----------------------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------------------
-    // Standard methods: version, builddate, defaultmethod, maxinterfaceversion
 
     if (STR_IEQUALS(request_block->function, "help")) {
         err = do_help(idam_plugin_interface);
@@ -166,113 +136,34 @@ int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-    char* p = (char*)malloc(sizeof(char) * 2 * 1024);
+    const char* help = PLUGIN_NAME ": Add Functions Names, Syntax, and Descriptions\n\n";
+    const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
-    strcpy(p, "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n");
-
-    initDataBlock(data_block);
-
-    data_block->rank = 1;
-    data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
-
-    unsigned int i;
-    for (i = 0; i < data_block->rank; i++) {
-        initDimBlock(&data_block->dims[i]);
-    }
-
-    data_block->data_type = UDA_TYPE_STRING;
-    strcpy(data_block->data_desc, "templatePlugin: help = description of this plugin");
-
-    data_block->data = p;
-
-    data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
-    data_block->dims[0].dim_n = strlen(p) + 1;
-    data_block->dims[0].compressed = 1;
-    data_block->dims[0].dim0 = 0.0;
-    data_block->dims[0].diff = 1.0;
-    data_block->dims[0].method = 0;
-
-    data_block->data_n = data_block->dims[0].dim_n;
-
-    strcpy(data_block->data_label, "");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
 
 int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_INT;
-    data_block->rank = 0;
-    data_block->data_n = 1;
-    int* data = (int*)malloc(sizeof(int));
-    data[0] = THISPLUGIN_VERSION;
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Plugin version number");
-    strcpy(data_block->data_label, "version");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
 }
 
 // Plugin Build Date
 int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_STRING;
-    data_block->rank = 0;
-    data_block->data_n = strlen(__DATE__) + 1;
-    char* data = (char*)malloc(data_block->data_n * sizeof(char));
-    strcpy(data, __DATE__);
-    data_block->data = data;
-    strcpy(data_block->data_desc, "Plugin build date");
-    strcpy(data_block->data_label, "date");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, __DATE__, "Plugin build date");
 }
 
 // Plugin Default Method
 int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_STRING;
-    data_block->rank = 0;
-    data_block->data_n = strlen(THISPLUGIN_DEFAULT_METHOD) + 1;
-    char* data = (char*)malloc(data_block->data_n * sizeof(char));
-    strcpy(data, THISPLUGIN_DEFAULT_METHOD);
-    data_block->data = data;
-    strcpy(data_block->data_desc, "Plugin default method");
-    strcpy(data_block->data_label, "method");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, "Plugin default method");
 }
 
 // Plugin Maximum Interface Version
 int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_INT;
-    data_block->rank = 0;
-    data_block->data_n = 1;
-    int* data = (int*)malloc(sizeof(int));
-    data[0] = THISPLUGIN_MAX_INTERFACE_VERSION;
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Maximum Interface Version");
-    strcpy(data_block->data_label, "version");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION,
+                                  "Maximum Interface Version");
 }
 
 static char** get_names(PGconn* db, const char* name, int shot, int* size)

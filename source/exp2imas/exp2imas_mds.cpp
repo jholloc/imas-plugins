@@ -11,14 +11,16 @@
 #include "exp2imas_ssh.h"
 #include "exp2imas_ssh_server.h"
 
-static MDSplus::Connection* conn = nullptr;
+namespace {
 
-static int get_signal_length(MDSplus::Connection& conn, std::string signal)
+MDSplus::Connection* conn = nullptr;
+
+int get_signal_length(MDSplus::Connection& connection, std::string signal)
 {
     signal += "; SIZE(_sig);";
 
     try {
-        MDSplus::Data* ret = conn.get(signal.c_str());
+        MDSplus::Data* ret = connection.get(signal.c_str());
         int size = ret->getInt();
         MDSplus::deleteData(ret);
         return size;
@@ -34,21 +36,14 @@ typedef struct ServerThreadData {
     const char* mds_host;
 } SERVER_THREAD_DATA;
 
-static void* server_task(void* ptr)
+void* server_task(void* ptr)
 {
     auto data = (SERVER_THREAD_DATA*)ptr;
     ssh_run_server(data->experiment, data->ssh_host, data->mds_host);
     return nullptr;
 }
 
-int mds_close()
-{
-    delete conn;
-    conn = nullptr;
-    return 0;
-}
-
-int replace(char* out, char* in, const char* replace, const char* with)
+void replace(char* out, char* in, const char* replace, const char* with)
 {
     char* pos = strstr(in, replace);
     if (pos != nullptr) {
@@ -58,6 +53,15 @@ int replace(char* out, char* in, const char* replace, const char* with)
     } else {
         sprintf(out, "%s", in);
     }
+}
+
+} // anon namespace
+
+int mds_close()
+{
+    delete conn;
+    conn = nullptr;
+    return 0;
 }
 
 int mds_get(const char* experiment, const char* signalName, int shot, int run,

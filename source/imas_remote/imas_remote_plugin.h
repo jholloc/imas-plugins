@@ -3,7 +3,6 @@
 
 #include <plugins/udaPlugin.h>
 
-#define THISPLUGIN_VERSION                  1
 #define THISPLUGIN_MAX_INTERFACE_VERSION    1        // Interface versions higher than this will not be understood!
 #define THISPLUGIN_DEFAULT_METHOD           "help"
 

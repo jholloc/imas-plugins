@@ -63,7 +63,7 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 
 	char* fun_name = NULL; //Shape_of, tsmat_collect, tsbase
 	char* TOP_collections_parameters = NULL; //example : TOP_collections_parameters = DMAG:GMAG_BNORM:PosR, DMAG:GMAG_BTANG:PosR, ...
-	char* attributes = NULL; //example : attributes = rank:float:#1 (rank=0,1 , type = float, #1 = second IDAM index)
+	char* attributes = NULL; //example : attributes = rank:float:#1 (rank=0,1 , type = float, #1 = second UDA index)
 	char* normalizationAttributes = NULL; //example : multiply:cste:3     (multiply value by constant factor equals to 3)
 
 	getFunName(mapfun, &fun_name);

@@ -1,23 +1,3 @@
-/*---------------------------------------------------------------
-* v1 IDAM Plugin: ITER IMAS mdsplus put/get
-*
-* Input Arguments:	IDAM_PLUGIN_INTERFACE *idam_plugin_interface
-*
-* Returns:		0 if the plugin functionality was successful
-*			otherwise a Error Code is returned
-*
-* Standard functionality:
-*
-*	help	a description of what this plugin does together with a list of functions available
-*
-*	reset	frees all previously allocated heap, closes file handles and resets all static parameters.
-*		This has the same functionality as setting the housekeeping directive in the plugin interface
-*		data structure to TRUE (1)
-*
-*	init	Initialise the plugin: read all required data and process. Retain staticly for
-*		future reference.
-*
-*---------------------------------------------------------------------------------------------------------------*/
 #include "imas_mds.h"
 
 #include "common.h"
@@ -64,7 +44,7 @@ static int do_releaseObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN
 static int do_getObjectObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args);
 static int do_getObjectSlice(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args);
 static int do_getObjectGroup(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args);
-static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args);
+static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args, int idx);
 static int do_beginObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args);
 static int do_getObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args);
 static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args);
@@ -99,9 +79,9 @@ static int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, 
 
 void initLocalObj()
 {
-// Original IMAS objects may have NULL or (void *)-1 addresses
-// Two standard references are created at initialisation for these with refIds of 0 and 1.
-// These are not object pointers - both are set to NULL
+    // Original IMAS objects may have NULL or (void *)-1 addresses
+    // Two standard references are created at initialisation for these with refIds of 0 and 1.
+    // These are not object pointers - both are set to NULL
     int i;
     if (!initLocalObjs) return;
     for (i = 0; i < MAXOBJECTCOUNT; i++) {
@@ -117,12 +97,12 @@ int putLocalObj(void* dataObj)
 {
     int i;
 
-// if this is the same as a previous object it may contain changes
-// Check and return the saved object ID
+    // if this is the same as a previous object it may contain changes
+    // Check and return the saved object ID
 
     for (i = 0; i < lastObjectId; i++) if (localObjs[i] == dataObj) return i;
 
-// Save new object
+    // Save new object
 
     localObjs[lastObjectId] = dataObj;
     return lastObjectId++;
@@ -167,7 +147,7 @@ extern int imas_mds(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -249,7 +229,7 @@ extern int imas_mds(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     } else if (STR_IEQUALS(request_block->function, "getObjectGroup")) {
         err = do_getObjectGroup(idam_plugin_interface, plugin_args);
     } else if (STR_IEQUALS(request_block->function, "getObjectDim")) {
-        err = do_getObjectDim(idam_plugin_interface, plugin_args);
+        err = do_getObjectDim(idam_plugin_interface, plugin_args, idx);
     } else if (STR_IEQUALS(request_block->function, "beginObject")) {
         err = do_beginObject(idam_plugin_interface, plugin_args);
     } else if (STR_IEQUALS(request_block->function, "getObject")) {
@@ -534,9 +514,8 @@ int imas_mds_replaceLastDataSlice(int idx, char* cpoPath, char* path, int type, 
 int imas_mds_putData(int idx, char* cpoPath, char* path, int type, int nDims, int* dims, int isTimed, void* data,
                      double time)
 {
-
-//TODO *** timeBasePath, time
-//TODO putTimes, nPutTimes must be global - nPutTimes == dims[0], used when isTimed is != 0
+    //TODO *** timeBasePath, time
+    //TODO putTimes, nPutTimes must be global - nPutTimes == dims[0], used when isTimed is != 0
 
     if (isTimed == PUTSLICE_OPERATION) {
         return imas_mds_putDataSlice(idx, cpoPath, path, getTimeBasePath(), type, nDims, dims, data, time);
@@ -674,7 +653,6 @@ int imas_mds_putDataX(int idx, char* cpoPath, char* path, int type, int nDims, i
 
 int imas_mds_getData(int idx, char* cpoPath, char* path, int type, int nDims, int* dims, void** dataOut)
 {
-
     switch (nDims) {
         case 0: {
             switch (type) {
@@ -1257,7 +1235,7 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
         RAISE_PLUGIN_ERROR("No data object name (signal) has been specified!");
     }
 
-// Prepare common code
+    // Prepare common code
 
     char* env = NULL;
     char work[MAXMETA];
@@ -1280,7 +1258,7 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
         plugin_args.shotNumber = request_block->exp_number;
     }
 
-// JET PPF sources: PPF::/$ppfname/$pulseNumber/$sequence/$owner
+    // JET PPF sources: PPF::/$ppfname/$pulseNumber/$sequence/$owner
 
     if (plugin_args.isFormat && STR_IEQUALS(plugin_args.format, "ppf")) {            // JET PPF source naming pattern
 
@@ -1377,15 +1355,15 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
         RAISE_PLUGIN_ERROR("the specified format is not recognised!");
     }
 
-// Create the Request data structure
+    // Create the Request data structure
 
-    env = getenv("UDA_IDAM_PLUGIN");
+    env = getenv("UDA_UDA_PLUGIN");
 
     if (env != NULL) {
         sprintf(work, "%s::get(host=%s, port=%d, signal=\"%s\", source=\"%s\")", env, getIdamServerHost(),
                 getIdamServerPort(), next_request_block.signal, next_request_block.source);
     } else {
-        sprintf(work, "IDAM::get(host=%s, port=%d, signal=\"%s\", source=\"%s\")", getIdamServerHost(),
+        sprintf(work, "UDA::get(host=%s, port=%d, signal=\"%s\", source=\"%s\")", getIdamServerHost(),
                 getIdamServerPort(), next_request_block.signal, next_request_block.source);
     }
 
@@ -1394,19 +1372,19 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
 
     makeRequestBlock(&next_request_block, *plugin_list, idam_plugin_interface->environment);
 
-// Call the IDAM client via the IDAM plugin (ignore the request identified)
+    // Call the UDA client via the UDA plugin (ignore the request identified)
 
     if (env != NULL) {
         next_request_block.request = findPluginRequestByFormat(env, plugin_list);
     } else {
-        next_request_block.request = findPluginRequestByFormat("IDAM", plugin_list);
+        next_request_block.request = findPluginRequestByFormat("UDA", plugin_list);
     }
 
     if (next_request_block.request < 0) {
         RAISE_PLUGIN_ERROR("No UDA server plugin found!");
     }
 
-// Locate and Execute the UDA plugin
+    // Locate and Execute the UDA plugin
 
     int id = findPluginIdByRequest(next_request_block.request, plugin_list);
     if (id >= 0 && plugin_list->plugin[id].idamPlugin != NULL) {
@@ -1417,7 +1395,7 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
 
     freeNameValueList(&next_request_block.nameValueList);
 
-// Return data is automatic since both next_request_block and request_block point to the same DATA_BLOCK etc.
+    // Return data is automatic since both next_request_block and request_block point to the same DATA_BLOCK etc.
 
     return err;
 }
@@ -1574,7 +1552,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
 
             int id = findPluginIdByFormat(plugin_name, idam_plugin_interface->pluginList);
             if (id < 0) {
-                UDA_LOG(UDA_LOG_ERROR, "Specified IDAM data plugin not found\n");
+                UDA_LOG(UDA_LOG_ERROR, "Specified UDA data plugin not found\n");
             } else {
                 PLUGIN_DATA* plugin = &idam_plugin_interface->pluginList->plugin[id];
 
@@ -1601,7 +1579,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
                            ? plugin_args.shotNumber
                            : ual_get_shot(idx);
 
-                int uda_type = findIMASIDAMType(type);
+                int uda_type = findIMASUDAType(type);
 
                 sprintf(new_request.signal, fmt, expName, new_request.api_delim, (char*)plugin_args.CPOPath, path,
                         indices_string, shot, uda_type, get_shape ? ", get_shape" : "");
@@ -1669,7 +1647,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
         THROW_ERROR(999, "Data GET method failed!");
     }
 
-// Return Data
+    // Return Data
 
     switch (dataOperation) {
         case GETDIMENSION_OPERATION: {
@@ -1680,7 +1658,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
             break;
         }
         case GET_OPERATION: {
-            data_block->data_type = findIMASIDAMType(type);
+            data_block->data_type = findIMASUDAType(type);
             data_block->data = imasData;
             data_block->rank = (unsigned int)plugin_args.rank;
             if (plugin_args.rank == 0 && type == STRING) {
@@ -1697,7 +1675,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
             // Need to return Data as well as the time - increase rank by 1 and pass in a
             // coordinate array of length 1
             data_block->rank = plugin_args.rank;
-            data_block->data_type = findIMASIDAMType(type);
+            data_block->data_type = findIMASUDAType(type);
             data_block->data = imasData;
             data_block->data_n = shape[0];
             for (i = 1; i < plugin_args.rank; i++)data_block->data_n *= shape[i];
@@ -1885,7 +1863,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
             isVarData = 1;
             putDataBlock = &putDataBlockList->putDataBlock[varDataIndex];
             if ((type = findIMASType(convertIdam2StringType(putDataBlock->data_type))) == 0) {
-                // Convert an IDAM type to an IMAS type
+                // Convert an UDA type to an IMAS type
                 UDA_LOG(UDA_LOG_ERROR, "imas put: The data's Type cannot be converted!\n");
                 THROW_ERROR(999, "The data's Type cannot be converted!");
             }
@@ -1893,7 +1871,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
 
     } else {    // isPutData
 
-// Convert type string into IMAS type identifiers
+        // Convert type string into IMAS type identifiers
 
         if (!plugin_args.isTypeName) {
             UDA_LOG(UDA_LOG_ERROR, "imas put: The data's Type has not been specified!\n");
@@ -1908,7 +1886,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
 
     isType = 1;
 
-// Any Data?
+    // Any Data?
 
     if (!plugin_args.isDataString && !isVarData) {
         UDA_LOG(UDA_LOG_ERROR, "imas put: No data has been specified!\n");
@@ -1920,7 +1898,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
         THROW_ERROR(999, "No specific time has been specified!");
     }
 
-// Which Data Operation?
+    // Which Data Operation?
 
     int dataOperation = PUT_OPERATION;
     if (plugin_args.isPutDataSlice) {
@@ -1929,7 +1907,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
         dataOperation = REPLACELASTSLICE_OPERATION;
     }
 
-// Convert Name-Value string arrays (shape, data) to numerical arrays of the correct type
+    // Convert Name-Value string arrays (shape, data) to numerical arrays of the correct type
 
     if (!plugin_args.isPutData) {
         if (!plugin_args.isRank && !plugin_args.isShapeString) {        // Assume a scalar value
@@ -1984,14 +1962,14 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
             isData = 1;
         }
 
-// Test all required data is available
+        // Test all required data is available
 
         if (!plugin_args.isCPOPath || !plugin_args.isPath || !isType || !plugin_args.isRank || !isShape || !isData) {
             UDA_LOG(UDA_LOG_ERROR, "Insufficient data parameters passed - put not possible!\n");
             THROW_ERROR(999, "Insufficient data parameters passed - put not possible!");
         }
 
-// The type passed here is the IMAS type enumeration (imas_putData is the original imas putData function)
+        // The type passed here is the IMAS type enumeration (imas_putData is the original imas putData function)
 
         if (dataOperation == PUT_OPERATION) {
             rc = imas_mds_putData(idx, (char*)plugin_args.CPOPath, (char*)plugin_args.path, type, plugin_args.rank, shape,
@@ -2009,7 +1987,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
 
         if (rc < 0) err = 999;
 
-// Housekeeping heap
+        // Housekeeping heap
 
         free((void*)shape);
         free(data);
@@ -2033,7 +2011,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
             freeShape = 1;
         }
 
-// TODO....time
+        // TODO....time
         if (dataOperation == PUT_OPERATION) {
             rc = imas_mds_putData(idx, (char*)plugin_args.CPOPath, (char*)plugin_args.path, type, putDataBlock->rank,
                                   putDataBlock->shape, plugin_args.isTimed,
@@ -2091,12 +2069,12 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
 
 static int do_open(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args, int* idx)
 {
-/*
-name	- filename
-shot	- experiment number
-run	- analysis number
-retIdx	- returned data file index number
-*/
+    /*
+    name	- filename
+    shot	- experiment number
+    run	- analysis number
+    retIdx	- returned data file index number
+    */
 
     if (!plugin_args.isFileName || !plugin_args.isShotNumber || !plugin_args.isRunNumber) {
         UDA_LOG(UDA_LOG_ERROR, "A Filename, Shot number and Run number are required!\n");
@@ -2130,14 +2108,14 @@ mdsimasCreate   calls getMdsShot, passes MDSPLUS_TREE_BASE_$ via environment var
 
 static int do_create(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args, int* idx)
 {
-/*
-name	- filename
-shot	- experiment number
-run	- analysis number
-refShot - not used
-refRun  - not used
-retIdx	- returned data file index number
-*/
+    /*
+    name	- filename
+    shot	- experiment number
+    run	- analysis number
+    refShot - not used
+    refRun  - not used
+    retIdx	- returned data file index number
+    */
 
     if (!plugin_args.isFileName || !plugin_args.isShotNumber || !plugin_args.isRunNumber) {
         UDA_LOG(UDA_LOG_ERROR, "imas: A Filename, Shot number and Run number are required!\n");
@@ -2157,7 +2135,7 @@ retIdx	- returned data file index number
         }
     }
 
-// Register the file
+    // Register the file
 
     char work[512];
     // Use comma separated list (non compliant with filenaming conventions)
@@ -2365,7 +2343,7 @@ static int do_getObjectSlice(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
         putDataBlock = &(putDataBlockList->putDataBlock[0]);
     }
 
-// Test all required data is available
+    // Test all required data is available
 
     if (!plugin_args.isPutData || !plugin_args.isClientIdx || !plugin_args.isPath || !plugin_args.isCPOPath ||
         putDataBlockList->blockCount != 3) {
@@ -2373,18 +2351,18 @@ static int do_getObjectSlice(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
         THROW_ERROR(999, "Insufficient data parameters passed - begin not possible!");
     }
 
-// Set global variables
+    // Set global variables
 
     setSliceIdx(((int*)putDataBlock[1].data)[0], ((int*)putDataBlock[1].data)[1]);
     setSliceTime(((double*)putDataBlock[2].data)[0], ((double*)putDataBlock[2].data)[1]);
 
-// Identify the local object
+    // Identify the local object
 
     //void *obj = findLocalObj(*((int *)putDataBlock[0].data));
 
     //if(obj == NULL) obj = mdsBeginObject();
 
-// call the original IMAS function
+    // call the original IMAS function
 
     void* dataObj = NULL;
     int rc = mdsGetObjectSlice(plugin_args.clientIdx, (char*)plugin_args.CPOPath, (char*)plugin_args.path,
@@ -2411,14 +2389,14 @@ static int do_getObjectSlice(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
 
 static int do_getObjectGroup(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args)
 {
-// Test all required data is available
+    // Test all required data is available
 
     if (!plugin_args.isClientIdx || !plugin_args.isCPOPath || !plugin_args.isPath || !plugin_args.isTimedArg) {
         UDA_LOG(UDA_LOG_ERROR, "Insufficient data parameters passed - begin not possible!\n");
         THROW_ERROR(999, "Insufficient data parameters passed - begin not possible!");
     }
 
-// call the original IMAS function
+    // call the original IMAS function
 
     void* dataObj = NULL;
     int rc = mdsGetObject(plugin_args.clientIdx, (char*)plugin_args.CPOPath, (char*)plugin_args.path, &dataObj, plugin_args.isTimed);
@@ -2427,7 +2405,7 @@ static int do_getObjectGroup(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
         THROW_ERROR(999, "Object Get failed!");
     }
 
-// Save the object reference
+    // Save the object reference
 
     int refId = putLocalObj(dataObj);
 
@@ -2438,8 +2416,10 @@ static int do_getObjectGroup(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
 //----------------------------------------------------------------------------------------
 // Object Dimension: int mdsGetObjectDim(void *obj)
 
-static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args)
+static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args, int idx)
 {
+    static MACHINE_MAPPING* machine_mapping = NULL;
+
     PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
@@ -2447,18 +2427,77 @@ static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_
         putDataBlock = &(putDataBlockList->putDataBlock[0]);
     }
 
-// Object? The data is the local object reference
+    // Object? The data is the local object reference
 
     if (!plugin_args.isPutData || putDataBlockList->putDataBlock[0].data == NULL) {
         UDA_LOG(UDA_LOG_ERROR, "imas getObjectDim: No data object has been specified!\n");
         THROW_ERROR(999, "No data object has been specified!");
     }
 
-// Identify the local object
+    // Identify the local object
 
+    int objId = *((int*)putDataBlock[0].data);
     void* obj = findLocalObj(*((int*)putDataBlock[0].data));
 
     if (obj == NULL) obj = mdsBeginObject();
+
+    if (obj == NULL) {
+        // data not in IDS - go to other plugins to try and get it
+
+        const char* expName = NULL;
+        FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_block->nameValueList, expName);
+
+        if (machine_mapping == NULL) {
+            machine_mapping = new_mapping();
+        }
+
+        const char* plugin_name = mapping_plugin(machine_mapping, expName, plugin_args.CPOPath);
+
+        int id = findPluginIdByFormat(plugin_name, idam_plugin_interface->pluginList);
+        if (id < 0) {
+            UDA_LOG(UDA_LOG_ERROR, "Specified UDA data plugin not found\n");
+        } else {
+            PLUGIN_DATA* plugin = &idam_plugin_interface->pluginList->plugin[id];
+
+            char* path = NULL;
+            int* indices = NULL;
+            int num_indices = extract_array_indices((char*)plugin_args.path, &path, &indices);
+            char* indices_string = indices_to_string(indices, num_indices);
+
+            int get_shape = 0;
+
+            REQUEST_BLOCK new_request;
+            copyRequestBlock(&new_request, *idam_plugin_interface->request_block);
+
+            const char* fmt = path[0] == '/'
+                              ? "%s%sread(element=%s%s, indices=%s, shot=%d, dtype=%d, IDS_version=3.7.4%s)"
+                              : "%s%sread(element=%s/%s, indices=%s, shot=%d, dtype=%d, IDS_version=3.7.4%s)";
+
+            int shot = plugin_args.isShotNumber
+                       ? plugin_args.shotNumber
+                       : ual_get_shot(idx);
+
+            int uda_type = findIMASUDAType(INT);
+
+            sprintf(new_request.signal, fmt, expName, new_request.api_delim, (char*)plugin_args.CPOPath, path,
+                    indices_string, shot, uda_type, get_shape ? ", get_shape" : "");
+
+            UDA_LOG(UDA_LOG_DEBUG, "imas: %s", new_request.signal);
+
+            makeRequestBlock(&new_request, *idam_plugin_interface->pluginList, idam_plugin_interface->environment);
+            printRequestBlock(new_request);
+
+            idam_plugin_interface->request_block = &new_request;
+
+            int rc = plugin->idamPlugin(idam_plugin_interface);
+            sprintf(idam_plugin_interface->data_block->data_desc, (plugin_args.path[0] == '/') ? "%s%s" : "%s/%s",
+                    plugin_args.CPOPath, plugin_args.path);
+
+            if (rc == 0) {
+                return 0;
+            }
+        }
+    }
 
     if (obj == NULL) {
         UDA_LOG(UDA_LOG_ERROR, "imas getObjectDim: No data object has been found!\n");
@@ -2484,7 +2523,7 @@ static int do_beginObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_A
         THROW_ERROR(999, "Object Begin failed!");
     }
 
-// Save the object reference
+    // Save the object reference
 
     int refId = putLocalObj(data);
 
@@ -2502,7 +2541,7 @@ static int do_getObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
     int err = 0;
     int rc = 0;
 
-// Test all required data is available
+    // Test all required data is available
 
     if (!plugin_args.isGetDimension) {
         if (!plugin_args.isPath || !plugin_args.isIndex || !plugin_args.isTypeName || !plugin_args.isClientObjectId ||
@@ -2511,13 +2550,13 @@ static int do_getObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
             THROW_ERROR(999, "Insufficient data parameters passed - put not possible!");
         }
 
-// Identify the local object
+        // Identify the local object
 
         void* obj = findLocalObj(plugin_args.clientObjectId);
 
         if (obj == NULL) obj = mdsBeginObject();
 
-// The type passed here is the IMAS type enumeration
+        // The type passed here is the IMAS type enumeration
 
         void* data = NULL;
         int type = findIMASType(plugin_args.typeName);
@@ -2534,11 +2573,11 @@ static int do_getObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
 
         DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-// Return the Data Slice
+        // Return the Data Slice
 
         initDataBlock(data_block);
         data_block->rank = plugin_args.rank;
-        data_block->data_type = findIMASIDAMType(type);
+        data_block->data_type = findIMASUDAType(type);
         data_block->data = (char*)data;
         data_block->data_n = shape[0];
         if (data_block->rank > 0) {
@@ -2559,20 +2598,20 @@ static int do_getObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
         return err;
     }
 
-// Dimensional Data Only
+    // Dimensional Data Only
 
     if (!plugin_args.isPath || !plugin_args.isIndex || !plugin_args.isClientObjectId) {
         UDA_LOG(UDA_LOG_ERROR, "Insufficient data parameters passed - put not possible!\n");
         THROW_ERROR(999, "Insufficient data parameters passed - put not possible!");
     }
 
-// Identify the local object
+    // Identify the local object
 
     void* obj = findLocalObj(plugin_args.clientObjectId);
 
     if (obj == NULL) obj = mdsBeginObject();
 
-// The type passed here is the IMAS type enumeration
+    // The type passed here is the IMAS type enumeration
 
     int* shape = (int*)malloc(7 * sizeof(int));
     int numDims = 0;
@@ -2587,7 +2626,7 @@ static int do_getObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
 
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-// Return the Data Slice
+    // Return the Data Slice
 
     initDataBlock(data_block);
     data_block->rank = 1;
@@ -2617,7 +2656,7 @@ static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
 
     PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
 
-// Test all required data is available
+    // Test all required data is available
 
     if (!plugin_args.isPath || !plugin_args.isIndex || !plugin_args.isPutData || putDataBlockList->blockCount != 2) {
         UDA_LOG(UDA_LOG_ERROR, "Insufficient data parameters passed - put not possible!\n");
@@ -2630,27 +2669,27 @@ static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
         THROW_ERROR(999, "The data's Type cannot be converted!");
     }
 
-// Any Data?
+    // Any Data?
 
     if (putDataBlockList->putDataBlock[1].data == NULL) {
         UDA_LOG(UDA_LOG_ERROR, "No data has been specified!\n");
         THROW_ERROR(999, "No data has been specified!");
     }
 
-// Object?
+    // Object?
 
     if (putDataBlockList->putDataBlock[0].data == NULL) {
         UDA_LOG(UDA_LOG_ERROR, "No data object has been specified!\n");
         THROW_ERROR(999, "No data object has been specified!");
     }
 
-// Identify the local object
+    // Identify the local object
 
     void* obj = findLocalObj(((int*)putDataBlockList->putDataBlock[0].data)[0]);
 
     if (obj == NULL) obj = mdsBeginObject();
 
-// Create the shape array if the rank is 1 (not passed by IDAM)
+    // Create the shape array if the rank is 1 (not passed by UDA)
 
     int shape[1];
     if (putDataBlockList->putDataBlock[1].rank == 1 && putDataBlockList->putDataBlock[1].shape == NULL) {
@@ -2658,7 +2697,7 @@ static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
         shape[0] = putDataBlockList->putDataBlock[1].count;
     }
 
-// The type passed here is the IMAS type enumeration
+    // The type passed here is the IMAS type enumeration
 
     void* newObj = imas_mds_putDataSliceInObject(obj, (char*)plugin_args.path, plugin_args.index, type,
                                                  putDataBlockList->putDataBlock[1].rank,
@@ -2691,21 +2730,21 @@ static int do_putObjectInObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PL
         putDataBlock = &(putDataBlockList->putDataBlock[0]);
     }
 
-// Test all required data is available
+    // Test all required data is available
 
     if (!plugin_args.isPath || !plugin_args.isIndex || !plugin_args.isPutData || putDataBlock->count != 2) {
         UDA_LOG(UDA_LOG_ERROR, "Insufficient data parameters passed - put not possible!\n");
         THROW_ERROR(999, "Insufficient data parameters passed - put not possible!");
     }
 
-// Any Data?
+    // Any Data?
 
     if (putDataBlock->data == NULL || putDataBlock->data_type != UDA_TYPE_INT) {
         UDA_LOG(UDA_LOG_ERROR, "No data has been specified!\n");
         THROW_ERROR(999, "No data has been specified!");
     }
 
-// Identify the local object and object to be inserted
+    // Identify the local object and object to be inserted
 
     void* obj = findLocalObj(((int*)putDataBlock->data)[0]);
     void* dataObj = findLocalObj(((int*)putDataBlock->data)[1]);
@@ -2713,7 +2752,7 @@ static int do_putObjectInObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PL
     if (obj == NULL) obj = mdsBeginObject();
     if (dataObj == NULL) dataObj = mdsBeginObject();
 
-// The type passed here is the IMAS type enumeration
+    // The type passed here is the IMAS type enumeration
 
     void* newObj = mdsPutObjectInObject(obj, (char*)plugin_args.path, plugin_args.index, dataObj);
 
@@ -2737,7 +2776,7 @@ static int do_putObjectGroup(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
     int err = 0;
     int rc = 0;
 
-// Test all required data is available
+    // Test all required data is available
 
     if (!plugin_args.isClientIdx || !plugin_args.isCPOPath || !plugin_args.isPath || !plugin_args.isClientObjectId ||
         !plugin_args.isTimedArg) {
@@ -2745,15 +2784,15 @@ static int do_putObjectGroup(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
         THROW_ERROR(999, "Insufficient data parameters passed - putObject not possible!");
     }
 
-// Identify the local object
+    // Identify the local object
 
     void* obj = findLocalObj(plugin_args.clientObjectId);
 
     if (obj == NULL) obj = mdsBeginObject();
 
-//            struct descriptor * object = (struct descriptor *) obj;    // For debugging
+    //            struct descriptor * object = (struct descriptor *) obj;    // For debugging
 
-// call the original IMAS function
+    // call the original IMAS function
 
     rc = mdsPutObject(plugin_args.clientIdx, (char*)plugin_args.CPOPath, (char*)plugin_args.path, obj, plugin_args.isTimed);
 
@@ -3243,8 +3282,8 @@ static int do_endIdsPutTimed(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
 
 static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args)
 {
-    const char* help = "\nimas_mds: Add Functions Names, Syntax, and Descriptions\n\n";
-    const char* desc = "imas_mds: help = description of this plugin";
+    const char* help = PLUGIN_NAME ": Add Functions Names, Syntax, and Descriptions\n\n";
+    const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
@@ -3254,7 +3293,7 @@ static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plu
 
 static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
 }
 
 //----------------------------------------------------------------------------------------

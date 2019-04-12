@@ -44,7 +44,7 @@ int source_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         THROW_ERROR(999, "Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -141,15 +141,15 @@ int source_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    char* help = "\nsource: Add Functions Names, Syntax, and Descriptions\n\n";
-    const char* desc = "source: help = description of this plugin";
+    char* help = PLUGIN_NAME ": Add Functions Names, Syntax, and Descriptions\n\n";
+    const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
 
 static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, NULL);
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, NULL);
 }
 
 static int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)

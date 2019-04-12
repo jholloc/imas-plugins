@@ -140,7 +140,7 @@ int GetDynData(int shotNumber, float** data_time, float** data, int* len, int* n
 		command = NULL;
 	}
 
-	UDA_LOG(UDA_LOG_DEBUG, "searching for IDAM index...\n");
+	UDA_LOG(UDA_LOG_DEBUG, "searching for UDA index...\n");
 	UDA_LOG(UDA_LOG_DEBUG, "attributes : %s\n", attributes);
 
 	int requestedIndex = getNumIDAMIndex(attributes, nodeIndices);
@@ -255,7 +255,7 @@ void SetDynamicDataTime(DATA_BLOCK* data_block, int len, float* data_time, float
 
 void SetDynData(DATA_BLOCK* data_block, int len, float* data_time, float* data, int setTime)
 {
-	//IDAM data block initialization
+	// UDA data block initialization
 	initDataBlock(data_block);
 	int i;
 	data_block->rank = 1;
@@ -500,7 +500,7 @@ int equals(float *p, float *q, int len) {
 
 void setReturnData2DFloat (DATA_BLOCK* data_block, int dim1_shape, int dim2_shape, float* data)
 {
-	//IDAM data block initialization
+	// UDA data block initialization
 	initDataBlock(data_block);
 	data_block->rank = 2;
 	data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));

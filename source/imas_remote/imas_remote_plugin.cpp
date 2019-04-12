@@ -4,7 +4,9 @@
 #include <stack>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/filesystem.hpp>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -52,7 +54,7 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
         }
 
-        idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+        idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
         REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -112,8 +114,14 @@ namespace {
  */
 int IMASPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
-    const char* desc = "templatePlugin: help = description of this plugin";
+    boost::filesystem::path path = __FILE__;
+    path = path.parent_path().append("help.md");
+    std::ifstream ifs(path.native());
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+
+    const char* help = ss.str().c_str();
+    const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
@@ -125,7 +133,7 @@ int IMASPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int IMASPlugin::version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
 }
 
 /**
@@ -246,7 +254,7 @@ int IMASPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
-    PulseContext* pulse_ctx = dynamic_cast<PulseContext*>(env.context);
+    auto pulse_ctx = dynamic_cast<PulseContext*>(env.context);
     OperationContext* op_ctx = new OperationContext(*pulse_ctx, dataObject, access, range, time, interp);
 
     op_ctx_ = std::unique_ptr<OperationContext>{ op_ctx };
@@ -453,29 +461,6 @@ int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_inte
     int ctxId;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
 
-    int size;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, size);
-
-    const char* dataObject;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, dataObject);
-
-    int access;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, access);
-
-    int range;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, range);
-
-#ifdef FIND_REQUIRED_DOUBLE_VALUE
-    double time;
-    FIND_REQUIRED_DOUBLE_VALUE(request_block->nameValueList, time);
-#else
-    float time;
-    FIND_REQUIRED_FLOAT_VALUE(request_block->nameValueList, time);
-#endif
-
-    int interp;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
-
     const char* path;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
 
@@ -485,7 +470,9 @@ int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_inte
     LLenv env = Lowlevel::getLLenv(ctxId);
 
     ArraystructContext* array_ctx = build_arraystruct_context(path, timebase);
-    
+
+    int size = 0;
+
     env.backend->beginArraystructAction(array_ctx, &size);
 
     array_ctx_stack_.emplace(array_ctx);

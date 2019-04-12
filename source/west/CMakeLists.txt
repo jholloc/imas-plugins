@@ -21,6 +21,7 @@ include( plugins )
 
 uda_plugin(
   NAME WEST
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC westPlugin
   DESCRIPTION "Read WEST data"
   EXAMPLE "ADAS::adf21()"

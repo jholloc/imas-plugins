@@ -9,6 +9,7 @@ include( plugins )
 
 uda_plugin(
   NAME MAST_IMAS
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC mastImasPlugin
   DESCRIPTION "plugin to handle IMAS requests by returning MAST data"
   EXAMPLE "MAST_IMAS::read(element='magnetics/method/#/name', index=1)"

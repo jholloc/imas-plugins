@@ -11,6 +11,11 @@ set( MATLAB
   $ENV{MATLAB}
 )
 
+if ( NOT MATLAB )
+  message( WARNING "MATLAB environmental variable not defined - skipping TCVM plugin" )
+  return()
+endif()
+
 include_directories( SYSTEM )
 
 add_compile_options( -fexceptions -fPIC -fno-omit-frame-pointer -pthread -g )
@@ -23,7 +28,7 @@ uda_plugin(
   LIBNAME tcvm_plugin
   SOURCES ${SOURCES}
   CONFIG_FILE tcvm.cfg
-  VERSION 1.0.0
+  VERSION ${PROJECT_VERSION}
   EXTRA_DEFINITIONS
     -DUSE_MEX_CMD
     -D_GNU_SOURCE

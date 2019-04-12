@@ -32,6 +32,7 @@ set( IMAS_SOURCES
 
 uda_plugin(
   NAME IMAS
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC imas_mds
   DESCRIPTION "ITER IMAS put & get plugin"
   EXAMPLE "IMAS::put()"
