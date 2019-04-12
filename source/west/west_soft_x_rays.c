@@ -145,13 +145,9 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 
 	UDA_LOG(UDA_LOG_DEBUG, "setting file pointer...\n");
 	FILE* p_file_soft_x_rays_calib_ce_cx_e;
-
-	char content[50];
 	float* Ce = malloc(CHANNELS_COUNT*sizeof(float));
 	float* Cx = malloc(CHANNELS_COUNT*sizeof(float));
 	float* E = malloc(CHANNELS_COUNT*sizeof(float));
-
-	const int WIDTH = 3;
 
 	UDA_LOG(UDA_LOG_DEBUG, "reading WEST_SOFT_X_RAYS_CALIB_CE_CX_E_FILE...\n");
 	char* soft_x_rays_calib_ce_cx_e_file = getenv("WEST_SOFT_X_RAYS_CALIB_CE_CX_E_FILE");
@@ -162,8 +158,6 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 		return status;
 	} else {
 		int i = 0;
-		int j = 0;
-
 		 for(i = 0; i < CHANNELS_COUNT; i++)
 		  {
 			 fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&Ce[i]);
