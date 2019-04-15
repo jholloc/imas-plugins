@@ -58,8 +58,8 @@ int I_case_lower_lfs(int shotNumber, float** time, float** data, int* len, float
 int getCurrent(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, float** data, float** time, int* len);
 float somme(float* data, int len);
 void somme2(float* s, float* data1, float* data2, float* data3, int len);
-float factUpper(int shotNumber);
-float factLower(int shotNumber);
+int factUpper(int shotNumber, float* result);
+int factLower(int shotNumber, float* result);
 
 int passive_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int passive_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
@@ -72,7 +72,7 @@ void pf_passive_throwsIdamError(int status, char* methodName, char* object_name,
 	int err = 901;
 	char msg[1000];
 	sprintf(msg, "%s(%s),object:%s,shot:%d,err:%d\n", "WEST:ERROR", methodName, object_name, shotNumber, status);
-	//UDA_LOG(UDA_LOG_ERROR, "%s", msg);
+	UDA_LOG(UDA_LOG_ERROR, "%s", msg);
 	addIdamError(CODEERRORTYPE, msg, err, "");
 }
 
@@ -297,9 +297,9 @@ int getCurrent(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, float**
 
 int passive_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-
 	//int k = nodeIndices[0]; //starts from 1
-	int k = 1;
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "executing passive_time operation\n");
+	int k = 1; //IDS is time homogeneous
 	int len;
 	float* data = NULL;
 	float* time = NULL;
@@ -329,12 +329,21 @@ int passive_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 		free(time);
 		return status;
 	}
-
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "executing passive_time1\n");
 	float* data_ref = NULL;
 	float* time_ref = NULL;
 
 	status = getIFREEB(shotNumber, 2, &time_ref, &data_ref, &len, 1.);
 
+	if (status != 0) {
+		pf_passive_throwsIdamError(status, "passive_current", "", shotNumber);
+		free(data);
+		free(time);
+		free(data_ref);
+		free(time_ref);
+		return status;
+	}
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "executing passive_time2\n");
 	int i;
 	const float p = 1.e-9;
 	for (i = 0; i < len ; i++) {
@@ -354,7 +363,9 @@ int passive_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 			return -1;
 		}
 	}
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "executing passive_time3\n");
 	SetDynamicDataTime(data_block, len, time, data);
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "executing passive_time4\n");
 	return 0;
 }
 
@@ -380,7 +391,8 @@ int getIDCOEF(int shotNumber, int extractionIndex, float** time, float** data, i
 			extractionIndex); //Concatenate nomsigp_to_extract avec !extractionIndex, example: !1, !2, ...
 	int rang[2] = { 0, 0 };
 	int status = readSignal(nomsigp_to_extract, shotNumber, 0, rang, time, data, len);
-	multiplyFloat(*data, normalizationFactor, *len);
+	if (status == 0)
+		multiplyFloat(*data, normalizationFactor, *len);
 	return status;
 }
 
@@ -409,9 +421,8 @@ int Ip_fw(int shotNumber, float** time, float** data, int* len, float normalizat
 	return getIFREEB(shotNumber, 1, time, data, len, normalizationFactor);
 }
 
-float factUpper(int shotNumber)
+int factUpper(int shotNumber, float* result)
 {
-
 	int I_case_upper_len;
 	float* I_case_upper_data = NULL;
 	float* I_case_upper_time = NULL;
@@ -420,6 +431,7 @@ float factUpper(int shotNumber)
 		pf_passive_throwsIdamError(status, "factUpper,I_case_upper", "", shotNumber);
 		free(I_case_upper_data);
 		free(I_case_upper_time);
+		return status;
 	}
 
 	int coeff_len;
@@ -432,6 +444,7 @@ float factUpper(int shotNumber)
 		free(I_case_upper_time);
 		free(coeff1_data);
 		free(coeff1_time);
+		return status;
 	}
 	float* coeff2_data = NULL;
 	float* coeff2_time = NULL;
@@ -444,6 +457,7 @@ float factUpper(int shotNumber)
 		free(coeff1_time);
 		free(coeff2_data);
 		free(coeff2_time);
+		return status;
 	}
 	float* coeff3_data = NULL;
 	float* coeff3_time = NULL;
@@ -458,18 +472,19 @@ float factUpper(int shotNumber)
 		free(coeff2_time);
 		free(coeff3_data);
 		free(coeff3_time);
+		return status;
 	}
 
 	float* s2 = NULL;
 	s2 = (float*)calloc(coeff_len, sizeof(float));
 	somme2(s2, coeff1_data, coeff2_data, coeff3_data, coeff_len);
 	float factUpper = somme(I_case_upper_data, I_case_upper_len) / somme(s2, coeff_len);
-	return factUpper;
+	*result = factUpper;
+	return 0;
 }
 
-float factLower(int shotNumber)
+int factLower(int shotNumber, float* result)
 {
-
 	int I_case_lower_len;
 	float* I_case_lower_data = NULL;
 	float* I_case_lower_time = NULL;
@@ -478,6 +493,7 @@ float factLower(int shotNumber)
 		pf_passive_throwsIdamError(status, "factLower,I_case_lower", "", shotNumber);
 		free(I_case_lower_data);
 		free(I_case_lower_time);
+		return status;
 	}
 
 	int coeff_len;
@@ -490,6 +506,7 @@ float factLower(int shotNumber)
 		free(I_case_lower_time);
 		free(coeff1_data);
 		free(coeff1_time);
+		return status;
 	}
 
 	float* coeff2_data = NULL;
@@ -503,6 +520,7 @@ float factLower(int shotNumber)
 		free(coeff1_time);
 		free(coeff2_data);
 		free(coeff2_time);
+		return status;
 	}
 
 	float* coeff3_data = NULL;
@@ -518,6 +536,7 @@ float factLower(int shotNumber)
 		free(coeff2_time);
 		free(coeff3_data);
 		free(coeff3_time);
+		return status;
 	}
 
 	float* s2 = NULL;
@@ -525,37 +544,62 @@ float factLower(int shotNumber)
 	somme2(s2, coeff1_data, coeff2_data, coeff3_data, coeff_len);
 
 	float factLower = somme(I_case_lower_data, I_case_lower_len) / somme(s2, coeff_len);
-	return factLower;
+	*result = factLower;
+	return status;;
 }
 
 int I_case_upper_hfs(int shotNumber, float** time, float** data, int* len, float normalizationFactor)
 {
-	return getIDCOEF(shotNumber, 19, time, data, len, factUpper(shotNumber)*normalizationFactor);
+	float fu = 0;
+	int status = factUpper(shotNumber, &fu);
+	if (status != 0)
+		return status;
+	return getIDCOEF(shotNumber, 19, time, data, len, fu*normalizationFactor);
 }
 
 int I_case_upper_c(int shotNumber, float** time, float** data, int* len, float normalizationFactor)
 {
-	return getIDCOEF(shotNumber, 20, time, data, len, factUpper(shotNumber)*normalizationFactor);
+	float fu = 0;
+	int status = factUpper(shotNumber, &fu);
+	if (status != 0)
+		return status;
+	return getIDCOEF(shotNumber, 20, time, data, len, fu*normalizationFactor);
 }
 
 int I_case_upper_lfs(int shotNumber, float** time, float** data, int* len, float normalizationFactor)
 {
-	return getIDCOEF(shotNumber, 21, time, data, len, factUpper(shotNumber)*normalizationFactor);
+	float fu = 0;
+	int status = factUpper(shotNumber, &fu);
+	if (status != 0)
+		return status;
+	return getIDCOEF(shotNumber, 21, time, data, len, fu*normalizationFactor);
 }
 
 int I_case_lower_hfs(int shotNumber, float** time, float** data, int* len, float normalizationFactor)
 {
-	return getIDCOEF(shotNumber, 22, time, data, len, factLower(shotNumber)*normalizationFactor);
+	float fl = 0;
+	int status = factLower(shotNumber, &fl);
+	if (status != 0)
+		return status;
+	return getIDCOEF(shotNumber, 22, time, data, len, fl*normalizationFactor);
 }
 
 int I_case_lower_c(int shotNumber, float** time, float** data, int* len, float normalizationFactor)
 {
-	return getIDCOEF(shotNumber, 23, time, data, len, factLower(shotNumber)*normalizationFactor);
+	float fl = 0;
+	int status = factLower(shotNumber, &fl);
+	if (status != 0)
+		return status;
+	return getIDCOEF(shotNumber, 23, time, data, len, fl*normalizationFactor);
 }
 
 int I_case_lower_lfs(int shotNumber, float** time, float** data, int* len, float normalizationFactor)
 {
-	return getIDCOEF(shotNumber, 24, time, data, len, factLower(shotNumber)*normalizationFactor);
+	float fl = 0;
+	int status = factLower(shotNumber, &fl);
+	if (status != 0)
+		return status;
+	return getIDCOEF(shotNumber, 24, time, data, len, fl*normalizationFactor);
 }
 
 float somme(float* data, int len)

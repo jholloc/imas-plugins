@@ -65,6 +65,7 @@ int homogeneous_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices){
 	}
 	if (homogeneous_time == -1) //an error has occurred, we do not set the field
 		ece_throwsIdamError(-1, "homogeneous_time", "", shotNumber);
+	    return -1;
 
 	setReturnDataIntScalar(data_block, homogeneous_time, NULL);
 	return 0;
@@ -427,46 +428,53 @@ int ece_frequencies(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 			return status;
 		}
 
+		UDA_LOG(UDA_LOG_DEBUG, "after calling getECEModeHarmonic2\n");
+
 		frequencies_data = malloc(sizeof(float) * len);
 
 		int i;
 
-		for (i = 0; i < len; i++) {
+		UDA_LOG(UDA_LOG_DEBUG, "len=%d\n", len);
 
+		for (i = 0; i < len; i++) {
+			//UDA_LOG(UDA_LOG_DEBUG, "in the loop\n", len);
 			int index = nodeIndices[0];
 
 			if (data[i] == 0) {
 
 				if (index <= 7) {
-					frequencies_data[i] = GVSH1_01[i];
+					frequencies_data[i] = GVSH1_01[index];
 				} else if (index > 7 && index <= 15) {
-					frequencies_data[i] = GVSH2_01[i];
+					frequencies_data[i] = GVSH2_01[index];
 				} else if (index > 15 && index <= 23) {
-					frequencies_data[i] = GVSH3_01[i];
+					frequencies_data[i] = GVSH3_01[index];
 				} else if (index > 23 && index <= 31) {
-					frequencies_data[i] = GVSH4_01[i];
+					frequencies_data[i] = GVSH4_01[index];
 				}
 			} else if (data[i] == 1) {
 
 				if (index <= 7) {
-					frequencies_data[i] = GVSH1_X2[i];
+					frequencies_data[i] = GVSH1_X2[index];
 				} else if (index > 7 && index <= 15) {
-					frequencies_data[i] = GVSH2_X2[i];
+					frequencies_data[i] = GVSH2_X2[index];
 				} else if (index > 15 && index <= 23) {
-					frequencies_data[i] = GVSH3_X2[i];
+					frequencies_data[i] = GVSH3_X2[index];
 				} else if (index > 23 && index <= 31) {
-					frequencies_data[i] = GVSH4_X2[i];
+					frequencies_data[i] = GVSH4_X2[index];
 				}
 			} else {
+				UDA_LOG(UDA_LOG_DEBUG, "unexpected ECE mode\n", len);
 				free(data);
 				free(TOP_collections_parameters);
 				ece_throwsIdamError2(status, "ece_frequencies", "unexpected ECE mode", channel, shotNumber);
 				return -1;
 			}
 		}
-
+		UDA_LOG(UDA_LOG_DEBUG, "after calling getECEModeHarmonic3\n");
 		SetDynamicData(data_block, len, frequencies_time, frequencies_data);
+		UDA_LOG(UDA_LOG_DEBUG, "after calling getECEModeHarmonic4\n");
 		free(data);
+		UDA_LOG(UDA_LOG_DEBUG, "after calling getECEModeHarmonic5\n");
 	} else {
 
 		//Get the ECE acquisition mode from NPZ file
