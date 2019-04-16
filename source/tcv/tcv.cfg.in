@@ -1,2 +1,2 @@
-export UDA_TCV_MAPPING_FILE=$UDA_PLUGINS_HOME/source/tcv/TCV_mappings/IDAM_mapping.xml
+export UDA_TCV_MAPPING_FILE=$UDA_PLUGINS_HOME/source/tcv/TCV_mappings/UDA_mapping.xml
 export UDA_TCV_MAPPING_FILE_DIRECTORY=$UDA_PLUGINS_HOME/source/tcv/TCV_mappings

@@ -131,7 +131,7 @@ int getIdamNameValuePairVarArray(const char* values, char quote, char delimiter,
 // Unpack 'values' sent via a name-value pair string using quote and delimiter to parse the string  
 // Build and return a 'data' array ('varData') from the passed string list of 'values'
 // varSize is expected size (number of elements) of the array
-// varType is the IDAM TYPE
+// varType is the UDA TYPE
 // varData is the returned data array - responsibility for freeing heap is passed also with this array
 // Return the list size or a negative error code
 

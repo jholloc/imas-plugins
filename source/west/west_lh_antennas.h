@@ -1,6 +1,6 @@
 
-#ifndef IDAM_PLUGIN_WEST_LH_ANTENNAS_H
-#define IDAM_PLUGIN_WEST_LH_ANTENNAS_H
+#ifndef UDA_PLUGIN_WEST_LH_ANTENNAS_H
+#define UDA_PLUGIN_WEST_LH_ANTENNAS_H
 
 #include <clientserver/udaStructs.h>
 
@@ -22,4 +22,4 @@ int lh_antennas_pressure_tank(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 void lh_antennas_throwsIdamError(int status, char* methodName, char * objectName, int shotNumber);
 void lh_antennas_throwsIdamError2(int status, char* methodName, char * objectName, int shotNumber, int antennaId);
 
-#endif // IDAM_PLUGIN_WEST_LH_ANTENNAS_H
+#endif // UDA_PLUGIN_WEST_LH_ANTENNAS_H

@@ -1,6 +1,6 @@
 
-#ifndef IDAM_PLUGIN_WEST_PF_PASSIVE_H
-#define IDAM_PLUGIN_WEST_PF_PASSIVE_H
+#ifndef UDA_PLUGIN_WEST_PF_PASSIVE_H
+#define UDA_PLUGIN_WEST_PF_PASSIVE_H
 
 #include <clientserver/udaStructs.h>
 
@@ -17,4 +17,4 @@ int pf_passive_current_data(int shotNumber, DATA_BLOCK* data_block, int* nodeInd
 int pf_passive_current_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 void pf_passive_throwsIdamError(int status, char* methodName, char* object_name, int shotNumber);
 
-#endif // IDAM_PLUGIN_WEST_PF_PASSIVE_H
+#endif // UDA_PLUGIN_WEST_PF_PASSIVE_H

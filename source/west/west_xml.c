@@ -63,7 +63,7 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 
 	char* fun_name = NULL; //Shape_of, tsmat_collect, tsbase
 	char* TOP_collections_parameters = NULL; //example : TOP_collections_parameters = DMAG:GMAG_BNORM:PosR, DMAG:GMAG_BTANG:PosR, ...
-	char* attributes = NULL; //example : attributes = rank:float:#1 (rank=0,1 , type = float, #1 = second IDAM index)
+	char* attributes = NULL; //example : attributes = rank:float:#1 (rank=0,1 , type = float, #1 = second UDA index)
 	char* normalizationAttributes = NULL; //example : multiply:cste:3     (multiply value by constant factor equals to 3)
 
 	getFunName(mapfun, &fun_name);
@@ -73,7 +73,7 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 
 	if (strcmp(fun_name, "tsmat_collect") == 0) {
 		//returns a static parameter (rank = 0) from a collection of static data (Top objects).
-		//Given the list of all static data in the collection, the element returned in the data_block is list(idam index)
+		//Given the list of all static data in the collection, the element returned in the data_block is list(UDA index)
 		fun = 0;
 	} else if (strcmp(fun_name, "shape_of_tsmat_collect") == 0) {
 		//Returns the list size of all static data in the collection
@@ -963,7 +963,7 @@ int execute_tsmat_without_idam_index(const char* TOP_collections_parameters, cha
 	return 0;
 }
 
-//Cast the results returned by tsmat according to the type of the data and set IDAM data
+//Cast the results returned by tsmat according to the type of the data and set UDA data
 void setStatic1DValue(int data_type, DATA_BLOCK* data_block, char* value, int val_nb, float normalizationFactor)
 {
 	if (data_type == UDA_TYPE_FLOAT) {

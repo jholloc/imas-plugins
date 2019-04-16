@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------
-* v1 IDAM Plugin: ITER IMAS mdsplus put/get
+* v1 UDA Plugin: ITER IMAS mdsplus put/get
 *
 * Input Arguments:	IDAM_PLUGIN_INTERFACE *idam_plugin_interface
 *
@@ -1244,8 +1244,8 @@ static int process_arguments(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
 }
 
 //----------------------------------------------------------------------------------------
-// Create the Data Source argument for the IDAM API
-// Use Case: When there are no data_source records in the IDAM metadata catalogue, e.g. JET
+// Create the Data Source argument for the UDA API
+// Use Case: When there are no data_source records in the UDA metadata catalogue, e.g. JET
 
 // IMAS::source(signal=signal, format=[ppf|jpf|mast|mds] [,source=source] [,shotNumber=shotNumber] [,pass=pass] [,owner=owner])
 
@@ -1394,7 +1394,7 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
 
     makeRequestBlock(&next_request_block, *plugin_list, idam_plugin_interface->environment);
 
-// Call the IDAM client via the IDAM plugin (ignore the request identified)
+// Call the UDA client via the UDA plugin (ignore the request identified)
 
     if (env != NULL) {
         next_request_block.request = findPluginRequestByFormat(env, plugin_list);
@@ -1885,7 +1885,7 @@ time	- the time slice to be written - from a PUTDATA block (putSlice keyword)
             isVarData = 1;
             putDataBlock = &putDataBlockList->putDataBlock[varDataIndex];
             if ((type = findIMASType(convertIdam2StringType(putDataBlock->data_type))) == 0) {
-                // Convert an IDAM type to an IMAS type
+                // Convert an UDA type to an IMAS type
                 UDA_LOG(UDA_LOG_ERROR, "imas put: The data's Type cannot be converted!\n");
                 THROW_ERROR(999, "The data's Type cannot be converted!");
             }
@@ -2624,7 +2624,7 @@ static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
         THROW_ERROR(999, "Insufficient data parameters passed - put not possible!");
     }
 
-    // Convert an IDAM type to an IMAS type
+    // Convert an UDA type to an IMAS type
     if ((type = findIMASType(convertIdam2StringType(putDataBlockList->putDataBlock[1].data_type))) == 0) {
         UDA_LOG(UDA_LOG_ERROR, "The data's Type cannot be converted!\n");
         THROW_ERROR(999, "The data's Type cannot be converted!");
@@ -2650,7 +2650,7 @@ static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
 
     if (obj == NULL) obj = mdsBeginObject();
 
-// Create the shape array if the rank is 1 (not passed by IDAM)
+// Create the shape array if the rank is 1 (not passed by UDA)
 
     int shape[1];
     if (putDataBlockList->putDataBlock[1].rank == 1 && putDataBlockList->putDataBlock[1].shape == NULL) {

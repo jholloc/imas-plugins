@@ -1,4 +1,4 @@
-// IDAM interface library
+// UDA interface library
 // Wrappers to ual_low_level_hdf5
 
 /*
@@ -29,13 +29,13 @@ hdf5EuitmCreate calls the system() function
 This is a security risk
 Additional system commands may be included in the passed name strings
 There are 2048 bytes to fill with code!
-TODO: Need to use IDAM function that check filenames from getHdf5FileName and getHdf5ModelName are standards compliant
-      use IsLegalFilePath(char *str) from IDAM TrimString utilities
+TODO: Need to use UDA function that check filenames from getHdf5FileName and getHdf5ModelName are standards compliant
+      use IsLegalFilePath(char *str) from UDA TrimString utilities
       Done!
 
 There is no mechanism for opening a previously existing file that is already open!
 TODO: Add name details to the file handle log and check for open files before opening a new file
-      Use the IDAM managePluginFiles utilities
+      Use the UDA managePluginFiles utilities
       Done!
       
 TODO: The source argument for idamGetAPI is empty (default server) - this should be a targeted source!  
@@ -49,11 +49,11 @@ For array 		 rank=n, shape=same shape as the original
 
 Planned actions:
 
-Change over file management to the IDAM plugin system
+Change over file management to the UDA plugin system
 Add additional types
 Review how strings are handled
 Review default values for missing data: NaN rather than the arbitrary extreme values chosen in IMAS, e.g. EMPTY_INT 
-Locate all Object specific code to the IDAM plugin
+Locate all Object specific code to the UDA plugin
 Investigate the object system - is this just a local cache?
 
 */
@@ -198,7 +198,7 @@ hid_t createGroup(hid_t rootId, const char* pathName)
 }
 
 /**
- * Find the file's IDX from the IDAM entry
+ * Find the file's IDX from the UDA entry
  * @param idam_id
  * @return
  */
@@ -214,7 +214,7 @@ int findHdf5Idx(int idam_id)
 }
 
 /**
- * Check the file's IDX is logged in IMAS and IDAM
+ * Check the file's IDX is logged in IMAS and UDA
  * @param idx
  * @return
  */
@@ -347,7 +347,7 @@ int imas_hdf5_IdsModelCreate(const char* filename, int version)
     return 0;
 }
 
-// dgm Original HDF5 hdf5EuitmCreate renamed imas_hdf5EuitmCreate - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5EuitmCreate renamed imas_hdf5EuitmCreate - called by the UDA IMAS plugin
 // *** security concern: uses a system call to copy a file
 // dgm Create from a Model file
 // dgm Select the model based on IDS version and Device name
@@ -360,7 +360,7 @@ int imas_hdf5_EuitmCreate(const char* name, int shot, int run, int refShot, int 
         hdf5Startup = 0;
     }
 
-    // Register the API function needed to close HDF5 files with the IDAM file manager
+    // Register the API function needed to close HDF5 files with the UDA file manager
     // herr_t H5Fclose(hid_t files_id);
     // herr_t and hid_t are both integers
     // The return code herr_t in an integer (ref: H5public.h) - use the Integer specific API
@@ -468,7 +468,7 @@ int imas_hdf5_EuitmCreate(const char* name, int shot, int run, int refShot, int 
     return 0;
 }
 
-// dgm Original HDF5 hdf5IMASCreate renamed imas_hdf5_IMASCreate - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5IMASCreate renamed imas_hdf5_IMASCreate - called by the UDA IMAS plugin
 
 // * Create a New HDF5 File and Fail if it already exists
 
@@ -479,7 +479,7 @@ int imas_hdf5_IMASCreate(const char* name, int shot, int run, int refShot, int r
         hdf5Startup = 0;
     }
 
-    // Register the API function needed to close HDF5 files with the IDAM file manager
+    // Register the API function needed to close HDF5 files with the UDA file manager
     // herr_t H5Fclose(hid_t files_id);
     // herr_t and hid_t are both integers
     // The return code herr_t in an integer (ref: H5public.h) - use the Integer specific API
@@ -517,7 +517,7 @@ int imas_hdf5_IMASCreate(const char* name, int shot, int run, int refShot, int r
 }
 
 
-// dgm Original HDF5 hdf5EuitmOpen renamed imas_hdf5_EuitmOpen - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5EuitmOpen renamed imas_hdf5_EuitmOpen - called by the UDA IMAS plugin
 
 int imas_hdf5_EuitmOpen(const char* name, int shot, int run, int* retIdx)
 {
@@ -559,7 +559,7 @@ int imas_hdf5_EuitmOpen(const char* name, int shot, int run, int* retIdx)
 }
 
 
-// dgm Original HDF5 hdf5EuitmClose renamed imas_hdf5_EuitmClose - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5EuitmClose renamed imas_hdf5_EuitmClose - called by the UDA IMAS plugin
 
 int imas_hdf5_EuitmClose(int idx, const char* name, int shot, int run)
 {
@@ -578,7 +578,7 @@ int imas_hdf5_EuitmClose(int idx, const char* name, int shot, int run)
 
     hdf5Files[idx] = 0;
 
-// dgm: Change state in the IDAM file log
+// dgm: Change state in the UDA file log
 
     filename = getHdf5FileName(name, shot, run);
     int record = findIdamPluginFileByName(&pluginFileList, filename);
@@ -616,7 +616,7 @@ void splitVarGrp(const char* cpoPath, const char* path, char** groupName, char**
     return;
 }
 
-// dgm Original HDF5 putData renamed imas_hdf5_putData - called by the IDAM IMAS plugin
+// dgm Original HDF5 putData renamed imas_hdf5_putData - called by the UDA IMAS plugin
 // Modify the passed bool isTimed to an enumerated type - the data operation
 // Redirect to appropriate function depending on enumerted value
 
@@ -765,7 +765,7 @@ int imas_hdf5_putData(int idx, const char* cpoPath, const char* path, int type, 
     return 0;
 }
 
-// dgm Original HDF5 putDataSlice renamed imas_hdf5_putDataSlice - called by the IDAM IMAS plugin
+// dgm Original HDF5 putDataSlice renamed imas_hdf5_putDataSlice - called by the UDA IMAS plugin
 
 int imas_hdf5_putDataX(int idx, const char* cpoPath, const char* path, int type, int nDims, int* dims, int dataOperation, void* data,
                   double time)
@@ -1009,7 +1009,7 @@ int imas_hdf5_putDataSlice(int idx, const char* cpoPath, const char* path, int t
     return 0;
 }
 
-// dgm Original HDF5 replaceLastDataSlice renamed imas_hdf5_replaceLastDataSlice - called by the IDAM IMAS plugin
+// dgm Original HDF5 replaceLastDataSlice renamed imas_hdf5_replaceLastDataSlice - called by the UDA IMAS plugin
 
 int imas_hdf5_replaceLastDataSlice(int idx, const char* cpoPath, const char* path, int type, int nDims, int* dims, void* data)
 {
@@ -1161,7 +1161,7 @@ int imas_hdf5_replaceLastDataSlice(int idx, const char* cpoPath, const char* pat
     return 0;
 }
 
-// dgm Original HDF5 getData renamed imas_hdf5_getData - called by the IDAM IMAS plugin
+// dgm Original HDF5 getData renamed imas_hdf5_getData - called by the UDA IMAS plugin
 
 int imas_hdf5_getData(int idx, const char* cpoPath, const char* path, int type, int nDims, int* dims, char** data)
 {
@@ -1301,7 +1301,7 @@ int imas_hdf5_getData(int idx, const char* cpoPath, const char* path, int type, 
     return 0;
 }
 
-// dgm Original HDF5 getDataSlices renamed imas_hdf5_getDataSlices - called by the IDAM IMAS plugin
+// dgm Original HDF5 getDataSlices renamed imas_hdf5_getDataSlices - called by the UDA IMAS plugin
 
 //Get the two consecutive data samples starting from dataIdx
 int imas_hdf5_getDataSlices(int idx, const char* cpoPath, const char* path, int type, int nDims, int* dims, int dataIdx,
@@ -1453,7 +1453,7 @@ int imas_hdf5_getDataSlices(int idx, const char* cpoPath, const char* path, int 
     return 0;
 }
 
-// dgm Replacement for Original IMAS HDF5 hdf5GetDimension (renamed imas_hdf5_GetDimension) that calls IDAM
+// dgm Replacement for Original IMAS HDF5 hdf5GetDimension (renamed imas_hdf5_GetDimension) that calls UDA
 
 int imas_hdf5_GetDimension(int expIdx, const char* cpoPath, const char* path, int* numDims, int* dim1, int* dim2, int* dim3,
                           int* dim4, int* dim5, int* dim6, int* dim7)
@@ -1700,7 +1700,7 @@ hid_t openGroup(hid_t root, const char* relPath, int create_flag, int clear_flag
  * If the specified slice is not the next slice to be filled
  * then we insert empty slices */
 
-// dgm Original HDF5 putDataSliceInObject renamed imas_hdf5_putDataSliceInObject - called by the IDAM IMAS plugin
+// dgm Original HDF5 putDataSliceInObject renamed imas_hdf5_putDataSliceInObject - called by the UDA IMAS plugin
 // The obj is a True Object
 
 int imas_hdf5_putDataSliceInObject(void* obj, const char* path, int index, int type, int nDims, int* dims, void* data)
@@ -2018,7 +2018,7 @@ int imas_hdf5_putDataSliceInObject(void* obj, const char* path, int index, int t
  *  then we return an empty result ("empty" value for scalars, size 0 for arrays)
  *  It is possible to read only the size (not the data) by setting type to DIMENSION */
 
-// dgm Original HDF5 getDataSliceFromObject renamed imas_hdf5_getDataSliceFromObject - called by the IDAM IMAS plugin
+// dgm Original HDF5 getDataSliceFromObject renamed imas_hdf5_getDataSliceFromObject - called by the UDA IMAS plugin
 
 int imas_hdf5_getDataSliceFromObject(void* obj, const char* path, int index, int type, int nDims, int* dims, void** data)
 {
@@ -2265,7 +2265,7 @@ obj_t* lastDescendant(obj_t* root)
     return obj;
 }
 
-// dgm Original HDF5 hdf5BeginObject renamed imas_hdf5_BeginObject - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5BeginObject renamed imas_hdf5_BeginObject - called by the UDA IMAS plugin
 
 /** Open or create a group corresponding to an object (for writing).
  *  Stores the group handle in an object structure.
@@ -2379,7 +2379,7 @@ void* imas_hdf5_BeginObject(int expIdx, void* obj, int index, const char* relPat
     return (void*)output;
 }
 
-// dgm Original HDF5 hdf5GetObject renamed imas_hdf5_GetObject - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5GetObject renamed imas_hdf5_GetObject - called by the UDA IMAS plugin
 
 /** Open the group corresponding to an object
  *  and store its handle */
@@ -2440,7 +2440,7 @@ int imas_hdf5_GetObject(int expIdx, const char* hdf5Path, const char* cpoPath, v
     return 0;
 }
 
-// dgm Original HDF5 hdf5GetObjectSlice renamed imas_hdf5_GetObjectSlice - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5GetObjectSlice renamed imas_hdf5_GetObjectSlice - called by the UDA IMAS plugin
 
 /** Open the group corresponding to an object slice
  *  and store its handle */
@@ -2479,7 +2479,7 @@ int imas_hdf5_GetObjectSlice(int expIdx, const char* hdf5Path, const char* cpoPa
     return 0;
 }
 
-// dgm Original HDF5 hdf5GetObjectFromObject renamed imas_hdf5_GetObjectFromObject - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5GetObjectFromObject renamed imas_hdf5_GetObjectFromObject - called by the UDA IMAS plugin
 
 /** Open an object inside another object
 */
@@ -2567,7 +2567,7 @@ int imas_hdf5_GetObjectFromObject(void* obj, const char* hdf5Path, int idx, void
     return 0;
 }
 
-// dgm Original HDF5 hdf5ReleaseObject renamed imas_hdf5_ReleaseObject - called by the IDAM IMAS plugin
+// dgm Original HDF5 hdf5ReleaseObject renamed imas_hdf5_ReleaseObject - called by the UDA IMAS plugin
 
 /** Free memory and release HDF5 handles
  *  for the specified object and all its descendants */

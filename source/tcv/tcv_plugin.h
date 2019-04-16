@@ -1,5 +1,5 @@
-#ifndef IDAM_PLUGINS_TCV_PLUGIN_H
-#define IDAM_PLUGINS_TCV_PLUGIN_H
+#ifndef UDA_PLUGINS_TCV_PLUGIN_H
+#define UDA_PLUGINS_TCV_PLUGIN_H
 
 #include <plugins/pluginStructs.h>
 
@@ -17,4 +17,4 @@ int tcvPlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
 }
 #endif
 
-#endif // IDAM_PLUGINS_TCV_PLUGIN_H
+#endif // UDA_PLUGINS_TCV_PLUGIN_H

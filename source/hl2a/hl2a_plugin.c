@@ -248,7 +248,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    char* element;    // will contain the IDAM mapping got from the IDAM request
+    char* element;    // will contain the UDA mapping got from the UDA request
     int shot;
     int* indices;
     size_t nindices;      
@@ -257,22 +257,22 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
     FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
 
-    char* IDAM_MappingKey = element;
+    char* UDA_MappingKey = element;
 
     char* mappingFileName = getenv("UDA_HL2A_MAPPING_FILE");
 
-    UDA_LOG(UDA_LOG_DEBUG, "IDAM mapping file: %s\n", mappingFileName);
-    UDA_LOG(UDA_LOG_DEBUG, "IDAM mapping key: %s\n", IDAM_MappingKey);
+    UDA_LOG(UDA_LOG_DEBUG, "UDA mapping file: %s\n", mappingFileName);
+    UDA_LOG(UDA_LOG_DEBUG, "UDA mapping key: %s\n", UDA_MappingKey);
 
-    //Get the mapping function from the value found in the IDAM mapping file for the given IDAM_MappingKey
+    //Get the mapping function from the value found in the UDA mapping file for the given UDA_MappingKey
     //Get also the IDS type ('static' or 'dynamic')
     int IDS_DataType;
-    const char* mapfun = getMappingValue(mappingFileName, IDAM_MappingKey, &IDS_DataType);
+    const char* mapfun = getMappingValue(mappingFileName, UDA_MappingKey, &IDS_DataType);
 
     //The path requested has not been found
     if (mapfun == NULL) {
-        UDA_LOG(UDA_LOG_DEBUG, "The requested function for accessing HL2A data has not been found. Check the IDAM mapping file.\n");
-        fprintf(stderr, "The requested function for accessing HL2A data has not been found. Check the IDAM mapping file.\n");
+        UDA_LOG(UDA_LOG_DEBUG, "The requested function for accessing HL2A data has not been found. Check the UDA mapping file.\n");
+        fprintf(stderr, "The requested function for accessing HL2A data has not been found. Check the UDA mapping file.\n");
         int err = 901;
         addIdamError(CODEERRORTYPE, "no data mapping provided...", err, "");
         return -1;
@@ -312,11 +312,11 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 
 
-//Get from the IDAM mapping file the IDS XPath for the given key and the data type ('static' or 'dynamic')
+//Get from the UDA mapping file the IDS XPath for the given key and the data type ('static' or 'dynamic')
 //Example : <mapping key="antennas/ec/Shape_of" value="//antennas/ec/@dim" type="static"/>
 // where the key is 'antennas/ec/Shape_of' and the IDS XPath is '//antennas/ec/@dim', the type is 'static'
 
-char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
+char* getMappingValue(const char* mappingFileName, const char* UDA_MappingKey,
                       int* IDS_DataType)
 {
     xmlDocPtr doc;
@@ -324,14 +324,14 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
     xmlXPathObjectPtr xpathObj;
 
     assert(mappingFileName);
-    assert(IDAM_MappingKey);
+    assert(UDA_MappingKey);
 
     /*
      * Load XML document
      */
     doc = xmlParseFile(mappingFileName);
     if (doc == NULL) {
-        UDA_LOG(UDA_LOG_DEBUG, "Error: unable to parse IDAM mapping file\n");
+        UDA_LOG(UDA_LOG_DEBUG, "Error: unable to parse UDA mapping file\n");
         fprintf(stderr, "Error: unable to parse file \"%s\"\n",
                 mappingFileName);
         return NULL;
@@ -349,10 +349,10 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
     }
     // Creating the Xpath request
     UDA_LOG(UDA_LOG_DEBUG, "Creating the Xpath request\n");
-    int len = strlen(IDAM_MappingKey) + 26;
+    int len = strlen(UDA_MappingKey) + 26;
     xmlChar* xPathExpr = malloc(len + sizeof(xmlChar));
     const xmlChar* c = "//mapping[@key='%s']/@value";
-    xmlStrPrintf(xPathExpr, len, c, IDAM_MappingKey);
+    xmlStrPrintf(xPathExpr, len, c, UDA_MappingKey);
 
     /*
      * Evaluate xpath expression for the type
@@ -387,7 +387,7 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
     }
     const xmlChar* key_type = "//mapping[@key='%s']/@type";
     xmlStrPrintf(xPathExpr, len, key_type,
-                 IDAM_MappingKey);
+    		   UDA_MappingKey);
 
     /*
      * Evaluate xpath expression for the type

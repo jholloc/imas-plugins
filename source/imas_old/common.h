@@ -1,5 +1,5 @@
-#ifndef IDAM_PLUGINS_IMAS_COMMON_H
-#define IDAM_PLUGINS_IMAS_COMMON_H
+#ifndef UDA_PLUGINS_IMAS_COMMON_H
+#define UDA_PLUGINS_IMAS_COMMON_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,4 +31,4 @@ int sizeIdamType(int type);
 }
 #endif
 
-#endif // IDAM_PLUGINS_IMAS_COMMON_H
+#endif // UDA_PLUGINS_IMAS_COMMON_H

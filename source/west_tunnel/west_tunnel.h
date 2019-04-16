@@ -1,5 +1,5 @@
-#ifndef IDAM_PLUGINS_TEMPLATE_PLUGIN_H
-#define IDAM_PLUGINS_TEMPLATE_PLUGIN_H
+#ifndef UDA_PLUGINS_TEMPLATE_PLUGIN_H
+#define UDA_PLUGINS_TEMPLATE_PLUGIN_H
 
 #include <plugins/udaPlugin.h>
 
@@ -17,4 +17,4 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
 }
 #endif
 
-#endif // IDAM_PLUGINS_TEMPLATE_PLUGIN_H
+#endif // UDA_PLUGINS_TEMPLATE_PLUGIN_H

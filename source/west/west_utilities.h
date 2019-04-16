@@ -1,5 +1,5 @@
-#ifndef IDAM_PLUGIN_WEST_UTILITIES_H
-#define IDAM_PLUGIN_WEST_UTILITIES_H
+#ifndef UDA_PLUGIN_WEST_UTILITIES_H
+#define UDA_PLUGIN_WEST_UTILITIES_H
 
 #include <libxml/xpath.h>
 #include <clientserver/udaStructs.h>
@@ -37,4 +37,4 @@ void getTopCollectionsCount(const char* TOP_collections_parameters, int* collect
 void getObjectName(char** obj_name, char* command);
 
 
-#endif // IDAM_PLUGIN_WEST_UTILITIES_H
+#endif // UDA_PLUGIN_WEST_UTILITIES_H

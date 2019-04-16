@@ -1,6 +1,6 @@
 
-#ifndef IDAM_PLUGIN_WEST_ECE_H
-#define IDAM_PLUGIN_WEST_ECE_H
+#ifndef UDA_PLUGIN_WEST_ECE_H
+#define UDA_PLUGIN_WEST_ECE_H
 
 #include <clientserver/udaStructs.h>
 
@@ -13,4 +13,4 @@ int ece_t_e_data_shape_of(int shotNumber, char** mapfun);
 int ece_t_e_data(int shotNumber, char** mapfun);
 void ece_throwsIdamError(int status, char* methodName, char* object_name, int shotNumber);
 void ece_throwsIdamError2(int status, char* methodName, char* object_name, int channel, int shotNumber) ;
-#endif // IDAM_PLUGIN_WEST_ECE_H
+#endif // UDA_PLUGIN_WEST_ECE_H

@@ -1,6 +1,6 @@
 
-#ifndef IDAM_PLUGIN_HL2A_MAGNETICS_H
-#define IDAM_PLUGIN_HL2A_MAGNETICS_H
+#ifndef UDA_PLUGIN_HL2A_MAGNETICS_H
+#define UDA_PLUGIN_HL2A_MAGNETICS_H
 
 #include <clientserver/udaStructs.h>
 
@@ -14,4 +14,4 @@ void magnetics_flux_loop_flux_time(int shotNumber, DATA_BLOCK* data_block, int* 
 void magnetics_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 
 
-#endif // IDAM_PLUGIN_HL2A_MAGNETICS_H
+#endif // UDA_PLUGIN_HL2A_MAGNETICS_H

@@ -73,7 +73,7 @@ int findIMASType(const char* typeName)
 }
 
 /**
- *  * Convert IMAS type to IDAM type
+ *  * Convert IMAS type to UDA type
  *   * @param type
  *    * @return
  *     */

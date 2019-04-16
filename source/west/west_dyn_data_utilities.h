@@ -1,5 +1,5 @@
-#ifndef IDAM_PLUGIN_WEST_DYN_DATA_UTILITIES_H
-#define IDAM_PLUGIN_WEST_DYN_DATA_UTILITIES_H
+#ifndef UDA_PLUGIN_WEST_DYN_DATA_UTILITIES_H
+#define UDA_PLUGIN_WEST_DYN_DATA_UTILITIES_H
 
 #include <clientserver/udaStructs.h>
 
@@ -38,4 +38,4 @@ void normalize(float* sum_data, int len, int normalizationFactor);
 void multiply(float* data, int len, float factor);
 
 
-#endif // IDAM_PLUGIN_WEST_DYN_DATA_UTILITIES_H
+#endif // UDA_PLUGIN_WEST_DYN_DATA_UTILITIES_H
