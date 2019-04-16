@@ -1,6 +1,6 @@
 find_package( UDA QUIET )
 find_package( IMAS QUIET )
-find_package( Boost QUIET )
+find_package( Boost QUIET COMPONENTS filesystem )
 find_package( MDSplus QUIET )
 
 if( NOT UDA_FOUND )
@@ -21,7 +21,7 @@ include( plugins )
 
 uda_plugin(
   NAME IMAS_PARTIAL
-  VERSION 1.0.0
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC imasPartial
   DESCRIPTION "Plugin to expand IMAS get-partial requests and return all required data"
   EXAMPLE "IMAS_PARTIAL::get(path=/magnetics)"
@@ -31,6 +31,8 @@ uda_plugin(
     imas_partial_plugin.h
     access_functions.cpp
     access_functions.h
+    is_integer.cpp
+    is_integer.h
     pugixml.hpp
     pugiconfig.hpp
   EXTRA_INCLUDE_DIRS
@@ -44,6 +46,7 @@ uda_plugin(
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
     ${IMAS_LOW_LEVEL_LIBRARIES}
+    ${Boost_LIBRARIES}
     MdsObjectsCppShr
     uda_cpp
 )

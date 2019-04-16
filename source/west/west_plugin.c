@@ -45,7 +45,7 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         return err;
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -112,118 +112,31 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 // Help: A Description of library functionality
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    char* p = (char*)malloc(sizeof(char) * 2 * 1024);
-
-    strcpy(p, "\nwestPlugin: this plugin maps WEST data to IDSs\n\n");
-
-    initDataBlock(data_block);
-
-    data_block->rank = 1;
-    data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
-
-    int i;
-    for (i = 0; i < data_block->rank; i++) {
-        initDimBlock(&data_block->dims[i]);
-    }
-
-    data_block->data_type = UDA_TYPE_STRING;
-    strcpy(data_block->data_desc,
-           "westPlugin: help = plugin used for mapping WEST experimental data to IDS");
-
-    data_block->data = (char*)p;
-
-    data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
-    data_block->dims[0].dim_n = strlen(p) + 1;
-    data_block->dims[0].compressed = 1;
-    data_block->dims[0].dim0 = 0.0;
-    data_block->dims[0].diff = 1.0;
-    data_block->dims[0].method = 0;
-
-    data_block->dims[0].compressed = 0;
-
-    data_block->data_n = data_block->dims[0].dim_n;
-
-    strcpy(data_block->data_label, "");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    char* help = PLUGIN_NAME ": this plugin maps WEST data to IDSs\n\n";
+    const char* desc = PLUGIN_NAME ": help = plugin used for mapping WEST experimental data to IDS";
 }
 
 int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_INT;
-    data_block->rank = 0;
-    data_block->data_n = 1;
-    int* data = (int*)malloc(sizeof(int));
-    data[0] = THISPLUGIN_VERSION;
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Plugin version number");
-    strcpy(data_block->data_label, "version");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, NULL);
 }
 
 // Plugin Build Date
 int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_STRING;
-    data_block->rank = 0;
-    data_block->data_n = strlen(__DATE__) + 1;
-    char* data = (char*)malloc(data_block->data_n * sizeof(char));
-    strcpy(data, __DATE__);
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Plugin build date");
-    strcpy(data_block->data_label, "date");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, __DATE__, NULL);
 }
 
 // Plugin Default Method
 int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_STRING;
-    data_block->rank = 0;
-    data_block->data_n = strlen(THISPLUGIN_DEFAULT_METHOD) + 1;
-    char* data = (char*)malloc(data_block->data_n * sizeof(char));
-    strcpy(data, THISPLUGIN_DEFAULT_METHOD);
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Plugin default method");
-    strcpy(data_block->data_label, "method");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, NULL);
 }
 
 // Plugin Maximum Interface Version
 int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_INT;
-    data_block->rank = 0;
-    data_block->data_n = 1;
-    int* data = (int*)malloc(sizeof(int));
-    data[0] = THISPLUGIN_MAX_INTERFACE_VERSION;
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Maximum Interface Version");
-    strcpy(data_block->data_label, "version");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, NULL);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -248,7 +161,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    const char* element;    // will contain the IDAM mapping got from the IDAM request
+    const char* element;    // will contain the UDA mapping got from the UDA request
     int shot;
     int* indices;
     size_t nindices;
@@ -259,24 +172,24 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     UDA_LOG(UDA_LOG_INFO, "Calling %s for shot: %d\n", element, shot);
 
-    const char* IDAM_MappingKey = element;
+    const char* UDA_MappingKey = element;
 
     char* mappingFileName = getenv("UDA_WEST_MAPPING_FILE");
 
-    UDA_LOG(UDA_LOG_DEBUG, "IDAM mapping file: %s\n", mappingFileName);
-    UDA_LOG(UDA_LOG_DEBUG, "IDAM mapping key: %s\n", IDAM_MappingKey);
+    UDA_LOG(UDA_LOG_DEBUG, "UDA mapping file: %s\n", mappingFileName);
+    UDA_LOG(UDA_LOG_DEBUG, "UDA mapping key: %s\n", UDA_MappingKey);
 
-    //Get the mapping function from the value found in the IDAM mapping file for the given IDAM_MappingKey
+    //Get the mapping function from the value found in the UDA mapping file for the given UDA_MappingKey
     //Get also the IDS type ('static' or 'dynamic')
     int IDS_DataType;
-    const char* mapfun = getMappingValue(mappingFileName, IDAM_MappingKey, &IDS_DataType);
+    const char* mapfun = getMappingValue(mappingFileName, UDA_MappingKey, &IDS_DataType);
 
     //The path requested has not been found
     if (mapfun == NULL) {
-        //UDA_LOG(UDA_LOG_ERROR, "The requested mapping function has not been found. Check the IDAM mapping file.\n");
-        //fprintf(stderr, "The requested mapping function has not been found. Check the IDAM mapping file.");
+        //UDA_LOG(UDA_LOG_ERROR, "The requested mapping function has not been found. Check the UDA mapping file.\n");
+        //fprintf(stderr, "The requested mapping function has not been found. Check the UDA mapping file.");
         int err = 901;
-        addIdamError(CODEERRORTYPE, "The requested mapping function has not been found. Check the IDAM mapping file.", err, "");
+        addIdamError(CODEERRORTYPE, "The requested mapping function has not been found. Check the UDA mapping file.", err, "");
         return -1;
     }
 
@@ -320,11 +233,11 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 
 
-//Get from the IDAM mapping file the IDS XPath for the given key and the data type ('static' or 'dynamic')
+//Get from the UDA mapping file the IDS XPath for the given key and the data type ('static' or 'dynamic')
 //Example : <mapping key="antennas/ec/Shape_of" value="//antennas/ec/@dim" type="static"/>
 // where the key is 'antennas/ec/Shape_of' and the IDS XPath is '//antennas/ec/@dim', the type is 'static'
 
-char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
+char* getMappingValue(const char* mappingFileName, const char* UDA_MappingKey,
                       int* IDS_DataType)
 {
     xmlDocPtr doc;
@@ -332,16 +245,16 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
     xmlXPathObjectPtr xpathObj;
 
     assert(mappingFileName);
-    assert(IDAM_MappingKey);
+    assert(UDA_MappingKey);
 
     /*
      * Load XML document
      */
     doc = xmlParseFile(mappingFileName);
     if (doc == NULL) {
-        //UDA_LOG(UDA_LOG_ERROR, "WEST:ERROR: unable to parse IDAM mapping file %s\n", mappingFileName);
+        //UDA_LOG(UDA_LOG_ERROR, "WEST:ERROR: unable to parse UDA mapping file %s\n", mappingFileName);
         int err = 901;
-        addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to parse IDAM mapping file %s !", err, mappingFileName);
+        addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to parse UDA mapping file %s !", err, mappingFileName);
         return NULL;
     }
 
@@ -358,10 +271,10 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
     }
     // Creating the Xpath request
     UDA_LOG(UDA_LOG_DEBUG, "Creating the Xpath request\n");
-    int len = strlen(IDAM_MappingKey) + 26;
+    int len = strlen(UDA_MappingKey) + 26;
     xmlChar* xPathExpr = malloc(len + sizeof(xmlChar));
     const char* c = "//mapping[@key='%s']/@value";
-    xmlStrPrintf(xPathExpr, len, c, IDAM_MappingKey);
+    xmlStrPrintf(xPathExpr, len, c, UDA_MappingKey);
 
     /*
      * Evaluate xpath expression for the type
@@ -395,7 +308,7 @@ char* getMappingValue(const char* mappingFileName, const char* IDAM_MappingKey,
     }
     const char* key_type = "//mapping[@key='%s']/@type";
     xmlStrPrintf(xPathExpr, len, key_type,
-                 IDAM_MappingKey);
+                 UDA_MappingKey);
 
     /*
      * Evaluate xpath expression for the type

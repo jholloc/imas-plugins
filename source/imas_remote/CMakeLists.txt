@@ -1,5 +1,5 @@
 find_package( UDA QUIET )
-find_package( Boost QUIET )
+find_package( Boost QUIET COMPONENTS filesystem )
 find_package( IMAS QUIET )
 find_package( MDSplus QUIET )
 
@@ -21,7 +21,7 @@ include( plugins )
 
 uda_plugin(
   NAME IMAS_REMOTE
-  VERSION 1.0.0
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC imasPlugin
   DESCRIPTION ""
   EXAMPLE ""
@@ -40,6 +40,7 @@ uda_plugin(
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
     ${IMAS_LOW_LEVEL_LIBRARIES}
+    ${Boost_LIBRARIES}
     MdsObjectsCppShr
     uda_cpp
 )

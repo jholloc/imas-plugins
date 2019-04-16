@@ -13,6 +13,7 @@ include( plugins )
 
 uda_plugin(
   NAME IMAS_UDA
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC imasUdaPlugin
   DESCRIPTION "Standardised Plugin Template"
   EXAMPLE "IMAS_UDA::functionName()"

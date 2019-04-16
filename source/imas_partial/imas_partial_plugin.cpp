@@ -12,6 +12,7 @@
 #include <memory>
 #include <deque>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -40,7 +41,6 @@ public:
     int build_date(IDAM_PLUGIN_INTERFACE* plugin_interface);
     int default_method(IDAM_PLUGIN_INTERFACE* plugin_interface);
     int max_interface_version(IDAM_PLUGIN_INTERFACE* plugin_interface);
-    int open(IDAM_PLUGIN_INTERFACE* plugin_interface);
     int get(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
 private:
@@ -170,7 +170,7 @@ int imasPartial(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
         }
 
-        idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+        idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
         REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -226,15 +226,21 @@ void IMASPartialPlugin::reset()
 
 int IMASPartialPlugin::help(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
-    const char* desc = "templatePlugin: help = description of this plugin";
+    boost::filesystem::path path = __FILE__;
+    path = path.parent_path().append("help.md");
+    std::ifstream ifs(path.native());
+    std::stringstream ss;
+    ss << ifs.rdbuf();
+
+    const char* help = ss.str().c_str();
+    const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
     return setReturnDataString(plugin_interface->data_block, help, desc);
 }
 
 int IMASPartialPlugin::version(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    return setReturnDataIntScalar(plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
+    return setReturnDataString(plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
 }
 
 int IMASPartialPlugin::build_date(IDAM_PLUGIN_INTERFACE* plugin_interface)
@@ -278,7 +284,7 @@ int get_rank(const std::string& data_type)
     return std::stoi(tokens.back());
 }
 
-void get_requests(LLenv& env, std::vector<std::string>& requests, std::map<std::string, int> sizes,
+void get_requests(LLenv& env, std::vector<std::string>& requests, std::map<std::string, int>& sizes,
         std::string ids_path, const pugi::xml_node& node)
 {
     std::string dtype = node.attribute("data_type").value();
@@ -433,21 +439,40 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     auto nodes = doc_.child("IDSs");
     std::string token;
 
-    std::string ids_path;
-    std::string delim;
+    std::vector<std::string> ids_paths;
     std::vector<std::string> size_requests;
+
+    ids_paths.push_back("");
+    std::string delim;
 
     while (!tokens.empty()) {
         token = tokens.front();
 
         if (imas_partial::is_integer(token)) {
-            if (tokens.size() != 1) {
-                size_requests.push_back(ids_path);
+            for (auto& ids_path : ids_paths) {
+                if (tokens.size() != 1) {
+                    size_requests.push_back(ids_path);
+                }
+                ids_path += delim + token;
             }
-            ids_path += delim + token;
+        } else if (imas_partial::is_range(token)) {
+            std::vector<std::string> new_paths;
+            for (const auto& ids_path : ids_paths) {
+                if (tokens.size() != 1) {
+                    size_requests.push_back(ids_path);
+                }
+                auto range = imas_partial::parse_range(token);
+                for (long i = range.begin; i < range.end + 1; i += range.stride) {
+                    std::string new_path = ids_path + delim + std::to_string(i);
+                    new_paths.push_back(new_path);
+                }
+            }
+            ids_paths = new_paths;
         } else {
             nodes = nodes.find_child_by_attribute("name", token.c_str());
-            ids_path += delim + token;
+            for (auto& ids_path : ids_paths) {
+                ids_path += delim + token;
+            }
         }
 
         delim = "/";
@@ -463,7 +488,9 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::vector<std::string> requests;
 
-    get_requests(env_, requests, sizes, ids_path, nodes);
+    for (const auto& ids_path: ids_paths) {
+        get_requests(env_, requests, sizes, ids_path, nodes);
+    }
 
     std::map<std::string, imas_partial::MDSData> results;
 

@@ -7,7 +7,6 @@
 extern "C" {
 #endif
 
-#define THISPLUGIN_VERSION                  1
 #define THISPLUGIN_MAX_INTERFACE_VERSION    1        // Interface versions higher than this will not be understood!
 #define THISPLUGIN_DEFAULT_METHOD           "help"
 
@@ -17,4 +16,4 @@ int mastImasPlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
 }
 #endif
 
-#endif // UDA_PLUGINS_TEMPLATE_PLUGIN_H
+#endif // UDA_PLUGINS_MAST_IMAS_PLUGIN_H

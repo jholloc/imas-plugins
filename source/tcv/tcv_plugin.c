@@ -301,7 +301,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             free(data);
         } else {
             err = 999;
-            addIdamError(CODEERRORTYPE,  __func__, err, "Unsupported data type");
+            addIdamError(CODEERRORTYPE, __func__, err, "Unsupported data type");
         }
 
         free(data_block->dims);
@@ -339,15 +339,14 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             float* data;
             int status =
                     tcv_mds_get(signalName, shot, &time, &data, &len);
-   
+
             UDA_LOG(UDA_LOG_DEBUG, "TCV: tcv_mds_get status of signal %s: %d\n", signalName, status);
 
             if (status != 0) {
                 return status;
-            }
-            else {
-               UDA_LOG(UDA_LOG_DEBUG, "TCV: error getting tcv_mds_get status of signal %s\n", signalName);
-               UDA_LOG(UDA_LOG_ERROR, "TCV: error getting tcv_mds_get status of signal %s\n", signalName);
+            } else {
+                UDA_LOG(UDA_LOG_DEBUG, "TCV: error getting tcv_mds_get status of signal %s\n", signalName);
+                UDA_LOG(UDA_LOG_ERROR, "TCV: error getting tcv_mds_get status of signal %s\n", signalName);
             }
 
             free(data_block->dims);

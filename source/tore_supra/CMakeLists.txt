@@ -13,6 +13,7 @@ include( plugins )
 
 uda_plugin(
   NAME TORE
+  VERSION ${PROJECT_VERSION}
   ENTRY_FUNC tsPlugin
   DESCRIPTION "Read Tore Supra data"
   EXAMPLE "ADAS::adf21()"

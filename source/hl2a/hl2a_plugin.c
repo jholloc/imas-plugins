@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <libxml/xpath.h>
 
 #include <clientserver/errorLog.h>
 #include <logging/logging.h>
@@ -45,7 +46,7 @@ int hl2aPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         return err;
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -112,118 +113,33 @@ int hl2aPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 // Help: A Description of library functionality
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
+    char* help = PLUGIN_NAME ": this plugin maps HL2A data to IDSs\n\n";
+    const char* desc = PLUGIN_NAME ": help = plugin used for mapping HL2A experimental data to IDS";
 
-    char* p = (char*)malloc(sizeof(char) * 2 * 1024);
-
-    strcpy(p, "\nhl2aPlugin: this plugin maps HL2A data to IDSs\n\n");
-
-    initDataBlock(data_block);
-
-    data_block->rank = 1;
-    data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
-
-    int i;
-    for (i = 0; i < data_block->rank; i++) {
-        initDimBlock(&data_block->dims[i]);
-    }
-
-    data_block->data_type = UDA_TYPE_STRING;
-    strcpy(data_block->data_desc,
-           "hl2APlugin: help = plugin used for mapping HL2A experimental data to IDS");
-
-    data_block->data = (char*)p;
-
-    data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
-    data_block->dims[0].dim_n = strlen(p) + 1;
-    data_block->dims[0].compressed = 1;
-    data_block->dims[0].dim0 = 0.0;
-    data_block->dims[0].diff = 1.0;
-    data_block->dims[0].method = 0;
-
-    data_block->dims[0].compressed = 0;
-
-    data_block->data_n = data_block->dims[0].dim_n;
-
-    strcpy(data_block->data_label, "");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
 
 int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_INT;
-    data_block->rank = 0;
-    data_block->data_n = 1;
-    int* data = (int*)malloc(sizeof(int));
-    data[0] = THISPLUGIN_VERSION;
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Plugin version number");
-    strcpy(data_block->data_label, "version");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, NULL);
 }
 
 // Plugin Build Date
 int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_STRING;
-    data_block->rank = 0;
-    data_block->data_n = strlen(__DATE__) + 1;
-    char* data = (char*)malloc(data_block->data_n * sizeof(char));
-    strcpy(data, __DATE__);
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Plugin build date");
-    strcpy(data_block->data_label, "date");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, __DATE__, NULL);
 }
 
 // Plugin Default Method
 int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_STRING;
-    data_block->rank = 0;
-    data_block->data_n = strlen(THISPLUGIN_DEFAULT_METHOD) + 1;
-    char* data = (char*)malloc(data_block->data_n * sizeof(char));
-    strcpy(data, THISPLUGIN_DEFAULT_METHOD);
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Plugin default method");
-    strcpy(data_block->data_label, "method");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, NULL);
 }
 
 // Plugin Maximum Interface Version
 int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-
-    initDataBlock(data_block);
-    data_block->data_type = UDA_TYPE_INT;
-    data_block->rank = 0;
-    data_block->data_n = 1;
-    int* data = (int*)malloc(sizeof(int));
-    data[0] = THISPLUGIN_MAX_INTERFACE_VERSION;
-    data_block->data = (char*)data;
-    strcpy(data_block->data_desc, "Maximum Interface Version");
-    strcpy(data_block->data_label, "version");
-    strcpy(data_block->data_units, "");
-
-    return 0;
+    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, NULL);
 }
 
 // ----------------------------------------------------------------------------------------
@@ -248,7 +164,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    char* element;    // will contain the UDA mapping got from the UDA request
+    const char* element;    // will contain the UDA mapping got from the UDA request
     int shot;
     int* indices;
     size_t nindices;      
@@ -257,7 +173,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
     FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
 
-    char* UDA_MappingKey = element;
+    const char* UDA_MappingKey = element;
 
     char* mappingFileName = getenv("UDA_HL2A_MAPPING_FILE");
 
@@ -273,8 +189,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     if (mapfun == NULL) {
         UDA_LOG(UDA_LOG_DEBUG, "The requested function for accessing HL2A data has not been found. Check the UDA mapping file.\n");
         fprintf(stderr, "The requested function for accessing HL2A data has not been found. Check the UDA mapping file.\n");
-        int err = 901;
-        addIdamError(CODEERRORTYPE, "no data mapping provided...", err, "");
+        addIdamError(CODEERRORTYPE, "no data mapping provided...", 901, "");
         return -1;
     }
 
@@ -316,7 +231,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 //Example : <mapping key="antennas/ec/Shape_of" value="//antennas/ec/@dim" type="static"/>
 // where the key is 'antennas/ec/Shape_of' and the IDS XPath is '//antennas/ec/@dim', the type is 'static'
 
-char* getMappingValue(const char* mappingFileName, const char* UDA_MappingKey,
+static char* getMappingValue(const char* mappingFileName, const char* UDA_MappingKey,
                       int* IDS_DataType)
 {
     xmlDocPtr doc;
@@ -332,8 +247,7 @@ char* getMappingValue(const char* mappingFileName, const char* UDA_MappingKey,
     doc = xmlParseFile(mappingFileName);
     if (doc == NULL) {
         UDA_LOG(UDA_LOG_DEBUG, "Error: unable to parse UDA mapping file\n");
-        fprintf(stderr, "Error: unable to parse file \"%s\"\n",
-                mappingFileName);
+        fprintf(stderr, "Error: unable to parse file \"%s\"\n", mappingFileName);
         return NULL;
     }
 
@@ -351,8 +265,7 @@ char* getMappingValue(const char* mappingFileName, const char* UDA_MappingKey,
     UDA_LOG(UDA_LOG_DEBUG, "Creating the Xpath request\n");
     int len = strlen(UDA_MappingKey) + 26;
     xmlChar* xPathExpr = malloc(len + sizeof(xmlChar));
-    const xmlChar* c = "//mapping[@key='%s']/@value";
-    xmlStrPrintf(xPathExpr, len, c, UDA_MappingKey);
+    xmlStrPrintf(xPathExpr, len, "//mapping[@key='%s']/@value", UDA_MappingKey);
 
     /*
      * Evaluate xpath expression for the type
@@ -385,9 +298,7 @@ char* getMappingValue(const char* mappingFileName, const char* UDA_MappingKey,
         err = 998;
         addIdamError(CODEERRORTYPE, __func__, err, "no result on XPath request");
     }
-    const xmlChar* key_type = "//mapping[@key='%s']/@type";
-    xmlStrPrintf(xPathExpr, len, key_type,
-    		   UDA_MappingKey);
+    xmlStrPrintf(xPathExpr, len, "//mapping[@key='%s']/@type", UDA_MappingKey);
 
     /*
      * Evaluate xpath expression for the type

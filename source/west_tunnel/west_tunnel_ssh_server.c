@@ -39,15 +39,15 @@ static int verify_knownhost(ssh_session session)
             return -1;
         case SSH_SERVER_FOUND_OTHER:
             fprintf(stderr, "The host key for this server was not found but an other"
-                    "type of key exists.\n");
+                            "type of key exists.\n");
             fprintf(stderr, "An attacker might change the default server key to"
-                    "confuse your client into thinking the key does not exist\n");
+                            "confuse your client into thinking the key does not exist\n");
             free(hash);
             return -1;
         case SSH_SERVER_FILE_NOT_FOUND:
             fprintf(stderr, "Could not find known host file.\n");
             fprintf(stderr, "If you accept the host key here, the file will be"
-                    "automatically created.\n");
+                            "automatically created.\n");
             /* fallback to SSH_SERVER_NOT_KNOWN behavior */
         case SSH_SERVER_NOT_KNOWN: {
             char* hexa = ssh_get_hexa(hash, (size_t)hlen);
@@ -130,14 +130,13 @@ static ssh_session create_session(const char* experiment, const char* ssh_host)
         }
     }
 
-
     if (username == NULL || password == NULL) {
         fprintf(stdout, "username: ");
         size_t len = 0;
         getline(&username, &len, stdin);
         username = TrimString(username);
-        if (username[strlen(username)-1] == '\n') {
-            username[strlen(username)-1] = '\0';
+        if (username[strlen(username) - 1] == '\n') {
+            username[strlen(username) - 1] = '\0';
         }
 
         password = getpass("password: ");

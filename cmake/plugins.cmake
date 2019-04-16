@@ -66,7 +66,7 @@ macro( uda_plugin )
     add_definitions( -DA64 )
   endif()
 
-  add_definitions( -DSERVERBUILD )
+  add_definitions( -DSERVERBUILD -DPLUGIN_NAME="${PLUGIN_NAME}" -DPLUGIN_VERSION="${PLUGIN_VERSION}" )
   foreach( DEF ${PLUGIN_EXTRA_DEFINITIONS} )
     add_definitions( ${DEF} )
   endforeach()

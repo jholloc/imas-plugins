@@ -10,7 +10,7 @@
 
 #define status_ok(status) (((status) & 1) == 1)
 
-int get_signal_length(const char *signal)
+int get_signal_length(const char* signal)
 {
     /* local vars */
     int dtype_long = DTYPE_LONG;
@@ -29,8 +29,8 @@ int get_signal_length(const char *signal)
     /* use MdsValue to get the signal length */
     status = MdsValue(buf, &idesc, &null, NULL);
     if (!((status & 1) == 1)) {
-	fprintf(stderr, "Unable to get length of %s.\n", signal);
-	return -1;
+        fprintf(stderr, "Unable to get length of %s.\n", signal);
+        return -1;
     }
 
     /* return signal length */
@@ -38,10 +38,10 @@ int get_signal_length(const char *signal)
 
 }
 
-int tcv_mds_get(const char *signalName, int shot, float **time, float **data, int *len)
+int tcv_mds_get(const char* signalName, int shot, float** time, float** data, int* len)
 {
 
-   UDA_LOG(UDA_LOG_DEBUG, "TCV: Entering in tcv_mds_get()\n");
+    UDA_LOG(UDA_LOG_DEBUG, "TCV: Entering in tcv_mds_get()\n");
 
     int dtype_float = DTYPE_FLOAT;
     int null = 0;
@@ -50,22 +50,22 @@ int tcv_mds_get(const char *signalName, int shot, float **time, float **data, in
     int socket = MdsConnect("localhost:8001");
     UDA_LOG(UDA_LOG_DEBUG, "TCV: MDS+ socket connection successfull ?\n");
     if (socket == -1) {
-            UDA_LOG(UDA_LOG_DEBUG, "TCV: Error connecting to localhost.\n");
-	    fprintf(stderr, "Error connecting to localhost.\n");
-    	return -1;
+        UDA_LOG(UDA_LOG_DEBUG, "TCV: Error connecting to localhost.\n");
+        fprintf(stderr, "Error connecting to localhost.\n");
+        return -1;
     } else {
-      UDA_LOG(UDA_LOG_DEBUG, "TCV: Connection to localhost:8001 successfull\n");
+        UDA_LOG(UDA_LOG_DEBUG, "TCV: Connection to localhost:8001 successfull\n");
     }
 
     /* Open tcv_shot tree for requested shot */
-    status = MdsOpen("tcv_shot",&shot);
+    status = MdsOpen("tcv_shot", &shot);
     UDA_LOG(UDA_LOG_DEBUG, "TCV: MDS+ tree open successful ?\n");
     if (!((status & 1) == 1)) {
-            UDA_LOG(UDA_LOG_DEBUG, "TCV: Error opening the tcv_shot tree.\n");
-            fprintf(stderr, "Error opening the tcv_shot tree.\n");
+        UDA_LOG(UDA_LOG_DEBUG, "TCV: Error opening the tcv_shot tree.\n");
+        fprintf(stderr, "Error opening the tcv_shot tree.\n");
         return -1;
     } else {
-      UDA_LOG(UDA_LOG_DEBUG, "TCV: MDS+ tree open successfull\n");
+        UDA_LOG(UDA_LOG_DEBUG, "TCV: MDS+ tree open successfull\n");
     }
 
     char buf[1024];
@@ -75,10 +75,10 @@ int tcv_mds_get(const char *signalName, int shot, float **time, float **data, in
     *len = get_signal_length(buf);
 
     if (len < 0) {
-            UDA_LOG(UDA_LOG_DEBUG, "TCV: Unable to get signal length of %s\n", signalName);
-            UDA_LOG(UDA_LOG_ERROR, "TCV: Unable to get signal length of %s\n", signalName);
-	    fprintf(stderr, "Unable to get signal length.\n");
-	    return -1;
+        UDA_LOG(UDA_LOG_DEBUG, "TCV: Unable to get signal length of %s\n", signalName);
+        UDA_LOG(UDA_LOG_ERROR, "TCV: Unable to get signal length of %s\n", signalName);
+        fprintf(stderr, "Unable to get signal length.\n");
+        return -1;
     }
 
     *time = malloc(*len * sizeof(float));
@@ -93,8 +93,8 @@ int tcv_mds_get(const char *signalName, int shot, float **time, float **data, in
 
     status = MdsValue(buf, &fdesc, &null, &rlen, NULL);
     if (!((status & 1) == 1)) {
-	    fprintf(stderr, "Unable to get signal.\n");
-    	return -1;
+        fprintf(stderr, "Unable to get signal.\n");
+        return -1;
     }
 
     fdesc = descr(&dtype_float, *data, len, &null);
@@ -103,13 +103,11 @@ int tcv_mds_get(const char *signalName, int shot, float **time, float **data, in
     memset(buf, 0, sizeof(buf));
     snprintf(buf, sizeof(buf) - 1, "%s", signalName);
 
-
     status = MdsValue(buf, &fdesc, &null, &rlen, NULL);
     if (!((status & 1) == 1)) {
-	    fprintf(stderr, "Unable to get signal.\n");
-	    return -1;
+        fprintf(stderr, "Unable to get signal.\n");
+        return -1;
     }
-
 
     return 0;
 }

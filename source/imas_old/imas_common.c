@@ -77,7 +77,7 @@ int findIMASType(const char* typeName)
  *   * @param type
  *    * @return
  *     */
-int findIMASIDAMType(int type)
+int findIMASUDAType(int type)
 {
     switch (type) {
         case INT:           return UDA_TYPE_INT;
