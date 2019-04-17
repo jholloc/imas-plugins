@@ -155,7 +155,7 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 
 	if (p_file_soft_x_rays_calib_ce_cx_e == NULL) {
 		soft_x_rays2_throwsIdamError(status, "readCalibrationFile", "unable to read soft_x_rays calibration file", shotNumber);
-		return status;
+		return -1;
 	} else {
 		int i = 0;
 		 for(i = 0; i < CHANNELS_COUNT; i++)
@@ -198,7 +198,7 @@ int soft_x_rays_channels_power_density_time(int shotNumber, DATA_BLOCK* data_blo
 	}
 	else {
 		nomsigp = strdup("GTXMH2");
-		extractionIndex = CHANNELS_COUNT + 1 - index;
+		extractionIndex = index - GTXMH1_CHANNELS_COUNT;
 	}
 
 	int status = channels_power_density(shotNumber, nomsigp, extractionIndex, &time, &data, &len);
