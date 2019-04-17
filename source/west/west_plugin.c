@@ -45,7 +45,7 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         return err;
     }
 
-    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
