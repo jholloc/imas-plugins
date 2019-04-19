@@ -210,7 +210,7 @@ int soft_x_rays_channels_power_density_time(int shotNumber, DATA_BLOCK* data_blo
 		return status;
 	}
 	else {
-		setReturnData2DFloat(data_block, 1, len, time);
+		SetDynamicDataTime(data_block, len, time, data);
 		return status;
 	}
 }
