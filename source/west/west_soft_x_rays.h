@@ -28,7 +28,7 @@ int soft_x_rays_channels_energy_band_upper_bound(int shotNumber, DATA_BLOCK* dat
 
 int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 
-int soft_x_rays_channels_power_density_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int soft_x_rays_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 
 void soft_x_rays_throwsIdamError(int status, char* methodName, char* object_name, int index, int shotNumber);
 

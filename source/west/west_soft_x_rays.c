@@ -136,12 +136,12 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 	int status = channels_power_density(shotNumber, nomsigp, extractionIndex, &time, &data, &len);
 
 	if (status != 0) {
-			UDA_LOG(UDA_LOG_DEBUG, "reading channels_power_density, error status...\n");
-			soft_x_rays_throwsIdamError(status, "soft_x_rays_channels_power_density_data", nomsigp, extractionIndex, shotNumber);
-			free(time);
-			free(data);
-			return status;
-		}
+		UDA_LOG(UDA_LOG_DEBUG, "reading channels_power_density, error status...\n");
+		soft_x_rays_throwsIdamError(status, "soft_x_rays_channels_power_density_data", nomsigp, extractionIndex, shotNumber);
+		free(time);
+		free(data);
+		return status;
+	}
 
 	UDA_LOG(UDA_LOG_DEBUG, "setting file pointer...\n");
 	FILE* p_file_soft_x_rays_calib_ce_cx_e;
@@ -158,15 +158,15 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 		return -1;
 	} else {
 		int i = 0;
-		 for(i = 0; i < CHANNELS_COUNT; i++)
-		  {
-			 fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&Ce[i]);
-			 UDA_LOG(UDA_LOG_DEBUG, "Ce[%d] = %e\n", i, Ce[i]);
-			 fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&Cx[i]);
-			 UDA_LOG(UDA_LOG_DEBUG, "Cx[%d] = %e\n", i, Cx[i]);
-			 fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&E[i]);
-			 UDA_LOG(UDA_LOG_DEBUG, "E[%d] = %e\n", i, E[i]);
-		  }
+		for(i = 0; i < CHANNELS_COUNT; i++)
+		{
+			fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&Ce[i]);
+			UDA_LOG(UDA_LOG_DEBUG, "Ce[%d] = %e\n", i, Ce[i]);
+			fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&Cx[i]);
+			UDA_LOG(UDA_LOG_DEBUG, "Cx[%d] = %e\n", i, Cx[i]);
+			fscanf(p_file_soft_x_rays_calib_ce_cx_e,"%e",&E[i]);
+			UDA_LOG(UDA_LOG_DEBUG, "E[%d] = %e\n", i, E[i]);
+		}
 
 		UDA_LOG(UDA_LOG_DEBUG, "closing file\n");
 		fclose(p_file_soft_x_rays_calib_ce_cx_e);
@@ -181,30 +181,22 @@ int soft_x_rays_channels_power_density_data(int shotNumber, DATA_BLOCK* data_blo
 	return 0;
 }
 
-int soft_x_rays_channels_power_density_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+int soft_x_rays_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
 	int index = nodeIndices[0]; //starts from 1
 
 	int len;
 	float *time = NULL;
 	float *data = NULL;
-	char* nomsigp = NULL;
+	char* nomsigp = strdup("GTXMH1");
 
-	int extractionIndex;
+	int extractionIndex = 1; //IDS is time homogeneous, so we take the first column for the time
 
-	if (index <= GTXMH1_CHANNELS_COUNT) {
-		nomsigp = strdup("GTXMH1");
-		extractionIndex = index;
-	}
-	else {
-		nomsigp = strdup("GTXMH2");
-		extractionIndex = index - GTXMH1_CHANNELS_COUNT;
-	}
-
+	//This function has ambiguous name, however it returns also the time, not only the power density
 	int status = channels_power_density(shotNumber, nomsigp, extractionIndex, &time, &data, &len);
 
 	if (status != 0) {
-		soft_x_rays_throwsIdamError(status, "soft_x_rays_channels_power_density_time", nomsigp, extractionIndex, shotNumber);
+		soft_x_rays_throwsIdamError(status, "soft_x_rays_time", nomsigp, extractionIndex, shotNumber);
 		free(time);
 		free(data);
 		return status;

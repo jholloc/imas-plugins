@@ -106,7 +106,7 @@
 <mapping key="ece/channel/#/frequency/time" value="ece_harmonic_time" type="dynamic"/>
 
 <mapping key="soft_x_rays/ids_properties/comment" value="soft_x_rays_idsproperties_comment" type="static"/>
-<mapping key="soft_x_rays/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
+<mapping key="soft_x_rays/ids_properties/homogeneous_time" value="set_value;1;0:int" type="static"/>
 <mapping key="soft_x_rays/channel/Shape_of" value="soft_x_rays_channels_shapeof" type="static"/>
 <mapping key="soft_x_rays/channel/#/line_of_sight/first_point/r" value="channel_line_of_sight_first_point_r" type="static"/>
 <mapping key="soft_x_rays/channel/#/line_of_sight/first_point/z" value="channel_line_of_sight_first_point_z" type="static"/>
@@ -118,7 +118,7 @@
 <mapping key="soft_x_rays/channel/#/energy_band/#/lower_bound" value="soft_x_rays_channels_energy_band_lower_bound" type="static"/>
 <mapping key="soft_x_rays/channel/#/energy_band/#/upper_bound" value="soft_x_rays_channels_energy_band_upper_bound" type="static"/>
 <mapping key="soft_x_rays/channel/#/power_density/data" value="soft_x_rays_channels_power_density_data" type="dynamic"/>
-<mapping key="soft_x_rays/channel/#/power_density/time" value="soft_x_rays_channels_power_density_time" type="dynamic"/>
+<mapping key="soft_x_rays/time" value="soft_x_rays_time" type="dynamic"/>
 
 <mapping key="summary/ids_properties/homogeneous_time" value="set_value;1;0:int" type="static"/>
 <!-- mapping key="summary/global_quantities/ip/value" value="flt1D_contrib;DMAG:GMAG_IFREEB:1:DMAG:SMAG_IP:0" type="dynamic"/ -->
