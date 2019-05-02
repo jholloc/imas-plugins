@@ -91,20 +91,6 @@
 <mapping key="polarimeter/channel/#/faraday_angle/data" value="tsbase_collect;DINTRPOL:GINTFARART;1:float:#0" type="dynamic"/>
 <mapping key="polarimeter/channel/#/faraday_angle/time" value="tsbase_time;DINTRPOL:GINTFARART;1:float:#0" type="dynamic"/>
 
-<mapping key="ece/ids_properties/homogeneous_time" value="homogeneous_time" type="static"/>
-<mapping key="ece/channel/Shape_of" value="ece_t_e_data_shape_of" type="static"/>
-<mapping key="ece/channel/#/t_e_voltage/data" value="ece_t_e_data" type="dynamic"/>
-<mapping key="ece/channel/#/t_e_voltage/time" value="ece_t_e_time" type="dynamic"/>
-<mapping key="ece/time" value="ece_time" type="dynamic"/>
-<mapping key="ece/line_of_sight/first_point/r" value="set_value;4.264881;0:float" type="static"/>
-<mapping key="ece/line_of_sight/first_point/z" value="set_value;0.;0:float" type="static"/>
-<mapping key="ece/line_of_sight/first_point/phi" value="set_value;1.4573069;0:float" type="static"/>
-<mapping key="ece/line_of_sight/second_point/r" value="set_value;1.8347117;0:float" type="static"/>
-<mapping key="ece/line_of_sight/second_point/z" value="set_value;0.;0:float" type="static"/>
-<mapping key="ece/line_of_sight/second_point/phi" value="set_value;1.4573069;0:float" type="static"/>
-<mapping key="ece/channel/#/frequency/data" value="ece_frequencies" type="dynamic"/>
-<mapping key="ece/channel/#/frequency/time" value="ece_harmonic_time" type="dynamic"/>
-
 <mapping key="soft_x_rays/ids_properties/comment" value="soft_x_rays_idsproperties_comment" type="static"/>
 <mapping key="soft_x_rays/ids_properties/homogeneous_time" value="set_value;1;0:int" type="static"/>
 <mapping key="soft_x_rays/channel/Shape_of" value="soft_x_rays_channels_shapeof" type="static"/>

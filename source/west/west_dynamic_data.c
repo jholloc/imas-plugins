@@ -57,24 +57,6 @@ int GetDynamicData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, i
 				&normalizationAttributes);
 		return SetNormalizedDynamicDataTime(shotNumber, data_block, nodeIndices, TOP_collections_parameters, attributes,
 				normalizationAttributes);
-	} else if (strcmp(fun_name, "ece_t_e_data") == 0) {
-		char* ece_mapfun = NULL;
-		ece_t_e_data(shotNumber, &ece_mapfun);
-		tokenizeFunParameters(ece_mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
-		UDA_LOG(UDA_LOG_DEBUG, "TOP_collections_parameters : %s\n", TOP_collections_parameters);
-		int status = SetNormalizedDynamicData(shotNumber, data_block, nodeIndices, TOP_collections_parameters, attributes,
-				normalizationAttributes);
-		free(ece_mapfun);
-		return status;
-
-	} else if (strcmp(fun_name, "ece_t_e_time") == 0) {
-		return ece_t_e_time(shotNumber, data_block, nodeIndices);
-	} else if (strcmp(fun_name, "ece_time") == 0) {
-		return ece_time(shotNumber, data_block, nodeIndices);
-	} else if (strcmp(fun_name, "ece_frequencies") == 0) {
-		return ece_frequencies(shotNumber, data_block, nodeIndices);
-	} else if (strcmp(fun_name, "ece_frequencies_time") == 0) {
-		return ece_harmonic_time(shotNumber, data_block, nodeIndices); //TODO
 	} else if (strcmp(fun_name, "pf_passive_current_data") == 0) {
 		return pf_passive_current_data(shotNumber, data_block, nodeIndices);
 	} else if (strcmp(fun_name, "pf_passive_current_time") == 0) {
