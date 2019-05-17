@@ -65,7 +65,8 @@ void test2D_hl2a(float* data,  size_t* shape1,  size_t* shape2)
 {
    const size_t N1 = 10;
    const size_t N2 = 10;
-   size_t i, j;
+   //data = malloc(sizeof(float)*N1*N2);
+    size_t i, j;
    for (i = 0; i < N1; i++) {
         for (j = 0; j < N2; j++) {
             data[i*N2+j] = (float)(i+j);

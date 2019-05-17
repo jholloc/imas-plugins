@@ -12,11 +12,14 @@
 #include <plugins/udaPlugin.h>
 
 #include "hl2a_dyn_data_utilities.h"
-
-
+//#include "HL2ATestLIB.h"
 
 void magnetics_ids_properties_homogeneous_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
+   // HL2AHelloWorld();
+   printf("=================");
+   printf("TEST!");
+
     setReturnDataIntScalar(data_block, 1, NULL); //returns 1, homogeneous time base
 }
 
@@ -24,6 +27,17 @@ void magnetics_flux_loop_shape_of(int shotNumber, DATA_BLOCK* data_block, int* n
 {
    int N = 10;
    setReturnDataIntScalar(data_block, N, NULL); //returns N flux loops
+}
+
+void magnetics_flux_loop_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+{
+   UDA_LOG(UDA_LOG_DEBUG, "%s\n", "inside magnetics_flux_loop_name");
+   int flux_loop_id = nodeIndices[0]; //starts from 1
+   char flux_loop_name[50];
+   sprintf(flux_loop_name, "Flux loop %d", flux_loop_id);
+   UDA_LOG(UDA_LOG_DEBUG, "flux_loop_name = %s\n", flux_loop_name);
+   setReturnDataString(data_block, flux_loop_name, NULL); //returns flux loop name as a string
+   UDA_LOG(UDA_LOG_DEBUG, "%s\n", "returning from magnetics_flux_loop_name");
 }
 
 void magnetics_flux_loop_position_shape_of(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
@@ -100,20 +114,27 @@ void magnetics_flux_loop_position_z(int shotNumber, DATA_BLOCK* data_block, int*
 
 void magnetics_flux_loop_flux_data(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-    const size_t N= 5; //number of data points
+    const size_t N= 1000; //number of data points
     float* data = malloc(sizeof(float)*N);
+    //float* time = malloc(sizeof(float)*N);
     size_t i = 0;
     for (i = 0; i < N; i++) {
        float fi = (float) i;
-       data[i] = 2.*fi;
+       data[i] = fi/1000. + 1.;
+       //time[i] = fi;
     }
+    //const size_t N2= 1000;
+    //const size_t* shape = (size_t*) &N;
+    //const size_t N2= 1000;
     const size_t* shape = &N;
-    setReturnDataFloatArray(data_block, data, 1, shape, "");
+    setReturnDataFloatArray(data_block, data, 1, shape, ""); 
+    //SetDynamicData(data_block, N, time, data);
+    
 }
 
 void magnetics_flux_loop_flux_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-    const size_t N= 5; //number of data points
+    const size_t N= 1000; //number of data points
     float* time = malloc(sizeof(float)*N);
     size_t i = 0;
     for (i = 0; i < N; i++) {
@@ -125,7 +146,7 @@ void magnetics_flux_loop_flux_time(int shotNumber, DATA_BLOCK* data_block, int* 
 
 void magnetics_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-    const size_t N= 5; //number of data points
+    const size_t N= 1000; //number of data points
     float* time = malloc(sizeof(float)*N);
     size_t i = 0;
     for (i = 0; i < N; i++) {
@@ -134,4 +155,6 @@ void magnetics_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
     const size_t* shape = &N;
     setReturnDataFloatArray(data_block, time, 1, shape, ""); 
 }
+
+
 
