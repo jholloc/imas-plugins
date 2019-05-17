@@ -521,3 +521,12 @@ void setReturnData2DFloat (DATA_BLOCK* data_block, int dim1_shape, int dim2_shap
 	data_block->data = (char*)data;
 }
 
+int time_field(char *object_name, int shotNumber, int extractionIndex, float **time, float **data, int* len) {
+	UDA_LOG(UDA_LOG_DEBUG, "Calling time_field function\n");
+	char nomsigp_to_extract[50];
+	addExtractionChars(nomsigp_to_extract, object_name, extractionIndex); //Concatenate nomsigp_to_extract avec !extractionIndex, example: !1, !2, ...
+	int rang[2] = { 0, 0 };
+	int status = readSignal(nomsigp_to_extract, shotNumber, 0, rang, time, data, len);
+	return status;
+}
+

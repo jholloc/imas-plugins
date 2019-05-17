@@ -23,6 +23,7 @@
 #include "west_summary.h"
 #include "west_lh_antennas.h"
 #include "west_barometry.h"
+#include "west_ic_antennas.h"
 
 char* setBuffer(int data_type, char* value);
 int getShapeOf(const char* command, int shotNumber, int* nb_val);
@@ -208,6 +209,23 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	}
 	else if (strcmp(fun_name, "barometry_gauge_calibration_coefficient") == 0) {
 		fun = 504;
+	}
+
+	//------------------ic_antennas----------------------------------
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_outline_r") == 0) {
+		fun = 600;
+	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_outline_phi") == 0) {
+		fun = 601;
+	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_width_tor") == 0) {
+		fun = 602;
+	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_distance_to_conductor") == 0) {
+		fun = 603;
+	}
+	else if (strcmp(fun_name, "ic_antennas_ids_properties_comment") == 0) {
+		fun = 604;
 	}
 
 	UDA_LOG(UDA_LOG_DEBUG, "Case: %d", fun);
@@ -554,6 +572,32 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	case 504: {
 		UDA_LOG(UDA_LOG_DEBUG, "Case of barometry_gauge_calibration_coefficient from WEST plugin\n");
 		status = barometry_gauge_calibration_coefficient(shotNumber, data_block, nodeIndices);
+		break;
+	}
+
+	case 600: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_outline_r from WEST plugin\n");
+		status = ic_antennas_modules_strap_outline_r(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 601: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_outline_phi from WEST plugin\n");
+		status = ic_antennas_modules_strap_outline_phi(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 602: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_width_tor from WEST plugin\n");
+		status = ic_antennas_modules_strap_width_tor(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 603: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_distance_to_conductor from WEST plugin\n");
+		status = ic_antennas_modules_strap_distance_to_conductor(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 604: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_ids_properties_comment from WEST plugin\n");
+		status = ic_antennas_ids_properties_comment(shotNumber, data_block, nodeIndices);
 		break;
 	}
 

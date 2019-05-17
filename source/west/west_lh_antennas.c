@@ -17,7 +17,6 @@
 #include "ts_rqparam.h"
 #include "west_static_data_utilities.h"
 
-
 void lh_antennas_throwsIdamError(int status, char* methodName, char * objectName, int shotNumber) {
 	int err = 901;
 	char errorMsg[1000];
@@ -45,6 +44,19 @@ int lh_antennas_power(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) 
 	return status;
 }
 
+int lh_antennas_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int len;
+	char* object_name = "SHYBPTOT";
+	int status = time_field(object_name, shotNumber, 1, &time, &data, &len);
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status, "lh_antennas_power_time", object_name, shotNumber);
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 
 	float f = 1e6; //conversion factor, power is given in MW in Arcade
@@ -62,6 +74,36 @@ int lh_antennas_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 	if (status != 0) {
 		lh_antennas_throwsIdamError2(status, "lh_antennas_power_forward", "SHYBPFORW1/SHYBPFORW2", shotNumber, antennaId);
 	}
+	return status;
+}
+
+int lh_antennas_power_forward_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	int status = -1;
+	if (antennaId == 1) {
+		char *object_name = "SHYBPFORW1";
+		status = time_field(object_name, shotNumber, 1, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_power_forward_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "SHYBPFORW2";
+		status = time_field(object_name, shotNumber, 1, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_power_forward_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
 	return status;
 }
 
@@ -85,6 +127,36 @@ int lh_antennas_power_reflected(int shotNumber, DATA_BLOCK* data_block, int* nod
 	return status;
 }
 
+int lh_antennas_power_reflected_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	int status = -1;
+	if (antennaId == 1) {
+		char *object_name = "SHYBPREFL1";
+		status = time_field(object_name, shotNumber, 1, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_power_reflected_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "SHYBPREFL2";
+		status = time_field(object_name, shotNumber, 1, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_power_reflected_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_reflection_coefficient(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 
 	float f = 1; //conversion factor, power is given in MW in Arcade
@@ -105,6 +177,36 @@ int lh_antennas_reflection_coefficient(int shotNumber, DATA_BLOCK* data_block, i
 	return status;
 }
 
+int lh_antennas_reflection_coefficient_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	int status = -1;
+	if (antennaId == 1) {
+		char *object_name = "SHYBREF1";
+		status = time_field(object_name, shotNumber, 1, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_reflection_coefficient_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "SHYBREF2";
+		status = time_field(object_name, shotNumber, 1, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_reflection_coefficient_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_position_definition(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	const char* comment = "Closest to machine geometric axis point of the lateral antenna protection at Z = 0";
 	setReturnDataString(data_block, comment, NULL);
@@ -122,6 +224,20 @@ int lh_antennas_pressure_tank(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 	return status;
 }
 
+int lh_antennas_pressure_tank_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	char* object_name = "GPRESHYB";
+	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status, "lh_antennas_pressure_tank_time", object_name, shotNumber);
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_phase_average(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	float f = 0.01745329251994329576923690768489; //conversion factor from degrees to radians
 	int antennaId = nodeIndices[0]; //=1 or 2
@@ -130,6 +246,20 @@ int lh_antennas_phase_average(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 	if (status != 0) {
 		lh_antennas_throwsIdamError2(status, "lh_antennas_phase_average", object_name, shotNumber, antennaId);
 	}
+	return status;
+}
+
+int lh_antennas_phase_average_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	char* object_name = "GPHASHYB";
+	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status, "lh_antennas_phase_average_time", object_name, shotNumber);
+	}
+	SetDynamicDataTime(data_block, len, time, data);
 	return status;
 }
 
@@ -144,6 +274,20 @@ int lh_antennas_n_parallel_peak(int shotNumber, DATA_BLOCK* data_block, int* nod
 	return status;
 }
 
+int lh_antennas_n_parallel_peak_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int len;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	char* object_name = "GNPARHYB";
+	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status, "lh_antennas_n_parallel_peak_time", object_name, shotNumber);
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_position_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	float f = 1;
 	int antennaId = nodeIndices[0]; //=1 or 2
@@ -152,6 +296,20 @@ int lh_antennas_position_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 	if (status != 0) {
 		lh_antennas_throwsIdamError2(status, "lh_antennas_position_r", object_name, shotNumber, antennaId);
 	}
+	return status;
+}
+
+int lh_antennas_position_r_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int len;
+	char* object_name = "GPOSHYB";
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status, "lh_antennas_position_r_time", object_name, shotNumber);
+	}
+	SetDynamicDataTime(data_block, len, time, data);
 	return status;
 }
 
@@ -165,13 +323,12 @@ int lh_antennas_modules_power(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 	float f = 1e6; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
 	if (antennaId == 1) {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPINJC1";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	else {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPINJC2";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
@@ -181,17 +338,47 @@ int lh_antennas_modules_power(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 	return status;
 }
 
+int lh_antennas_modules_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
+	if (antennaId == 1) {
+		char *object_name = "GPINJC1";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "GPINJC2";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_modules_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	float f = 1e6; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
 	if (antennaId == 1) {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPFORWC1";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	else {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPFORWC2";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
@@ -201,17 +388,47 @@ int lh_antennas_modules_power_forward(int shotNumber, DATA_BLOCK* data_block, in
 	return status;
 }
 
+int lh_antennas_modules_power_forward_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
+	if (antennaId == 1) {
+		char *object_name = "GPFORWC1";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_forward_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "GPFORWC2";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_forward_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_modules_power_reflected(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	float f = 1e6; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
 	if (antennaId == 1) {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPREFLC1";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	else {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPREFLC2";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
@@ -221,17 +438,47 @@ int lh_antennas_modules_power_reflected(int shotNumber, DATA_BLOCK* data_block, 
 	return status;
 }
 
+int lh_antennas_modules_power_reflected_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
+	if (antennaId == 1) {
+		char *object_name = "GPREFLC1";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_reflected_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "GPREFLC2";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_reflected_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_modules_reflection_coefficient(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	float f = 1; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
 	if (antennaId == 1) {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GCREFC1";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	else {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GCREFC2";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
@@ -241,22 +488,83 @@ int lh_antennas_modules_reflection_coefficient(int shotNumber, DATA_BLOCK* data_
 	return status;
 }
 
+int lh_antennas_modules_reflection_coefficient_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int extractionIndex = nodeIndices[1]; //module id
+	int len;
+	int status = -1;
+	if (antennaId == 1) {
+		char *object_name = "GCREFC1";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_reflection_coefficient_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "GCREFC2";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_reflection_coefficient_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_modules_phase(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	float f = 0.01745329251994329576923690768489; //conversion factor from degrees to radians
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
 	if (antennaId == 1) {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPHIC1";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	else {
-		int extractionIndex = nodeIndices[1]; //module id
 		char *object_name = "GPHIC2";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	if (status != 0) {
 		lh_antennas_throwsIdamError2(status, "lh_antennas_modules_phase", "GPHIC1/GPHIC2", shotNumber, antennaId);
 	}
+	return status;
+}
+
+int lh_antennas_modules_phase_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int extractionIndex = nodeIndices[1]; //module id
+	int len;
+	int status = -1;
+	if (antennaId == 1) {
+		char *object_name = "GPHIC1";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_phase_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "GPHIC2";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_phase_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
 	return status;
 }

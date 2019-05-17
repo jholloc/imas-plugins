@@ -19,6 +19,8 @@ void SetDynamicData(DATA_BLOCK* data_block, int len, float *time, float *data);
 
 void SetDynamicDataTime(DATA_BLOCK* data_block, int len, float *time, float *data);
 
+int time_field(char *object_name, int shotNumber, int extractionIndex, float **time, float **data, int* len);
+
 int getArcadeSignal(char* nomsigp, int shotNumber, int extractionIndex, float** time, float** data, int* len, float normalizationFactor);
 void setReturnData2DFloat (DATA_BLOCK* data_block, int dim1_shape, int dim2_shape, float* data);
 

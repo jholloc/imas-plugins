@@ -20,6 +20,7 @@
 #include "west_summary.h"
 #include "west_lh_antennas.h"
 #include "west_barometry.h"
+#include "west_ic_antennas.h"
 
 int GetDynamicData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, int* nodeIndices)
 {
@@ -83,39 +84,110 @@ int GetDynamicData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, i
 		return summary_time(shotNumber, data_block, nodeIndices); //TODO
 	}else if (strcmp(fun_name, "lh_antennas_power") == 0) {
 		return lh_antennas_power(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_power_time") == 0) {
+		return lh_antennas_power_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_power_forward") == 0) {
 		return lh_antennas_power_forward(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_power_forward_time") == 0) {
+		return lh_antennas_power_forward_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_power_reflected") == 0) {
 		return lh_antennas_power_reflected(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_power_reflected_time") == 0) {
+		return lh_antennas_power_reflected_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_reflection_coefficient") == 0) {
 		return lh_antennas_reflection_coefficient(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_reflection_coefficient_time") == 0) {
+		return lh_antennas_reflection_coefficient_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_power") == 0) {
 		return lh_antennas_modules_power(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_modules_power_time") == 0) {
+		return lh_antennas_modules_power_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_power_forward") == 0) {
 		return lh_antennas_modules_power_forward(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_modules_power_forward_time") == 0) {
+		return lh_antennas_modules_power_forward_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_power_reflected") == 0) {
 		return lh_antennas_modules_power_reflected(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_modules_power_reflected_time") == 0) {
+		return lh_antennas_modules_power_reflected_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_reflection_coefficient") == 0) {
 		return lh_antennas_modules_reflection_coefficient(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_modules_reflection_coefficient_time") == 0) {
+		return lh_antennas_modules_reflection_coefficient_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_modules_phase") == 0) {
 		return lh_antennas_modules_phase(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_modules_phase_time") == 0) {
+		return lh_antennas_modules_phase_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_phase_average") == 0) {
 		return lh_antennas_phase_average(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_phase_average_time") == 0) {
+		return lh_antennas_phase_average_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_n_parallel_peak") == 0) {
 		return lh_antennas_n_parallel_peak(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_n_parallel_peak_time") == 0) {
+		return lh_antennas_n_parallel_peak_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_position_r") == 0) {
 		return lh_antennas_position_r(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_position_r_time") == 0) {
+		return lh_antennas_position_r_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_position_z") == 0) {
 		return lh_antennas_position_z(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_pressure_tank") == 0) {
 		return lh_antennas_pressure_tank(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "lh_antennas_pressure_tank_time") == 0) {
+		return lh_antennas_pressure_tank_time(shotNumber, data_block, nodeIndices); //TODO
 	}else if (strcmp(fun_name, "barometry_gauge_pressure_data") == 0) {
 		return barometry_gauge_pressure_data(shotNumber, data_block, nodeIndices); //TODO
 	}else if (strcmp(fun_name, "barometry_gauge_pressure_time") == 0) {
 		return barometry_gauge_pressure_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_power_forward") == 0) {
+		return ic_antennas_module_power_forward(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_power_forward_time") == 0) {
+		return ic_antennas_module_power_forward_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_power_reflected") == 0) {
+		return ic_antennas_module_power_reflected(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_power_reflected_time") == 0) {
+		return ic_antennas_module_power_reflected_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_phase_forward") == 0) {
+		return ic_antennas_module_phase_forward(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_phase_forward_time") == 0) {
+		return ic_antennas_module_phase_forward_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_phase_reflected") == 0) {
+		return ic_antennas_module_phase_reflected(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_phase_reflected_time") == 0) {
+		return ic_antennas_module_phase_reflected_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_voltage") == 0) {
+		return ic_antennas_module_voltage(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_voltage_time") == 0) {
+		return ic_antennas_module_voltage_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_voltage_phase") == 0) {
+		return ic_antennas_module_voltage_phase(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_voltage_phase_time") == 0) {
+		return ic_antennas_module_voltage_phase_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_current") == 0) {
+		return ic_antennas_module_current(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_current_time") == 0) {
+		return ic_antennas_module_current_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_matching_element_capacity") == 0) {
+		return ic_antennas_module_matching_element_capacity(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_matching_element_capacity_time") == 0) {
+		return ic_antennas_module_matching_element_capacity_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_pressure") == 0) {
+		return ic_antennas_module_pressure(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_module_pressure_time") == 0) {
+		return ic_antennas_module_pressure_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_power_launched") == 0) {
+		return ic_antennas_power_launched(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_power_launched_time") == 0) {
+		return ic_antennas_power_launched_time(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_frequency") == 0) {
+		return ic_antennas_frequency(shotNumber, data_block, nodeIndices); //TODO
+	}else if (strcmp(fun_name, "ic_antennas_frequency_time") == 0) {
+		return ic_antennas_frequency_time(shotNumber, data_block, nodeIndices); //TODO
 	}/*else if (strcmp(fun_name, "test_fun") == 0) {
 		return test_fun(shotNumber, data_block, nodeIndices); //TODO
 	}*/
+
 	else {
 		const char* errorMsg = "WEST:ERROR: mapped C function not found in west_dynamic_data.c !\n";
 		char msg[1000];
