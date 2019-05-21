@@ -104,6 +104,45 @@ int ic_antennas_module_identifier(int shotNumber, DATA_BLOCK* data_block, int* n
 	return ic_antennas_module_name(shotNumber, data_block, nodeIndices);
 }
 
+int ic_antennas_module_pressure_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	int antennaId = nodeIndices[0];
+	int moduleId = nodeIndices[1];
+
+	int cases[3][2] = {1,2,3,4,5,6};
+
+	int c = cases[antennaId - 1][moduleId - 1];
+
+	if (c == 1) {
+		const char* name = "Q1 left";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (c == 2) {
+		const char* name = "Q1 right";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (c == 3) {
+		const char* name = "Q2 left";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (c == 4) {
+		const char* name = "Q2 right";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (c == 5) {
+		const char* name = "Q4 left";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (c == 6) {
+		const char* name = "Q4 right";
+		setReturnDataString(data_block, name, NULL);
+	}
+	return 0;
+}
+
+int ic_antennas_module_pressure_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	return ic_antennas_module_pressure_name(shotNumber, data_block, nodeIndices);
+}
+
 /*
  * matching capacitor values [pF] (1: Q1 left upper, 2: Q1 left lower, 3:
  * Q1 right upper, 4:Q1 right lower; 5: Q2 left upper, 6: Q2 left lower, 7:

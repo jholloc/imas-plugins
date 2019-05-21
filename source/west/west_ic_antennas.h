@@ -25,6 +25,8 @@ int ic_antennas_module_matching_element_name(int shotNumber, DATA_BLOCK* data_bl
 int ic_antennas_module_matching_element_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_module_matching_element_capacity(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_module_matching_element_capacity_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int ic_antennas_module_pressure_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int ic_antennas_module_pressure_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_module_pressure(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_module_pressure_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
