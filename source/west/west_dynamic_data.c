@@ -13,7 +13,6 @@
 #include "west_utilities.h"
 #include "west_dyn_data_utilities.h"
 
-#include "west_ece.h"
 #include "west_pf_passive.h"
 #include "west_pf_active.h"
 #include "west_soft_x_rays.h"

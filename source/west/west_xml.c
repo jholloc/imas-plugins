@@ -16,7 +16,6 @@
 #include "west_utilities.h"
 #include "west_static_data_utilities.h"
 
-#include "west_ece.h"
 #include "west_pf_passive.h"
 #include "west_pf_active.h"
 #include "west_soft_x_rays.h"
@@ -93,13 +92,6 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		fun = 5;
 	}  else if (strcmp(fun_name, "tsmat_collect_poloidal_angle") == 0) {
 		fun = 6;
-	}
-
-	//--------------------ece----------------------------------
-	else if (strcmp(fun_name, "homogeneous_time") == 0) {
-		fun = 7;
-	} else if (strcmp(fun_name, "ece_t_e_data_shape_of") == 0) {
-		fun = 9;
 	}
 
 	//------------------pf_passive----------------------------------
@@ -340,25 +332,6 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		tokenizeFunParameters(mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
 		execute_tsmat_collect_poloidal_angle(TOP_collections_parameters, attributes, shotNumber, data_block, nodeIndices,
 				normalizationAttributes);*/
-		break;
-	}
-
-	case 7: {
-		UDA_LOG(UDA_LOG_DEBUG, "Case of homogeneous_time from WEST plugin\n");
-		status = homogeneous_time(shotNumber, data_block, nodeIndices);
-		break;
-	}
-
-	case 9: {
-		UDA_LOG(UDA_LOG_DEBUG, "Case of ece_t_e_data_shape_of from WEST plugin\n");
-		char* ece_mapfun = NULL;
-		status = ece_t_e_data_shape_of(shotNumber, &ece_mapfun);
-		if (status != 0)
-			return status;
-		UDA_LOG(UDA_LOG_DEBUG, "Calling tokenizeFunParameters() from WEST plugin\n");
-		tokenizeFunParameters(ece_mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
-		status = shape_of_tsmat_collect(shotNumber, TOP_collections_parameters, data_block);
-		free(ece_mapfun);
 		break;
 	}
 
