@@ -17,6 +17,12 @@
 #include "ts_rqparam.h"
 #include "west_static_data_utilities.h"
 
+void ic_antennas_throwsIdamError(int status, char* methodName, char * objectName, int shotNumber);
+void ic_antennas_throwsIdamError1(int status, char* methodName, char * objectName, int shotNumber, int antennaId);
+void ic_antennas_throwsIdamError2(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId, int matching_element);
+void ic_antennas_throwsIdamError3(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId, int currentId);
+void ic_antennas_throwsIdamError4(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId, int voltageId);
+void ic_antennas_throwsIdamError5(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId);
 
 void ic_antennas_throwsIdamError(int status, char* methodName, char * objectName, int shotNumber) {
 	int err = 901;
@@ -25,11 +31,147 @@ void ic_antennas_throwsIdamError(int status, char* methodName, char * objectName
 	addIdamError(CODEERRORTYPE, errorMsg, err, "");
 }
 
-void ic_antennas_throwsIdamError2(int status, char* methodName, char * objectName, int shotNumber, int antennaId) {
+void ic_antennas_throwsIdamError1(int status, char* methodName, char * objectName, int shotNumber, int antennaId) {
 	int err = 901;
 	char errorMsg[1000];
-	sprintf(errorMsg, "%s(%s),object:%s,shot:%d,antenna:%d,err:%d\n", "WEST:ERROR", methodName, objectName, shotNumber,antennaId, status);
+	sprintf(errorMsg, "%s(%s),object:%s,shot:%d,antennaId:%d,err:%d\n", "WEST:ERROR", methodName, objectName, shotNumber, antennaId, status);
 	addIdamError(CODEERRORTYPE, errorMsg, err, "");
+}
+
+void ic_antennas_throwsIdamError2(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId, int matching_element) {
+	int err = 901;
+	char errorMsg[1000];
+	sprintf(errorMsg, "%s(%s),object:%s,shot:%d,antenna:%d,module:%d,matching_element:%d,err:%d\n", "WEST:ERROR", methodName, objectName, shotNumber,antennaId, moduleId, matching_element, status);
+	addIdamError(CODEERRORTYPE, errorMsg, err, "");
+}
+
+void ic_antennas_throwsIdamError3(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId, int currentId) {
+	int err = 901;
+	char errorMsg[1000];
+	sprintf(errorMsg, "%s(%s),object:%s,shot:%d,antenna:%d,module:%d,current:%d,err:%d\n", "WEST:ERROR", methodName, objectName, shotNumber,antennaId, moduleId, currentId, status);
+	addIdamError(CODEERRORTYPE, errorMsg, err, "");
+}
+
+void ic_antennas_throwsIdamError4(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId, int voltageId) {
+	int err = 901;
+	char errorMsg[1000];
+	sprintf(errorMsg, "%s(%s),object:%s,shot:%d,antenna:%d,module:%d,voltage:%d,err:%d\n", "WEST:ERROR", methodName, objectName, shotNumber,antennaId, moduleId, voltageId, status);
+	addIdamError(CODEERRORTYPE, errorMsg, err, "");
+}
+
+void ic_antennas_throwsIdamError5(int status, char* methodName, char * objectName, int shotNumber, int antennaId, int moduleId) {
+	int err = 901;
+	char errorMsg[1000];
+	sprintf(errorMsg, "%s(%s),object:%s,shot:%d,antenna:%d,module:%d,err:%d\n", "WEST:ERROR", methodName, objectName, shotNumber,antennaId, moduleId, status);
+	addIdamError(CODEERRORTYPE, errorMsg, err, "");
+}
+
+int ic_antennas_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	int antennaId = nodeIndices[0];
+	if (antennaId == 1) {
+		const char* name = "Q1";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (antennaId == 2) {
+		const char* name = "Q2";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (antennaId == 3) {
+		const char* name = "Q4";
+		setReturnDataString(data_block, name, NULL);
+	}
+	return 0;
+}
+
+int ic_antennas_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	return ic_antennas_name(shotNumber, data_block, nodeIndices);
+}
+
+int ic_antennas_module_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	int moduleId = nodeIndices[1];
+	if (moduleId == 1) {
+		const char* name = "left";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (moduleId == 2) {
+		const char* name = "right";
+		setReturnDataString(data_block, name, NULL);
+	}
+	return 0;
+}
+
+int ic_antennas_module_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	return ic_antennas_module_name(shotNumber, data_block, nodeIndices);
+}
+
+/*
+ * matching capacitor values [pF] (1: Q1 left upper, 2: Q1 left lower, 3:
+ * Q1 right upper, 4:Q1 right lower; 5: Q2 left upper, 6: Q2 left lower, 7:
+ * Q2 right upper, 8:Q2 right lower; 9: Q4 left upper, 10: Q4 left lower, 11:
+ * Q4 right upper, 12:Q4 right lower) module/matching_element/capacitance
+ */
+
+int ic_antennas_module_matching_element_name(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	int antennaId = nodeIndices[0];
+	int moduleId = nodeIndices[1];
+	int matching_element = nodeIndices[2];
+
+	int extractionIndices[3][2][2] = {1,2,3,4,5,6,7,8,9,10,11,12};
+
+	int extractionIndex = extractionIndices[antennaId - 1] [moduleId - 1] [matching_element - 1];
+	if (extractionIndex == 1) {
+		const char* name = "Q1 left upper";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 2) {
+		const char* name = "Q1 left lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 3) {
+		const char* name = "Q1 right upper";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 4) {
+		const char* name = "Q1 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 5) {
+		const char* name = "Q2 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 6) {
+		const char* name = "Q2 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 7) {
+		const char* name = "Q2 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 8) {
+		const char* name = "Q2 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 9) {
+		const char* name = "Q4 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 10) {
+		const char* name = "Q4 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 11) {
+		const char* name = "Q4 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	else if (extractionIndex == 12) {
+		const char* name = "Q4 right lower";
+		setReturnDataString(data_block, name, NULL);
+	}
+	return 0;
+}
+
+int ic_antennas_module_matching_element_identifier(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	return ic_antennas_module_matching_element_name(shotNumber, data_block, nodeIndices);
 }
 
 int ic_antennas_module_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
@@ -58,7 +200,7 @@ int ic_antennas_module_power_forward(int shotNumber, DATA_BLOCK* data_block, int
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_power_forward", "GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_power_forward", "GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId, moduleId);
 	}
 	return status;
 }
@@ -90,7 +232,7 @@ int ic_antennas_module_power_forward_time(int shotNumber, DATA_BLOCK* data_block
 		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_power_forward_time", "GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_module_power_forward_time", "GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId, moduleId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -122,7 +264,7 @@ int ic_antennas_module_power_reflected(int shotNumber, DATA_BLOCK* data_block, i
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_power_reflected","GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_power_reflected","GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId, moduleId);
 	}
 	return status;
 }
@@ -154,7 +296,7 @@ int ic_antennas_module_power_reflected_time(int shotNumber, DATA_BLOCK* data_blo
 		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_power_reflected_time","GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_power_reflected_time","GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId, moduleId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -185,7 +327,7 @@ int ic_antennas_module_phase_forward(int shotNumber, DATA_BLOCK* data_block, int
 			status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 		}
 		if (status != 0) {
-			ic_antennas_throwsIdamError2(status, "ic_antennas_module_phase_forward", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId);
+			ic_antennas_throwsIdamError5(status, "ic_antennas_module_phase_forward", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId);
 			return status;
 		}
 		//We create a null vector with length = len(time)
@@ -209,7 +351,7 @@ int ic_antennas_module_phase_forward(int shotNumber, DATA_BLOCK* data_block, int
 			status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 		}
 		if (status != 0) {
-			ic_antennas_throwsIdamError2(status, "ic_antennas_module_phase_forward", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId);
+			ic_antennas_throwsIdamError5(status, "ic_antennas_module_phase_forward", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId);
 			return status;
 		}
 	}
@@ -238,7 +380,7 @@ int ic_antennas_module_phase_forward_time(int shotNumber, DATA_BLOCK* data_block
 		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_phase_forward_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_module_phase_forward_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -250,7 +392,7 @@ int ic_antennas_module_phase_reflected(int shotNumber, DATA_BLOCK* data_block, i
 	int antennaId = nodeIndices[0];
 	int moduleId = nodeIndices[1];
 	int status = -1;
-	int extractionIndex = 0;
+	int extractionIndex;
 	if (moduleId == 1) { //left
 		extractionIndex = 2;
 	}
@@ -270,7 +412,7 @@ int ic_antennas_module_phase_reflected(int shotNumber, DATA_BLOCK* data_block, i
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_phase_reflected", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_module_phase_reflected", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId);
 	}
 	return status;
 }
@@ -283,7 +425,7 @@ int ic_antennas_module_phase_reflected_time(int shotNumber, DATA_BLOCK* data_blo
 	int antennaId = nodeIndices[0];
 	int moduleId = nodeIndices[1];
 	int status = -1;
-	int extractionIndex = 0;
+	int extractionIndex;
 	if (moduleId == 1) { //left
 		extractionIndex = 2;
 	}
@@ -303,7 +445,7 @@ int ic_antennas_module_phase_reflected_time(int shotNumber, DATA_BLOCK* data_blo
 		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_phase_reflected_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_module_phase_reflected_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -317,11 +459,11 @@ int ic_antennas_module_voltage_phase(int shotNumber, DATA_BLOCK* data_block, int
 	int voltageId = nodeIndices[2];
 	int status = -1;
 
-	int extractionIndices[2][2] = {2, 2, 5, 5};
-	/*extractionIndices[0][0] = 2;
-		extractionIndices[0][1] = 2;
-		extractionIndices[1][0] = 5;
-		extractionIndices[1][1] = 5;*/
+	int extractionIndices[2][2] = {3, 4, 6, 7};
+	/*extractionIndices[0][0] = 3;
+		extractionIndices[0][1] = 4;
+		extractionIndices[1][0] = 6;
+		extractionIndices[1][1] = 7;*/
 	int extractionIndex = extractionIndices[moduleId - 1][voltageId - 1];
 
 	if (antennaId == 1) { //Q1 antenna
@@ -336,8 +478,9 @@ int ic_antennas_module_voltage_phase(int shotNumber, DATA_BLOCK* data_block, int
 		char *object_name = "GICHPHASESQ4";
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
+
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_voltage_phase", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError4(status, "ic_antennas_module_voltage_phase", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId, voltageId);
 	}
 	return status;
 }
@@ -351,12 +494,12 @@ int ic_antennas_module_voltage_phase_time(int shotNumber, DATA_BLOCK* data_block
 	int voltageId = nodeIndices[2];
 	int status = -1;
 
-	int extractionIndices[2][2] = {2, 2, 5, 5};
-	/*extractionIndices[0][0] = 2;
-	extractionIndices[0][1] = 2;
-	extractionIndices[1][0] = 5;
-	extractionIndices[1][1] = 5;*/
-	//int *ptr_extractionIndices = extractionIndices[0][0];
+	int extractionIndices[2][2] = {3, 4, 6, 7};
+	/*extractionIndices[0][0] = 3;
+	extractionIndices[0][1] = 4;
+	extractionIndices[1][0] = 6;
+	extractionIndices[1][1] = 7;*/
+
 	int extractionIndex = extractionIndices[moduleId - 1][voltageId - 1];
 
 	if (antennaId == 1) { //Q1 antenna
@@ -372,7 +515,7 @@ int ic_antennas_module_voltage_phase_time(int shotNumber, DATA_BLOCK* data_block
 		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_voltage_phase_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError4(status, "ic_antennas_module_voltage_phase_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId, voltageId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -422,7 +565,7 @@ int ic_antennas_module_current(int shotNumber, DATA_BLOCK* data_block, int* node
 	status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_current","GICHICAPA", shotNumber, antennaId);
+		ic_antennas_throwsIdamError3(status, "ic_antennas_module_current","GICHICAPA", shotNumber, antennaId, moduleId, currentId);
 	}
 	return status;
 }
@@ -465,13 +608,13 @@ int ic_antennas_module_current_time(int shotNumber, DATA_BLOCK* data_block, int*
 	//second module --> 'right'
 	//extractionIndices[2,1,0] = 11; //upper
 	//extractionIndices[2,1,1] = 12; //lower
-	//int *ptr_extractionIndices = extractionIndices[0,0,0];
+
 	int extractionIndex = extractionIndices[antennaId - 1][moduleId - 1][currentId - 1];
 	char *object_name = "GICHICAPA";
 	status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_current_time","GICHICAPA", shotNumber, antennaId);
+		ic_antennas_throwsIdamError3(status, "ic_antennas_module_current_time","GICHICAPA", shotNumber, antennaId, moduleId, currentId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -494,7 +637,7 @@ int ic_antennas_module_voltage(int shotNumber, DATA_BLOCK* data_block, int* node
 	//second module --> 'right'
 	//extractionIndices[1,0] = 3; //upper
 	//extractionIndices[1,1] = 4; //lower
-	//int *ptr_extractionIndices = extractionIndices[0,0];
+
 	int extractionIndex = extractionIndices[moduleId - 1][voltageId - 1];
 
 	if (antennaId == 1) {
@@ -510,7 +653,7 @@ int ic_antennas_module_voltage(int shotNumber, DATA_BLOCK* data_block, int* node
 		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_voltage","GICHVPROBEQ1/GICHVPROBEQ2/GICHVPROBEQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError4(status, "ic_antennas_module_voltage","GICHVPROBEQ1/GICHVPROBEQ2/GICHVPROBEQ4", shotNumber, antennaId, moduleId, voltageId);
 	}
 	return status;
 }
@@ -550,7 +693,7 @@ int ic_antennas_module_voltage_time(int shotNumber, DATA_BLOCK* data_block, int*
 		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 	}
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_voltage_time","GICHVPROBEQ1/GICHVPROBEQ2/GICHVPROBEQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError4(status, "ic_antennas_module_voltage","GICHVPROBEQ1/GICHVPROBEQ2/GICHVPROBEQ4", shotNumber, antennaId, moduleId, voltageId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -599,7 +742,7 @@ int ic_antennas_module_matching_element_capacity(int shotNumber, DATA_BLOCK* dat
 	status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_matching_element_capacity","GICHCAPA", shotNumber, antennaId);
+		ic_antennas_throwsIdamError2(status, "ic_antennas_module_matching_element_capacity","GICHCAPA", shotNumber, antennaId, moduleId, matching_element);
 	}
 	return status;
 }
@@ -648,7 +791,7 @@ int ic_antennas_module_matching_element_capacity_time(int shotNumber, DATA_BLOCK
 	status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_matching_element_capacity_time","GICHCAPA", shotNumber, antennaId);
+		ic_antennas_throwsIdamError2(status, "ic_antennas_module_matching_element_capacity_time","GICHCAPA", shotNumber, antennaId, moduleId, matching_element);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -688,7 +831,7 @@ int ic_antennas_module_pressure(int shotNumber, DATA_BLOCK* data_block, int* nod
 	status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_pressure","GICHVTRANSFO", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_pressure","GICHVTRANSFO", shotNumber, antennaId, moduleId);
 	}
 	return status;
 }
@@ -729,7 +872,7 @@ int ic_antennas_module_pressure_time(int shotNumber, DATA_BLOCK* data_block, int
 	status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_module_pressure_time","GICHVTRANSFO", shotNumber, antennaId);
+		ic_antennas_throwsIdamError5(status, "ic_antennas_module_pressure_time","GICHVTRANSFO", shotNumber, antennaId, moduleId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -754,7 +897,7 @@ int ic_antennas_power_launched(int shotNumber, DATA_BLOCK* data_block, int* node
 	}
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_power","SICHPQ1/SICHPQ2/SICHPQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError1(status, "ic_antennas_power","SICHPQ1/SICHPQ2/SICHPQ4", shotNumber, antennaId);
 	}
 	return status;
 }
@@ -780,7 +923,7 @@ int ic_antennas_power_launched_time(int shotNumber, DATA_BLOCK* data_block, int*
 	}
 
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_power_launched_time","SICHPQ1/SICHPQ2/SICHPQ4", shotNumber, antennaId);
+		ic_antennas_throwsIdamError1(status, "ic_antennas_power_launched_time","SICHPQ1/SICHPQ2/SICHPQ4", shotNumber, antennaId);
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -795,20 +938,20 @@ int ic_antennas_frequency(int shotNumber, DATA_BLOCK* data_block, int* nodeIndic
 	//Reading the antennas frequencies (3 scalars for Q1, Q2 and Q4)
 	int status = readStaticParameters(&value, &nb_val, shotNumber, "DFCI", "PILOTAGE", "ICHFREQ", val_nb);
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_frequency","DFCI:PILOTAGE:ICHFREQ", shotNumber, antennaId);
+		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency","DFCI:PILOTAGE:ICHFREQ", shotNumber, antennaId);
 		free(value);
 	}
 	float* pt_float = (float*)value;
 
 	//Getting the time vector
 	int rang[2] = {0,0};
-	int len = 0;
+	int len;
 	float* time = NULL;
 	float* data = NULL;
-	int status2 = readSignal("GICHANTPOWQ1%1", shotNumber, 0, rang, &time, &data, &len);
+	int status2 = readSignal("GICHANTPOWQ1", shotNumber, 0, rang, &time, &data, &len);
 
 	if (status2 != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_frequency","GICHANTPOWQ1%1", shotNumber, antennaId);
+		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency","GICHANTPOWQ1%1", shotNumber, antennaId);
 		free(time);
 		free(data);
 	}
@@ -834,7 +977,7 @@ int ic_antennas_frequency_time(int shotNumber, DATA_BLOCK* data_block, int* node
 	char* object_name = "GICHANTPOWQ1";
 	int status = time_field(object_name, shotNumber, 1, &time, &data, &len);
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_frequency_time","GICHANTPOWQ1%1", shotNumber, antennaId);
+		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency_time","GICHANTPOWQ1%1", shotNumber, antennaId);
 		free(time);
 		free(data);
 	}
@@ -848,22 +991,22 @@ int ic_antennas_modules_strap_outline_r(int shotNumber, DATA_BLOCK* data_block, 
 	int moduleId = nodeIndices[1];
 	int strapId = nodeIndices[2];
 
-	int val_nb = 1;
-	int nb_val = 0;
+	int val_nb = 3;
+	int nb_val;
 	char* value = NULL;
 	//Reading the antennas radial position (3 scalars for Q1, Q2 and Q4)
-	int status = readStaticParameters(&value, &nb_val, shotNumber, "EXP=T=S", "Position", "PosICRH", val_nb);
+	int status = readStaticParameters(&value, &nb_val, shotNumber, "EXP-T-S", "Position", "PosICRH", val_nb);
 	if (status != 0) {
-		ic_antennas_throwsIdamError2(status, "ic_antennas_modules_strap_outline","EXP=T=S:Position:PosICRH", shotNumber, antennaId);
+		ic_antennas_throwsIdamError1(status, "ic_antennas_modules_strap_outline_r","EXP-T-S:Position:PosICRH", shotNumber, antennaId);
 		free(value);
 	}
 	float* pt_float = (float*)value;
-
+	UDA_LOG(UDA_LOG_DEBUG, "After readStaticParameters execution\n");
 
 	//Building the FLT_1D r field
 	const int N = 4; //number of radial positions of a strap (2 straps for the left module, 2 straps for the right module)
 	float* r = malloc(sizeof(float)*N);
-	int i = 0;
+	int i;
 	for (i = 0; i < N; i++) {
 		r[i] = pt_float[antennaId - 1]; //same radial positions for the 4 points of the outline
 	}

@@ -274,10 +274,13 @@ void SetDynData(DATA_BLOCK* data_block, int len, float* data_time, float* data, 
 		initDimBlock(&data_block->dims[i]);
 	}
 
-	data_block->dims[0].data_type = UDA_TYPE_FLOAT;
+	data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
 	data_block->dims[0].dim_n = len;
-	data_block->dims[0].compressed = 0;
-	data_block->dims[0].dim = (char*)data_time;
+	data_block->dims[0].compressed = 1;
+	data_block->dims[0].dim = (char*)NULL;
+	data_block->dims[0].dim0 = 0.0;
+	data_block->dims[0].diff = 1.0;
+	data_block->dims[0].method = 0;
 
 	strcpy(data_block->data_label, "");
 	strcpy(data_block->data_units, "");

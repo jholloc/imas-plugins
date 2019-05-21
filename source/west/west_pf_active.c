@@ -112,10 +112,11 @@ int pf_active_current_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 		status = get_pf_current(shotNumber, 13, &time, &data, &len, 1000.);
 	}
 	else {
-		pf_active_throwsIdamError(status, "pf_active_current_time", "wrong index", shotNumber);
-		free(time);
-		free(data);
-		return status;
+		UDA_LOG(UDA_LOG_DEBUG, "wrong index !\n");
+		//pf_active_throwsIdamError(status, "pf_active_current_time", "wrong index", shotNumber);
+		//free(time);
+		//free(data);
+		//return status;
 	}
 	if (status != 0) {
 		pf_active_throwsIdamError(status, "pf_active_current_time", "get_pf_current", shotNumber);

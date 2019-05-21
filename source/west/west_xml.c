@@ -227,6 +227,24 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	else if (strcmp(fun_name, "ic_antennas_ids_properties_comment") == 0) {
 		fun = 604;
 	}
+	else if (strcmp(fun_name, "ic_antennas_name") == 0) {
+		fun = 605;
+	}
+	else if (strcmp(fun_name, "ic_antennas_identifier") == 0) {
+		fun = 606;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_name") == 0) {
+		fun = 607;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_identifier") == 0) {
+		fun = 608;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_matching_element_name") == 0) {
+		fun = 609;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_matching_element_identifier") == 0) {
+		fun = 610;
+	}
 
 	UDA_LOG(UDA_LOG_DEBUG, "Case: %d", fun);
 	int status = -1;
@@ -600,6 +618,37 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		status = ic_antennas_ids_properties_comment(shotNumber, data_block, nodeIndices);
 		break;
 	}
+	case 605: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_name from WEST plugin\n");
+		status = ic_antennas_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 606: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_identifier from WEST plugin\n");
+		status = ic_antennas_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 607: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_name from WEST plugin\n");
+		status = ic_antennas_module_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 608: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_identifier from WEST plugin\n");
+		status = ic_antennas_module_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 609: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_matching_element_name from WEST plugin\n");
+		status = ic_antennas_module_matching_element_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 610: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_matching_element_identifier from WEST plugin\n");
+		status = ic_antennas_module_matching_element_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+
 
 	}
 
