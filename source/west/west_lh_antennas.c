@@ -31,10 +31,17 @@ void lh_antennas_throwsIdamError2(int status, char* methodName, char * objectNam
 	addIdamError(CODEERRORTYPE, errorMsg, err, "");
 }
 
+int lh_antennas_ids_properties_comment(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	const char* comment = "LH total coupled power [MW] antenna[i=1,2].power_launched are currently computed as power_forward - power_reflected.";
+	//on garde les valeurs de phi approchées données plus haut pour les 4 coins du strap
+	setReturnDataString(data_block, comment, NULL);
+	return 0;
+}
+
 int lh_antennas_power(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 	UDA_LOG(UDA_LOG_DEBUG, "Calling lh_antennas_power\n");
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
 	int extractionIndex = 0; //indicates that signal does not belong to a group
+	float f = 1e6; //conversion factor, power is given in MW in Arcade
 	char *object_name = "SHYBPTOT";
 	int status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
 	if (status != 0) {
@@ -55,6 +62,132 @@ int lh_antennas_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
+}
+
+int lh_antennas_antenna_power(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	UDA_LOG(UDA_LOG_DEBUG, "Calling lh_antennas_antenna_power\n");
+
+	int antennaId = nodeIndices[0]; //=1 or 2
+	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float *forward_time = NULL;
+	float *forward_data = NULL;
+	int forward_len;
+
+	int status = -1;
+	int extractionIndex = 0;
+
+	if (antennaId == 1) {
+		char *object_name = "SHYBPFORW1";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&forward_time, &forward_data, &forward_len, f);
+	}
+	else {
+		char *object_name = "SHYBPFORW2";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&forward_time, &forward_data, &forward_len, f);
+	}
+
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status,"lh_antennas_antenna_power", "SHYBPFORW1/SHYBPFORW2", shotNumber);
+		free(forward_time);
+		free(forward_data);
+		return status;
+	}
+
+	float *reflected_time = NULL;
+	float *reflected_data = NULL;
+	int reflected_len;
+
+	if (antennaId == 1) {
+		char *object_name = "SHYBPREFL1";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&reflected_time, &reflected_data, &reflected_len, f);
+	}
+	else {
+		char *object_name = "SHYBPREFL2";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&reflected_time, &reflected_data, &reflected_len, f);
+	}
+
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status,"lh_antennas_antenna_power", "SHYBPREFL1/SHYBPREFL2", shotNumber);
+		free(forward_time);
+		free(forward_data);
+		return status;
+	}
+
+	if (forward_len != reflected_len) {
+		lh_antennas_throwsIdamError(status,"lh_antennas_antenna_power", "Reflected power data has not the same length than forward power data !", shotNumber);
+		return -1;
+	}
+
+	substract(forward_data, reflected_data, forward_len);
+	SetDynamicData(data_block, forward_len, forward_time, forward_data);
+
+	return 0;
+
+}
+
+int lh_antennas_antenna_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+
+	int antennaId = nodeIndices[0]; //=1 or 2
+	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float *forward_time = NULL;
+	float *forward_data = NULL;
+	int forward_len;
+
+	int status = -1;
+	int extractionIndex = 0;
+
+	if (antennaId == 1) {
+		char *object_name = "SHYBPFORW1";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&forward_time, &forward_data, &forward_len, f);
+	}
+	else {
+		char *object_name = "SHYBPFORW2";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&forward_time, &forward_data, &forward_len, f);
+	}
+
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status,"lh_antennas_antenna_power_time", "SHYBPFORW1/SHYBPFORW2", shotNumber);
+		free(forward_time);
+		free(forward_data);
+		return status;
+	}
+
+	float *reflected_time = NULL;
+	float *reflected_data = NULL;
+	int reflected_len;
+
+	if (antennaId == 1) {
+		char *object_name = "SHYBPREFL1";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&reflected_time, &reflected_data, &reflected_len, f);
+	}
+	else {
+		char *object_name = "SHYBPREFL2";
+		status = getArcadeSignal(object_name, shotNumber, extractionIndex,
+				&reflected_time, &reflected_data, &reflected_len, f);
+	}
+
+	if (status != 0) {
+		lh_antennas_throwsIdamError(status,"lh_antennas_antenna_power_time", "SHYBPREFL1/SHYBPREFL2", shotNumber);
+		free(forward_time);
+		free(forward_data);
+		return status;
+	}
+
+	if (forward_len != reflected_len) {
+		lh_antennas_throwsIdamError(status,"lh_antennas_antenna_power_time", "Reflected power data has not the same length than forward power data !", shotNumber);
+		return -1;
+	}
+
+	SetDynamicDataTime(data_block, forward_len, forward_time, forward_data);
+
+	return 0;
+
 }
 
 int lh_antennas_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {

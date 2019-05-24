@@ -4,8 +4,11 @@
 
 #include <clientserver/udaStructs.h>
 
+int lh_antennas_ids_properties_comment(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_power(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int lh_antennas_antenna_power(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int lh_antennas_antenna_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_power_forward_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_power_reflected(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);

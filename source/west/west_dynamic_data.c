@@ -85,6 +85,10 @@ int GetDynamicData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, i
 		return lh_antennas_power(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_power_time") == 0) {
 		return lh_antennas_power_time(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_antenna_power") == 0) {
+		return lh_antennas_antenna_power(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "lh_antennas_antenna_power_time") == 0) {
+		return lh_antennas_antenna_power_time(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_power_forward") == 0) {
 		return lh_antennas_power_forward(shotNumber, data_block, nodeIndices);
 	}else if (strcmp(fun_name, "lh_antennas_power_forward_time") == 0) {

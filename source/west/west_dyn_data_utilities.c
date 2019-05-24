@@ -444,6 +444,13 @@ void sum(float* sum_data, float* data, int len) {
 	}
 }
 
+void substract(float* diff_data, float* data, int len) {
+	int i;
+	for (i = 0; i < len; i++) {
+		diff_data[i] = diff_data[i] - data[i];
+	}
+}
+
 void normalize(float* sum_data, int len, int normalizationFactor) {
 	int i;
 	for (i = 0; i < len; i++) {

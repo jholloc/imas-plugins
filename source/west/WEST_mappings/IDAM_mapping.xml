@@ -128,11 +128,12 @@
 <mapping key="summary/time" value="tsbase_time;DMAG:SMAG_IP;1:float:1" type="dynamic"/>
 
 <mapping key="lh_antennas/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
+<mapping key="lh_antennas/ids_properties/comment" value="lh_antennas_ids_properties_comment" type="static"/>
 <mapping key="lh_antennas/antenna/Shape_of" value="set_value;2;0:int" type="static"/>
 <mapping key="lh_antennas/power/data" value="lh_antennas_power" type="dynamic"/>
 <mapping key="lh_antennas/power/time" value="lh_antennas_power_time" type="dynamic"/>
-<mapping key="lh_antennas/antenna/#/power/data" value="lh_antennas_power_forward" type="dynamic"/>
-<mapping key="lh_antennas/antenna/#/power/time" value="lh_antennas_power_forward_time" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/power_launched/data" value="lh_antennas_antenna_power" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/power_launched/time" value="lh_antennas_antenna_power_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/power_forward/data" value="lh_antennas_power_forward" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/power_forward/time" value="lh_antennas_power_forward_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/power_reflected/data" value="lh_antennas_power_reflected" type="dynamic"/>
