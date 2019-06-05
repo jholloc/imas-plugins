@@ -59,6 +59,7 @@ int lh_antennas_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 	int status = time_field(object_name, shotNumber, 1, &time, &data, &len);
 	if (status != 0) {
 		lh_antennas_throwsIdamError(status, "lh_antennas_power_time", object_name, shotNumber);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -366,6 +367,7 @@ int lh_antennas_pressure_tank_time(int shotNumber, DATA_BLOCK* data_block, int* 
 	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
 	if (status != 0) {
 		lh_antennas_throwsIdamError(status, "lh_antennas_pressure_tank_time", object_name, shotNumber);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -391,6 +393,7 @@ int lh_antennas_phase_average_time(int shotNumber, DATA_BLOCK* data_block, int* 
 	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
 	if (status != 0) {
 		lh_antennas_throwsIdamError(status, "lh_antennas_phase_average_time", object_name, shotNumber);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -416,6 +419,7 @@ int lh_antennas_n_parallel_peak_time(int shotNumber, DATA_BLOCK* data_block, int
 	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
 	if (status != 0) {
 		lh_antennas_throwsIdamError(status, "lh_antennas_n_parallel_peak_time", object_name, shotNumber);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -441,6 +445,7 @@ int lh_antennas_position_r_time(int shotNumber, DATA_BLOCK* data_block, int* nod
 	int status = time_field(object_name, shotNumber, antennaId, &time, &data, &len);
 	if (status != 0) {
 		lh_antennas_throwsIdamError(status, "lh_antennas_position_r_time", object_name, shotNumber);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
