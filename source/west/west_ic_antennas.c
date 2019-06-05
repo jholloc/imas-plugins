@@ -272,6 +272,7 @@ int ic_antennas_module_power_forward_time(int shotNumber, DATA_BLOCK* data_block
 	}
 	if (status != 0) {
 		ic_antennas_throwsIdamError5(status, "ic_antennas_module_power_forward_time", "GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId, moduleId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -336,6 +337,7 @@ int ic_antennas_module_power_reflected_time(int shotNumber, DATA_BLOCK* data_blo
 	}
 	if (status != 0) {
 		ic_antennas_throwsIdamError5(status, "ic_antennas_power_reflected_time","GICHANTPOWQ1/GICHANTPOWQ2/GICHANTPOWQ4", shotNumber, antennaId, moduleId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -420,6 +422,7 @@ int ic_antennas_module_phase_forward_time(int shotNumber, DATA_BLOCK* data_block
 	}
 	if (status != 0) {
 		ic_antennas_throwsIdamError5(status, "ic_antennas_module_phase_forward_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -485,6 +488,7 @@ int ic_antennas_module_phase_reflected_time(int shotNumber, DATA_BLOCK* data_blo
 	}
 	if (status != 0) {
 		ic_antennas_throwsIdamError5(status, "ic_antennas_module_phase_reflected_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -555,6 +559,7 @@ int ic_antennas_module_voltage_phase_time(int shotNumber, DATA_BLOCK* data_block
 	}
 	if (status != 0) {
 		ic_antennas_throwsIdamError4(status, "ic_antennas_module_voltage_phase_time", "GICHPHASESQ1/GICHPHASESQ2/GICHPHASESQ4", shotNumber, antennaId, moduleId, voltageId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -654,6 +659,7 @@ int ic_antennas_module_current_time(int shotNumber, DATA_BLOCK* data_block, int*
 
 	if (status != 0) {
 		ic_antennas_throwsIdamError3(status, "ic_antennas_module_current_time","GICHICAPA", shotNumber, antennaId, moduleId, currentId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -733,6 +739,7 @@ int ic_antennas_module_voltage_time(int shotNumber, DATA_BLOCK* data_block, int*
 	}
 	if (status != 0) {
 		ic_antennas_throwsIdamError4(status, "ic_antennas_module_voltage","GICHVPROBEQ1/GICHVPROBEQ2/GICHVPROBEQ4", shotNumber, antennaId, moduleId, voltageId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -831,6 +838,7 @@ int ic_antennas_module_matching_element_capacity_time(int shotNumber, DATA_BLOCK
 
 	if (status != 0) {
 		ic_antennas_throwsIdamError2(status, "ic_antennas_module_matching_element_capacity_time","GICHCAPA", shotNumber, antennaId, moduleId, matching_element);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -871,6 +879,7 @@ int ic_antennas_module_pressure(int shotNumber, DATA_BLOCK* data_block, int* nod
 
 	if (status != 0) {
 		ic_antennas_throwsIdamError5(status, "ic_antennas_pressure","GICHVTRANSFO", shotNumber, antennaId, moduleId);
+		return status;
 	}
 	return status;
 }
@@ -912,6 +921,7 @@ int ic_antennas_module_pressure_time(int shotNumber, DATA_BLOCK* data_block, int
 
 	if (status != 0) {
 		ic_antennas_throwsIdamError5(status, "ic_antennas_module_pressure_time","GICHVTRANSFO", shotNumber, antennaId, moduleId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -979,6 +989,7 @@ int ic_antennas_frequency(int shotNumber, DATA_BLOCK* data_block, int* nodeIndic
 	if (status != 0) {
 		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency","DFCI:PILOTAGE:ICHFREQ", shotNumber, antennaId);
 		free(value);
+		return status;
 	}
 	float* pt_float = (float*)value;
 
@@ -993,6 +1004,7 @@ int ic_antennas_frequency(int shotNumber, DATA_BLOCK* data_block, int* nodeIndic
 		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency","GICHANTPOWQ1%1", shotNumber, antennaId);
 		free(time);
 		free(data);
+		return status2;
 	}
 	//Building the FLT_1D antenna/frequency field
 	float* frequencies = malloc(sizeof(float)*len);
@@ -1019,6 +1031,7 @@ int ic_antennas_frequency_time(int shotNumber, DATA_BLOCK* data_block, int* node
 		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency_time","GICHANTPOWQ1%1", shotNumber, antennaId);
 		free(time);
 		free(data);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
@@ -1038,6 +1051,7 @@ int ic_antennas_modules_strap_outline_r(int shotNumber, DATA_BLOCK* data_block, 
 	if (status != 0) {
 		ic_antennas_throwsIdamError1(status, "ic_antennas_modules_strap_outline_r","EXP-T-S:Position:PosICRH", shotNumber, antennaId);
 		free(value);
+		return status;
 	}
 	float* pt_float = (float*)value;
 	UDA_LOG(UDA_LOG_DEBUG, "After readStaticParameters execution\n");
