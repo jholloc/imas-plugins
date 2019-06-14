@@ -981,7 +981,7 @@ int ic_antennas_power_launched_time(int shotNumber, DATA_BLOCK* data_block, int*
 int ic_antennas_frequency(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 
 	int antennaId = nodeIndices[0];
-	int val_nb = 1;
+	int val_nb = 3;
 	int nb_val = 0;
 	char* value = NULL;
 	//Reading the antennas frequencies (3 scalars for Q1, Q2 and Q4)
@@ -994,17 +994,25 @@ int ic_antennas_frequency(int shotNumber, DATA_BLOCK* data_block, int* nodeIndic
 	float* pt_float = (float*)value;
 
 	//Getting the time vector
-	int rang[2] = {0,0};
 	int len;
 	float* time = NULL;
 	float* data = NULL;
-	int status2 = readSignal("GICHANTPOWQ1", shotNumber, 0, rang, &time, &data, &len);
 
-	if (status2 != 0) {
-		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency","GICHANTPOWQ1%1", shotNumber, antennaId);
+	if (antennaId == 1) {
+		status = time_field("GICHANTPOWQ1", shotNumber, 1, &time, &data, &len);
+	}
+	else if (antennaId == 2) {
+		status = time_field("GICHANTPOWQ2", shotNumber, 1, &time, &data, &len);
+	}
+	else if (antennaId == 3) {
+		status = time_field("GICHANTPOWQ4", shotNumber, 1, &time, &data, &len);
+	}
+
+	if (status != 0) {
+		ic_antennas_throwsIdamError1(status, "ic_antennas_frequency","GICHANTPOWQ1,GICHANTPOWQ2,GICHANTPOWQ3", shotNumber, antennaId);
 		free(time);
 		free(data);
-		return status2;
+		return status;
 	}
 	//Building the FLT_1D antenna/frequency field
 	float* frequencies = malloc(sizeof(float)*len);
