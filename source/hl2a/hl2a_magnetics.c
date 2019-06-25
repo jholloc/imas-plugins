@@ -25,7 +25,7 @@ void magnetics_ids_properties_homogeneous_time(int shotNumber, DATA_BLOCK* data_
 
 void magnetics_flux_loop_shape_of(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
 {
-   int N = 10;
+   int N = 1;
    setReturnDataIntScalar(data_block, N, NULL); //returns N flux loops
 }
 
@@ -154,6 +154,12 @@ void magnetics_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
     }
     const size_t* shape = &N;
     setReturnDataFloatArray(data_block, time, 1, shape, ""); 
+}
+
+void magnetics_bpol_probe_shape_of(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices)
+{
+   int N = 1;
+   setReturnDataIntScalar(data_block, N, NULL); //returns N bpol probe
 }
 
 
