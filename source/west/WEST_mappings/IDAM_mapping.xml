@@ -200,7 +200,8 @@
 <mapping key="ic_antennas/antenna/#/module/#/matching_element/#/name" value="ic_antennas_module_matching_element_name" type="static"/>
 <mapping key="ic_antennas/antenna/#/module/#/matching_element/#/identifier" value="ic_antennas_module_matching_element_identifier" type="static"/>
 <mapping key="ic_antennas/antenna/#/module/#/strap/#/outline/r" value="ic_antennas_modules_strap_outline_r" type="static"/>
-<mapping key="ic_antennas/antenna/#/module/#/strap/#/outline/phi" value="ic_antennas_modules_strap_outline_phi" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/strap/#/outline/z" value="ic_antennas_modules_strap_outline_z" type="static"/>
+<!-- mapping key="ic_antennas/antenna/#/module/#/strap/#/outline/phi" value="ic_antennas_modules_strap_outline_phi" type="static"/ -->
 <mapping key="ic_antennas/antenna/#/module/#/strap/#/width_tor" value="ic_antennas_modules_strap_width_tor" type="static"/>
 <mapping key="ic_antennas/antenna/#/module/#/strap/#/distance_to_conductor" value="ic_antennas_modules_strap_distance_to_conductor" type="static"/>
 

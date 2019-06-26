@@ -1046,33 +1046,37 @@ int ic_antennas_frequency_time(int shotNumber, DATA_BLOCK* data_block, int* node
 }
 
 int ic_antennas_modules_strap_outline_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
-
 	int antennaId = nodeIndices[0];
-	int moduleId = nodeIndices[1];
-	int strapId = nodeIndices[2];
-
-	int val_nb = 3;
-	int nb_val;
-	char* value = NULL;
-	//Reading the antennas radial position (3 scalars for Q1, Q2 and Q4)
-	int status = readStaticParameters(&value, &nb_val, shotNumber, "EXP-T-S", "Position", "PosICRH", val_nb);
-	if (status != 0) {
-		ic_antennas_throwsIdamError1(status, "ic_antennas_modules_strap_outline_r","EXP-T-S:Position:PosICRH", shotNumber, antennaId);
-		free(value);
-		return status;
-	}
-	float* pt_float = (float*)value;
-	UDA_LOG(UDA_LOG_DEBUG, "After readStaticParameters execution\n");
-
-	//Building the FLT_1D r field
-	const int N = 4; //number of radial positions of a strap (2 straps for the left module, 2 straps for the right module)
+	const int N = 6; //number of radial positions of a strap (2 straps for the left module, 2 straps for the right module)
 	float* r = malloc(sizeof(float)*N);
-	int i;
-	for (i = 0; i < N; i++) {
-		r[i] = pt_float[antennaId - 1]; //same radial positions for the 4 points of the outline
-	}
+	r[0] = 9.e-3;
+	r[1] = 44.e-3;
+	r[2] = 58.e-3;
+	r[3] = 87.e-3;
+	r[4] = 116.e-3;
+	r[5] = 140.e-3;
 	SetStatic1DData(data_block, N, r);
-	free(pt_float);
+	return 0;
+}
+
+int ic_antennas_modules_strap_outline_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	int antennaId = nodeIndices[0];
+	int strapId = nodeIndices[2];
+	const int N = 6; //number of radial positions of a strap (2 straps for the left module, 2 straps for the right module)
+	float* z = malloc(sizeof(float)*N);
+	z[0] = 296.e-3;
+	z[1] = 160.e-3;
+	z[2] = 45.e-3;
+	z[3] = 22.e-3;
+	z[4] = 22.e-3;
+	z[5] = 52.e-3;
+	if (strapId == 1) { //we change the sign of z (inferior strap)
+		int i;
+		for (i = 0; i < N; i++) {
+			z[i] = - z[i];
+		}
+	}
+	SetStatic1DData(data_block, N, z);
 	return 0;
 }
 
@@ -1129,7 +1133,7 @@ int ic_antennas_modules_strap_outline_phi(int shotNumber, DATA_BLOCK* data_block
 }
 
 int ic_antennas_modules_strap_width_tor(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
-	float width_tor = 0.14;
+	float width_tor = 0.13;
 	setReturnDataFloatScalar(data_block, width_tor, NULL);
 	return 0;
 }

@@ -243,6 +243,9 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	else if (strcmp(fun_name, "ic_antennas_module_pressure_identifier") == 0) {
 		fun = 612;
 	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_outline_z") == 0) {
+		fun = 613;
+	}
 	// ------ LH_ANTENNAS
 	else if (strcmp(fun_name, "lh_antennas_ids_properties_comment") == 0) {
 		fun = 700;
@@ -639,6 +642,11 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	case 612: {
 		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_pressure_identifier from WEST plugin\n");
 		status = ic_antennas_module_pressure_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 613: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_outline_z from WEST plugin\n");
+		status = ic_antennas_modules_strap_outline_z(shotNumber, data_block, nodeIndices);
 		break;
 	}
 	case 700: {

@@ -36,6 +36,7 @@ int ic_antennas_power_launched_time(int shotNumber, DATA_BLOCK* data_block, int*
 int ic_antennas_frequency(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_frequency_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_modules_strap_outline_r(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int ic_antennas_modules_strap_outline_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_modules_strap_outline_phi(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_modules_strap_width_tor(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int ic_antennas_modules_strap_distance_to_conductor(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
