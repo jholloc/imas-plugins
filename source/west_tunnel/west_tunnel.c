@@ -66,7 +66,7 @@ static void* server_task(void* ptr)
 
 int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-	fprintf(stdout, "Calling WEST_TUNNEL plugin\n");
+	//fprintf(stdout, "Calling WEST_TUNNEL plugin\n");
 	static int init = 0;
 
 	//----------------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
 	}
 	int handle = idamClient(&new_request_block);
 	if (handle < 0) {
-		fprintf(stderr, "UDA call failed\n");
+		//fprintf(stderr, "UDA call failed\n");
 		return handle;
 	}
 
@@ -234,15 +234,14 @@ int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
+	//fprintf(stdout, "Calling open_pulse in WEST_TUNNEL plugin\n");
 	UDA_LOG(UDA_LOG_DEBUG, "%s", "Opening pulse file in west_tunnel");
-	//printf("%s\n", "Executing west_tunnel");
 	setenv("UDA_HOST", "localhost", 1);
 
 	char port[100];
 	sprintf(port, "%d", g_west_tunnel_server_port);
 	setenv("UDA_PORT", port, 1);
 
-	//fprintf(stdout, "Calling open_pulse in WEST_TUNNEL plugin\n");
 	UDA_LOG(UDA_LOG_DEBUG, "%s", "Calling open_pulse of west_tunnel plugin");
 
 	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
