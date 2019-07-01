@@ -1,28 +1,27 @@
 /*---------------------------------------------------------------
-* v1 IDAM Plugin Template: Standardised plugin design template, just add ... 
-*
-* Input Arguments:	IDAM_PLUGIN_INTERFACE *idam_plugin_interface
-*
-* Returns:		0 if the plugin functionality was successful
-*			otherwise a Error Code is returned 
-*
-* Standard functionality:
-*
-*	help	a description of what this plugin does together with a list of functions available
-*
-*	reset	frees all previously allocated heap, closes file handles and resets all static parameters.
-*		This has the same functionality as setting the housekeeping directive in the plugin interface
-*		data structure to TRUE (1)
-*
-*	init	Initialise the plugin: read all required data and process. Retain staticly for
-*		future reference.	
-*
-*---------------------------------------------------------------------------------------------------------------*/
+ * v1 IDAM Plugin Template: Standardised plugin design template, just add ...
+ *
+ * Input Arguments:	IDAM_PLUGIN_INTERFACE *idam_plugin_interface
+ *
+ * Returns:		0 if the plugin functionality was successful
+ *			otherwise a Error Code is returned
+ *
+ * Standard functionality:
+ *
+ *	help	a description of what this plugin does together with a list of functions available
+ *
+ *	reset	frees all previously allocated heap, closes file handles and resets all static parameters.
+ *		This has the same functionality as setting the housekeeping directive in the plugin interface
+ *		data structure to TRUE (1)
+ *
+ *	init	Initialise the plugin: read all required data and process. Retain staticly for
+ *		future reference.
+ *
+ *---------------------------------------------------------------------------------------------------------------*/
 #include "west_tunnel.h"
 
 #include <stdlib.h>
 #include <strings.h>
-
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -36,105 +35,148 @@
 #include "west_tunnel_ssh.h"
 #include "west_tunnel_ssh_server.h"
 
-static char* convertIdam2StringType(int type);
-
 static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-
 static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-
 static int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-
 static int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-
 static int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
-static int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
 typedef struct ServerThreadData {
-    const char* experiment;
-    const char* ssh_host;
-    const char* uda_host;
+	const char* experiment;
+	const char* ssh_host;
+	const char* uda_host;
 } SERVER_THREAD_DATA;
 
 static void* server_task(void* ptr)
 {
-    SERVER_THREAD_DATA* data = (SERVER_THREAD_DATA*)ptr;
-    ssh_run_server(data->experiment, data->ssh_host, data->uda_host);
-    return NULL;
+	SERVER_THREAD_DATA* data = (SERVER_THREAD_DATA*)ptr;
+	ssh_run_server(data->experiment, data->ssh_host, data->uda_host);
+	return NULL;
 }
 
 int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    static int init = 0;
+	fprintf(stdout, "Calling WEST_TUNNEL plugin\n");
+	static int init = 0;
 
-    //----------------------------------------------------------------------------------------
-    // Standard v1 Plugin Interface
+	//----------------------------------------------------------------------------------------
+	// Standard v1 Plugin Interface
 
-    if (idam_plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
-        RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
-    }
+	if (idam_plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
+		RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
+	}
 
-    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
+	idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
-        if (!init) return 0; // Not previously initialised: Nothing to do!
-        // Free Heap & reset counters
-        init = 0;
-        return 0;
-    }
+	if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+		if (!init) return 0; // Not previously initialised: Nothing to do!
+		// Free Heap & reset counters
+		init = 0;
+		return 0;
+	}
 
-    //----------------------------------------------------------------------------------------
-    // Initialise
+	//----------------------------------------------------------------------------------------
+	// Initialise
+	if (!init) {
+		g_west_tunnel_server_port = 0;
+		g_west_tunnel_initialised = false;
 
-    if (!init) {
-        g_west_tunnel_server_port = 0;
-        g_west_tunnel_initialised = false;
+		pthread_cond_init(&g_west_tunnel_initialised_cond, NULL);
+		pthread_mutex_init(&g_west_tunnel_initialised_mutex, NULL);
 
-        pthread_cond_init(&g_west_tunnel_initialised_cond, NULL);
-        pthread_mutex_init(&g_west_tunnel_initialised_mutex, NULL);
+		pthread_t server_thread;
+		SERVER_THREAD_DATA thread_data = {};
+		thread_data.experiment = "WEST";
+		thread_data.ssh_host = "gemma.intra.cea.fr";
+		thread_data.uda_host = "gemma.intra.cea.fr";
 
-        pthread_t server_thread;
-        SERVER_THREAD_DATA thread_data = {};
-        thread_data.experiment = "WEST";
-    	thread_data.ssh_host = "altair.partenaires.cea.fr";
-    	thread_data.uda_host = "altair.partenaires.cea.fr";
+		pthread_create(&server_thread, NULL, server_task, &thread_data);
 
-        pthread_create(&server_thread, NULL, server_task, &thread_data);
+		pthread_mutex_lock(&g_west_tunnel_initialised_mutex);
+		while (!g_west_tunnel_initialised) {
+			pthread_cond_wait(&g_west_tunnel_initialised_cond, &g_west_tunnel_initialised_mutex);
+		}
+		pthread_mutex_unlock(&g_west_tunnel_initialised_mutex);
 
-        pthread_mutex_lock(&g_west_tunnel_initialised_mutex);
-        while (!g_west_tunnel_initialised) {
-            pthread_cond_wait(&g_west_tunnel_initialised_cond, &g_west_tunnel_initialised_mutex);
-        }
-        pthread_mutex_unlock(&g_west_tunnel_initialised_mutex);
+		pthread_mutex_destroy(&g_west_tunnel_initialised_mutex);
+		pthread_cond_destroy(&g_west_tunnel_initialised_cond);
 
-        pthread_mutex_destroy(&g_west_tunnel_initialised_mutex);
-        pthread_cond_destroy(&g_west_tunnel_initialised_cond);
+		struct timespec sleep_for;
+		sleep_for.tv_sec = 0;
+		sleep_for.tv_nsec = 100000000;
+		nanosleep(&sleep_for, NULL);
 
-        struct timespec sleep_for;
-        sleep_for.tv_sec = 0;
-        sleep_for.tv_nsec = 100000000;
-        nanosleep(&sleep_for, NULL);
+		init = 1;
+	}
 
-        init = 1;
-    }
+	if (STR_IEQUALS(request_block->function, "help")) {
+		return do_help(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "version")) {
+		return do_version(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "builddate")) {
+		return do_builddate(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+		return do_defaultmethod(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+		return do_maxinterfaceversion(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "openPulse")) {
+		return open_pulse(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "closePulse")) {
+		return close_pulse(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "beginAction")) {
+		return begin_action(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "endAction")) {
+		return end_action(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "writeData")) {
+		return write_data(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "readData")) {
+		return read_data(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "deleteData")) {
+		return delete_data(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "beginArraystructAction")) {
+		return begin_arraystruct_action(idam_plugin_interface);
+	} else {
+		RAISE_PLUGIN_ERROR("Unknown function requested!");
+	}
+	return 0;
+}
 
-    if (STR_IEQUALS(request_block->function, "help")) {
-        return do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
-        return do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
-        return do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
-        return do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
-        return do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
-        return do_read(idam_plugin_interface);
-    } else {
-        RAISE_PLUGIN_ERROR("Unknown function requested!");
-    }
+int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
+	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+	REQUEST_BLOCK new_request_block;
+	initRequestBlock(&new_request_block);
+	int err = 0;
+
+	char request[1024];
+	sprintf(request,"IMAS_REMOTE::%s",request_block->signal);
+	//printf(stdout, "forwarded request: %s\n", request_block->signal);
+
+	UDA_LOG(UDA_LOG_DEBUG,"forwarded request: %s\n", request);
+
+	if ((err = makeClientRequestBlock(request, "", &new_request_block)) != 0) {
+		fprintf(stderr, "failed to create request block");
+		return err;
+	}
+	int handle = idamClient(&new_request_block);
+	if (handle < 0) {
+		fprintf(stderr, "UDA call failed\n");
+		return handle;
+	}
+
+	*idam_plugin_interface->data_block = *getIdamDataBlock(handle);
+	return 0;
 }
 
 /**
@@ -144,10 +186,10 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    const char* help = PLUGIN_NAME ": Add Functions Names, Syntax, and Descriptions\n\n";
-    const char* desc = PLUGIN_NAME ": help = description of this plugin";
+	const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
+	const char* desc = "templatePlugin: help = description of this plugin";
 
-    return setReturnDataString(idam_plugin_interface->data_block, help, desc);
+	return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
 
 /**
@@ -157,7 +199,7 @@ int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
+	return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
 }
 
 /**
@@ -167,7 +209,7 @@ int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataString(idam_plugin_interface->data_block, __DATE__, "Plugin build date");
+	return setReturnDataString(idam_plugin_interface->data_block, __DATE__, "Plugin build date");
 }
 
 /**
@@ -177,7 +219,7 @@ int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, "Plugin default method");
+	return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, "Plugin default method");
 }
 
 /**
@@ -187,113 +229,106 @@ int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, "Maximum Interface Version");
+	return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, "Maximum Interface Version");
 }
 
-//----------------------------------------------------------------------------------------
-// Add functionality here ....
-int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+int open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    //DATA_BLOCK* data_block = idam_plugin_interface->data_block;
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "Opening pulse file in west_tunnel");
+	//printf("%s\n", "Executing west_tunnel");
+	setenv("UDA_HOST", "localhost", 1);
 
-    setenv("UDA_HOST", "localhost", 1);
+	char port[100];
+	sprintf(port, "%d", g_west_tunnel_server_port);
+	setenv("UDA_PORT", port, 1);
 
-    char port[100];
-    sprintf(port, "%d", g_west_tunnel_server_port);
-    setenv("UDA_PORT", port, 1);
+	//fprintf(stdout, "Calling open_pulse in WEST_TUNNEL plugin\n");
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "Calling open_pulse of west_tunnel plugin");
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+	const char* tokamak;
+	FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
 
-    const char* element;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
+	if (strcmp(tokamak,"WEST") == 0 || strcmp(tokamak,"west") == 0) {
 
-    int* indices;
-    size_t nindices;
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
+		int backend_id;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, backend_id);
 
-    int shot;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+		int shot;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
 
-    int rank = 0;
-    if (strstr(element, "/data") != NULL || strstr(element, "/time") != NULL) {
-        rank = 1;
-    }
-    //FIND_REQUIRED_INT_VALUE(request_block->nameValueList, rank);
-    
-    int dtype;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
+		int run;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
 
-    const char* experiment = NULL;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, experiment);
+		const char* user;
+		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
 
-    char* copy = strdup(element);
+		const char* version;
+		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
 
-    int i;
-    for (i = 0; i < nindices; i++) {
-        char replace[10];
-        sprintf(replace, "%d", indices[i]);
-        char* old = copy;
-        copy = StringReplace(copy, "#", replace);
-        free(old);
-    }
+		int mode;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, mode);
 
-    char* found = strchr(copy, '/');
+		const char* options;
+		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, options);
 
-    *found = '\0';
-    char* group = strdup(copy);
-    char* variable = strdup(found + 1);
-    free(copy);
+		char request[1024];
+		sprintf(request,"openPulse(backend_id=%d, shot=%d, run=%d, user=%s, tokamak=%s, version=%s, mode=%d, options='%s')",
+				backend_id, shot, run, "imas_public", "west", version, mode, options);
 
-    char* type = convertIdam2StringType(dtype);
+		strcpy(request_block->signal, request);
 
-    char request[1024];
-    sprintf(request, "imas::get(idx=-1, group='%s', variable='%s', expName='%s', type=%s, rank=%d, shot=%d, run=0)", group, variable, experiment, type, rank, shot);
+	}
 
-    //printf("%s\n", request);
-
-    free(group);
-    free(variable);
-
-    //fprintf(stderr, "request: %s\n", request);
-
-    REQUEST_BLOCK new_request_block;
-    initRequestBlock(&new_request_block);
-    int err = 0;
-
-    env_host = 1;
-    env_port = 1;
-
-    if ((err = makeClientRequestBlock(request, "", &new_request_block)) != 0) {
-        fprintf(stderr, "failed to create request block");
-        return err;
-    }
-
-    int handle = idamClient(&new_request_block);
-    if (handle < 0) {
-        //fprintf(stderr, "UDA call failed\n");
-        return handle;
-    }
-
-    *idam_plugin_interface->data_block = *getIdamDataBlock(handle);
-
-    //fprintf(stderr, "UDA handle %d\n", handle);
-
-    return 0;
+	int fr = forwardRequest(idam_plugin_interface);
+	return fr;
 }
 
-char* convertIdam2StringType(int type) {
-    switch (type) {
-        case UDA_TYPE_INT:
-            return "int";
-        case UDA_TYPE_FLOAT:
-            return "double";
-        case UDA_TYPE_DOUBLE:
-            return "double";
-        case UDA_TYPE_STRING:
-            return "string";
-        default:
-            return "unknown";
-    }
-    return "unknown";
+int close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	return forwardRequest(idam_plugin_interface);
 }
 
+int begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	/*UDA_LOG(UDA_LOG_DEBUG, "%s", "Executing begin_action in west_tunnel");
+	printf("%s\n", "Executing begin_action in west_tunnel");
+	setenv("UDA_HOST", "localhost", 1);
+
+	char port[100];
+	sprintf(port, "%d", g_west_tunnel_server_port);
+	setenv("UDA_PORT", port, 1);*/
+	return forwardRequest(idam_plugin_interface);
+}
+
+int end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	return forwardRequest(idam_plugin_interface);
+}
+
+int write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	return forwardRequest(idam_plugin_interface);
+}
+
+int read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	UDA_LOG(UDA_LOG_DEBUG, "%s", "Executing begin_action in west_tunnel");
+	printf("%s\n", "Executing begin_action in west_tunnel");
+	setenv("UDA_HOST", "localhost", 1);
+
+	char port[100];
+	sprintf(port, "%d", g_west_tunnel_server_port);
+	setenv("UDA_PORT", port, 1);
+	return forwardRequest(idam_plugin_interface);
+}
+
+int delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	return forwardRequest(idam_plugin_interface);
+}
+
+int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	return forwardRequest(idam_plugin_interface);
+}
