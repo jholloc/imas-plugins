@@ -3,6 +3,6 @@ JET         magnetics   -           JET_MAGNETICS
 JET         *           -           EXP2IMAS
 ASDEX       *           -           EXP2IMAS
 TCV         *           -           EXP2IMAS
-WEST        *           -           WEST
+WEST        *           -           WEST_TUNNEL
 HL2A        *           -           HL2A
 TS          *           -           TORE_SUPRA
