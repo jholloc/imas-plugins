@@ -51,6 +51,8 @@ static int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface
 
 static int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
+static int THISPLUGIN_VERSION = 2;
+
 typedef struct ServerThreadData {
 	const char* experiment;
 	const char* ssh_host;
@@ -290,13 +292,6 @@ int close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-	/*UDA_LOG(UDA_LOG_DEBUG, "%s", "Executing begin_action in west_tunnel");
-	printf("%s\n", "Executing begin_action in west_tunnel");
-	setenv("UDA_HOST", "localhost", 1);
-
-	char port[100];
-	sprintf(port, "%d", g_west_tunnel_server_port);
-	setenv("UDA_PORT", port, 1);*/
 	return forwardRequest(idam_plugin_interface);
 }
 
@@ -312,13 +307,13 @@ int write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-	UDA_LOG(UDA_LOG_DEBUG, "%s", "Executing begin_action in west_tunnel");
+	/*UDA_LOG(UDA_LOG_DEBUG, "%s", "Executing begin_action in west_tunnel");
 	printf("%s\n", "Executing begin_action in west_tunnel");
 	setenv("UDA_HOST", "localhost", 1);
 
 	char port[100];
 	sprintf(port, "%d", g_west_tunnel_server_port);
-	setenv("UDA_PORT", port, 1);
+	setenv("UDA_PORT", port, 1);*/
 	return forwardRequest(idam_plugin_interface);
 }
 

@@ -4,9 +4,9 @@
 #include <stack>
 #include <cstdlib>
 #include <cstring>
-#include <fstream>
+//#include <fstream>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/filesystem.hpp>
+//#include <boost/filesystem.hpp>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -114,14 +114,16 @@ namespace {
  */
 int IMASPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    boost::filesystem::path path = __FILE__;
+    /*boost::filesystem::path path = __FILE__;
     path = path.parent_path().append("help.md");
     std::ifstream ifs(path.native());
     std::stringstream ss;
     ss << ifs.rdbuf();
 
     const char* help = ss.str().c_str();
-    const char* desc = PLUGIN_NAME ": help = description of this plugin";
+    const char* desc = PLUGIN_NAME ": help = description of this plugin";*/
+	const char* help = "\ntemplatePlugin: Add Functions Names, Syntax, and Descriptions\n\n";
+	const char* desc = "templatePlugin: help = description of this plugin";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
