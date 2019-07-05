@@ -168,6 +168,7 @@ int barometry_gauge_pressure_time(int shotNumber, DATA_BLOCK* data_block, int* n
 
 	if (status != 0) {
 		barometry_throwsIdamError(status, "barometry_gauge_pressure_time", "GBARDB4/8", shotNumber);
+		return status;
 
 	}
 	UDA_LOG(UDA_LOG_DEBUG, "setting time...\n");

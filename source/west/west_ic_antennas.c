@@ -973,6 +973,7 @@ int ic_antennas_power_launched_time(int shotNumber, DATA_BLOCK* data_block, int*
 
 	if (status != 0) {
 		ic_antennas_throwsIdamError1(status, "ic_antennas_power_launched_time","SICHPQ1/SICHPQ2/SICHPQ4", shotNumber, antennaId);
+		return status;
 	}
 	SetDynamicDataTime(data_block, len, time, data);
 	return status;
