@@ -47,6 +47,11 @@ include( use_cxx11 )
 
 use_cxx11()
 
+option( UDA_LEGACY "Building against legacy UDA server" OFF )
+if( UDA_LEGACY )
+  add_compile_definitions( UDA_LEGACY )
+endif()
+
 ########################################################################################################################
 
 include_directories( /opt/local/include )
