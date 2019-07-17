@@ -69,7 +69,7 @@ int lh_antennas_antenna_power(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 	UDA_LOG(UDA_LOG_DEBUG, "Calling lh_antennas_antenna_power\n");
 
 	int antennaId = nodeIndices[0]; //=1 or 2
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in MW in Arcade
 	float *forward_time = NULL;
 	float *forward_data = NULL;
 	int forward_len;
@@ -193,7 +193,7 @@ int lh_antennas_antenna_power_time(int shotNumber, DATA_BLOCK* data_block, int* 
 
 int lh_antennas_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
 	int extractionIndex = 0; //indicates that signal does not belong to a group
@@ -243,7 +243,7 @@ int lh_antennas_power_forward_time(int shotNumber, DATA_BLOCK* data_block, int* 
 
 int lh_antennas_power_reflected(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int extractionIndex = 0; //indicates that signal does not belong to a group
 	int status = -1;
@@ -458,7 +458,7 @@ int lh_antennas_position_z(int shotNumber, DATA_BLOCK* data_block, int* nodeIndi
 }
 
 int lh_antennas_modules_power(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
 	int extractionIndex = nodeIndices[1]; //module id
@@ -508,7 +508,7 @@ int lh_antennas_modules_power_time(int shotNumber, DATA_BLOCK* data_block, int* 
 }
 
 int lh_antennas_modules_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
 	int extractionIndex = nodeIndices[1]; //module id
@@ -558,7 +558,7 @@ int lh_antennas_modules_power_forward_time(int shotNumber, DATA_BLOCK* data_bloc
 }
 
 int lh_antennas_modules_power_reflected(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in MW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
 	int extractionIndex = nodeIndices[1]; //module id
