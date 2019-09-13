@@ -304,7 +304,8 @@ int IMASPlugin::write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* timebase;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, timebase);
 
-    void* data = nullptr;
+    int idata;
+    void* data = &idata;
 
     int datatype;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);
