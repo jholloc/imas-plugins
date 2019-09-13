@@ -35,6 +35,8 @@
 #include "west_tunnel_ssh.h"
 #include "west_tunnel_ssh_server.h"
 
+static int reset(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+static int init(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 static int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 static int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 static int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
@@ -50,6 +52,8 @@ static int delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 static int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
 static int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
+static int THISPLUGIN_VERSION = 2;
 
 typedef struct ServerThreadData {
 	const char* experiment;
@@ -67,61 +71,14 @@ static void* server_task(void* ptr)
 int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
 	//fprintf(stdout, "Calling WEST_TUNNEL plugin\n");
-	static int init = 0;
-
-	//----------------------------------------------------------------------------------------
-	// Standard v1 Plugin Interface
-
-	if (idam_plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
-		RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
-	}
-
-	idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+	static int initialization = 0;
 
 	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
-	if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
-		if (!init) return 0; // Not previously initialised: Nothing to do!
-		// Free Heap & reset counters
-		init = 0;
-		return 0;
+	if (STR_IEQUALS(request_block->function, "init")) {
+		return init(idam_plugin_interface);
 	}
-
-	//----------------------------------------------------------------------------------------
-	// Initialise
-	if (!init) {
-		g_west_tunnel_server_port = 0;
-		g_west_tunnel_initialised = false;
-
-		pthread_cond_init(&g_west_tunnel_initialised_cond, NULL);
-		pthread_mutex_init(&g_west_tunnel_initialised_mutex, NULL);
-
-		pthread_t server_thread;
-		SERVER_THREAD_DATA thread_data = {};
-		thread_data.experiment = "WEST";
-		thread_data.ssh_host = "gemma.intra.cea.fr";
-		thread_data.uda_host = "gemma.intra.cea.fr";
-
-		pthread_create(&server_thread, NULL, server_task, &thread_data);
-
-		pthread_mutex_lock(&g_west_tunnel_initialised_mutex);
-		while (!g_west_tunnel_initialised) {
-			pthread_cond_wait(&g_west_tunnel_initialised_cond, &g_west_tunnel_initialised_mutex);
-		}
-		pthread_mutex_unlock(&g_west_tunnel_initialised_mutex);
-
-		pthread_mutex_destroy(&g_west_tunnel_initialised_mutex);
-		pthread_cond_destroy(&g_west_tunnel_initialised_cond);
-
-		struct timespec sleep_for;
-		sleep_for.tv_sec = 0;
-		sleep_for.tv_nsec = 100000000;
-		nanosleep(&sleep_for, NULL);
-
-		init = 1;
-	}
-
-	if (STR_IEQUALS(request_block->function, "help")) {
+	else if (STR_IEQUALS(request_block->function, "help")) {
 		return do_help(idam_plugin_interface);
 	} else if (STR_IEQUALS(request_block->function, "version")) {
 		return do_version(idam_plugin_interface);
@@ -147,9 +104,51 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 		return delete_data(idam_plugin_interface);
 	} else if (STR_IEQUALS(request_block->function, "beginArraystructAction")) {
 		return begin_arraystruct_action(idam_plugin_interface);
+	} else if (STR_IEQUALS(request_block->function, "reset")) {
+		return reset(idam_plugin_interface);
 	} else {
+		UDA_LOG(UDA_LOG_ERROR, "%s%s", "Unknown function requested:",request_block->function);
+		//fprintf(stdout, "requested function:%s\n",request_block->function );
 		RAISE_PLUGIN_ERROR("Unknown function requested!");
 	}
+	return 0;
+}
+
+int reset(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	return 0;
+}
+
+int init(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
+	g_west_tunnel_server_port = 0;
+	g_west_tunnel_initialised = false;
+
+	pthread_cond_init(&g_west_tunnel_initialised_cond, NULL);
+	pthread_mutex_init(&g_west_tunnel_initialised_mutex, NULL);
+
+	pthread_t server_thread;
+	SERVER_THREAD_DATA thread_data = {};
+	thread_data.experiment = "WEST";
+	thread_data.ssh_host = "altair.partenaires.cea.fr";
+	thread_data.uda_host = "altair.partenaires.cea.fr";
+
+	pthread_create(&server_thread, NULL, server_task, &thread_data);
+
+	pthread_mutex_lock(&g_west_tunnel_initialised_mutex);
+	while (!g_west_tunnel_initialised) {
+		pthread_cond_wait(&g_west_tunnel_initialised_cond, &g_west_tunnel_initialised_mutex);
+	}
+	pthread_mutex_unlock(&g_west_tunnel_initialised_mutex);
+
+	pthread_mutex_destroy(&g_west_tunnel_initialised_mutex);
+	pthread_cond_destroy(&g_west_tunnel_initialised_cond);
+
+	struct timespec sleep_for;
+	sleep_for.tv_sec = 0;
+	sleep_for.tv_nsec = 100000000;
+	nanosleep(&sleep_for, NULL);
+	//fprintf(stdout, "WEST init() done.\n");
 	return 0;
 }
 
@@ -158,13 +157,12 @@ int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
 	REQUEST_BLOCK new_request_block;
 	initRequestBlock(&new_request_block);
 	int err = 0;
-
+	//fprintf(stdout, "forwarding request...\n");
 	char request[1024];
 	sprintf(request,"IMAS_REMOTE::%s",request_block->signal);
-	//printf(stdout, "forwarded request: %s\n", request_block->signal);
+	//fprintf(stdout, "forwarded request: %s\n", request);
 
 	UDA_LOG(UDA_LOG_DEBUG,"forwarded request: %s\n", request);
-
 	if ((err = makeClientRequestBlock(request, "", &new_request_block)) != 0) {
 		fprintf(stderr, "failed to create request block");
 		return err;
@@ -174,7 +172,6 @@ int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
 		//fprintf(stderr, "UDA call failed\n");
 		return handle;
 	}
-
 	*idam_plugin_interface->data_block = *getIdamDataBlock(handle);
 	return 0;
 }
@@ -234,6 +231,7 @@ int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
+
 	//fprintf(stdout, "Calling open_pulse in WEST_TUNNEL plugin\n");
 	UDA_LOG(UDA_LOG_DEBUG, "%s", "Opening pulse file in west_tunnel");
 	setenv("UDA_HOST", "localhost", 1);
@@ -290,13 +288,7 @@ int close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-	/*UDA_LOG(UDA_LOG_DEBUG, "%s", "Executing begin_action in west_tunnel");
-	printf("%s\n", "Executing begin_action in west_tunnel");
-	setenv("UDA_HOST", "localhost", 1);
-
-	char port[100];
-	sprintf(port, "%d", g_west_tunnel_server_port);
-	setenv("UDA_PORT", port, 1);*/
+	fprintf(stdout, "forwarding request begin_action...\n");
 	return forwardRequest(idam_plugin_interface);
 }
 
@@ -312,13 +304,6 @@ int write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-	UDA_LOG(UDA_LOG_DEBUG, "%s", "Executing begin_action in west_tunnel");
-	printf("%s\n", "Executing begin_action in west_tunnel");
-	setenv("UDA_HOST", "localhost", 1);
-
-	char port[100];
-	sprintf(port, "%d", g_west_tunnel_server_port);
-	setenv("UDA_PORT", port, 1);
 	return forwardRequest(idam_plugin_interface);
 }
 

@@ -5,8 +5,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <sstream>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/filesystem.hpp>
+#include <libgen.h>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -114,9 +115,10 @@ namespace {
  */
 int IMASPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    boost::filesystem::path path = __FILE__;
-    path = path.parent_path().append("help.md");
-    std::ifstream ifs(path.native());
+    std::string path = __FILE__;
+    std::string dir = dirname((char*)path.c_str());
+    path = dir + "/help.md";
+    std::ifstream ifs(path);
     std::stringstream ss;
     ss << ifs.rdbuf();
 
@@ -302,7 +304,8 @@ int IMASPlugin::write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* timebase;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, timebase);
 
-    void* data = nullptr;
+    int idata;
+    void* data = &idata;
 
     int datatype;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);

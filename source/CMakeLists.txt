@@ -5,6 +5,7 @@ if( NOT DEFINED BUILD_PLUGINS )
   set( BUILD_PLUGINS
     exp2imas
     hl2a
+    imas_forward
     imas_mapping
     imas_old
     imas_partial

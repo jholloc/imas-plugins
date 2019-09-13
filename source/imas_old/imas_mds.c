@@ -21,7 +21,7 @@
 #include <clientserver/udaTypes.h>
 #include <logging/logging.h>
 
-IDAMPLUGINFILELIST pluginFileList_mds;
+UDA_PLUGIN_FILE_LIST pluginFileList_mds;
 
 extern char* errmsg;
 

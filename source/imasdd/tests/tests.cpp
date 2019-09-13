@@ -5,6 +5,11 @@
 #include <clientserver/initStructs.h>
 #include <server/makeServerRequestBlock.h>
 
+#ifdef UDA_LEGACY
+#define UDA_PLUGIN_CLASS_FUNCTION   PLUGINFUNCTION
+#define UDA_PLUGIN_OPERATIONAL      PLUGINOPERATIONAL
+#endif
+
 IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& object)
 {
     IDAM_PLUGIN_INTERFACE interface = {};
@@ -25,7 +30,7 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& object)
     plugin_list.plugin = (PLUGIN_DATA*)malloc(sizeof(PLUGIN_DATA));
 
     plugin_list.plugin[0].request = 1000;
-    plugin_list.plugin[0].plugin_class = PLUGINFUNCTION;
+    plugin_list.plugin[0].plugin_class = UDA_PLUGIN_CLASS_FUNCTION;
     strcpy(plugin_list.plugin[0].format, "IMAS");
 
     makeServerRequestBlock(interface.request_block, plugin_list);
