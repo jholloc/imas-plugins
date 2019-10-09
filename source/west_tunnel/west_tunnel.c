@@ -73,10 +73,15 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 	//fprintf(stdout, "Calling WEST_TUNNEL plugin\n");
 	static int initialization = 0;
 
+	if (!initialization) {
+	    init(idam_plugin_interface);
+	    initialization = 1;
+	}
+
 	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
 	if (STR_IEQUALS(request_block->function, "init")) {
-		return init(idam_plugin_interface);
+		return 0;
 	}
 	else if (STR_IEQUALS(request_block->function, "help")) {
 		return do_help(idam_plugin_interface);
