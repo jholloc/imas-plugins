@@ -52,8 +52,6 @@ int read_size_from_backend(LLenv& env, const std::vector<std::string>& tokens, i
         int size = 0;
         try {
             env.backend->beginArraystructAction(arrayCtx.get(), &size);
-        } catch (UALNoDataException& ex) {
-            size = 0;
         } catch (MDSplus::MdsException& ex) {
             size = 0;
         }
@@ -115,13 +113,8 @@ imas_partial::MDSData read_data_from_backend(LLenv& env, const std::vector<std::
                 }
                 const char* timebase = time_path.c_str();
 
-                try {
-                    env.backend->readData(arrayCtx.get(), field, timebase, &data.data, &data.datatype, &data.rank,
-                                          data.dims);
-                } catch (UALNoDataException& ex) {
-                    std::cerr << "no data for " << field << std::endl;
-                    // pass
-                }
+                env.backend->readData(arrayCtx.get(), field, timebase, &data.data, &data.datatype, &data.rank,
+                        data.dims);
 
                 ArraystructContext* ctx = arrayCtx.get();
                 while (ctx) {
@@ -142,11 +135,7 @@ imas_partial::MDSData read_data_from_backend(LLenv& env, const std::vector<std::
         }
 
         int size = 0;
-        try {
-            env.backend->beginArraystructAction(arrayCtx.get(), &size);
-        } catch (UALNoDataException& ex) {
-            size = 0;
-        }
+        env.backend->beginArraystructAction(arrayCtx.get(), &size);
 
         return read_data_from_backend(env, tokens, depth + 1, opCtx, arrayCtx);
     }

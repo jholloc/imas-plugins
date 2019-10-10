@@ -110,7 +110,7 @@
 
   <mapping key="mse/channel/#/polarisation_angle/data" value="//msediag/polarimetry/measure/value/name" type="dynamic"/>
   <mapping key="mse/channel/#/polarisation_angle/data_error_upper" value="//msediag/polarimetry/measure/value/name" type="error"/>
-  <mapping key="mse/channel/#/polarisation_angle/data_error_lower" value="//msediag/polarimetry/measure/value/name" type="error"/>
+  <!--<mapping key="mse/channel/#/polarisation_angle/data_error_lower" value="//msediag/polarimetry/measure/value/name" type="error"/>-->
   <mapping key="mse/channel/#/polarisation_angle/data_error_index" value="0" type="constant"/>
 
   <mapping key="mse/channel/#/polarisation_angle/time" value="//msediag/polarimetry/measure/value/name" type="dynamic"/>

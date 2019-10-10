@@ -96,7 +96,7 @@
 
   <mapping key="pf_active/coil/#/current/data" value="//pfsystems/pfcoils/coilcurrent/value/name" type="dynamic"/>
   <mapping key="pf_active/coil/#/current/data_error_upper" value="//pfsystems/pfcoils/coilcurrent/value/name" type="error"/>
-  <mapping key="pf_active/coil/#/current/data_error_lower" value="//pfsystems/pfcoils/coilcurrent/value/name" type="error"/>
+  <!--<mapping key="pf_active/coil/#/current/data_error_lower" value="//pfsystems/pfcoils/coilcurrent/value/name" type="error"/>-->
   <mapping key="pf_active/coil/#/current/data_error_index" value="0" type="constant"/>
   <mapping key="pf_active/coil/#/current/time" value="//pfsystems/pfcoils/coilcurrent/value/name" type="dynamic"/>
 

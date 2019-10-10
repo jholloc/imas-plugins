@@ -22,7 +22,7 @@
   <mapping key="magnetics/flux_loop/#/flux/data" value="//magdiag/flux_loops/measure/value/name" type="dynamic"/>
   <mapping key="magnetics/flux_loop/#/flux/data_error_index" value="0" type="constant"/>
   <mapping key="magnetics/flux_loop/#/flux/data_error_upper" value="//magdiag/flux_loops/measure/value/name" type="error"/>
-  <mapping key="magnetics/flux_loop/#/flux/data_error_lower" value="//magdiag/flux_loops/measure/value/name" type="error"/>
+  <!--<mapping key="magnetics/flux_loop/#/flux/data_error_lower" value="//magdiag/flux_loops/measure/value/name" type="error"/>-->
   <mapping key="magnetics/flux_loop/#/flux/time" value="//magdiag/flux_loops/measure/value/name" type="dynamic"/>
 
   <mapping key="magnetics/bpol_probe/Shape_of" value="//magdiag/bpol_probes/setup_bprobe/name/@dim" type="static"/>
@@ -48,7 +48,7 @@
   <mapping key="magnetics/bpol_probe/#/field/data" value="//magdiag/bpol_probes/measure/value/name" type="dynamic"/>
   <mapping key="magnetics/bpol_probe/#/field/data_error_index" value="0" type="constant"/>
   <mapping key="magnetics/bpol_probe/#/field/data_error_upper" value="//magdiag/bpol_probes/measure/value/name" type="error"/>
-  <mapping key="magnetics/bpol_probe/#/field/data_error_lower" value="//magdiag/bpol_probes/measure/value/name" type="error"/>
+  <!--<mapping key="magnetics/bpol_probe/#/field/data_error_lower" value="//magdiag/bpol_probes/measure/value/name" type="error"/>-->
   <mapping key="magnetics/bpol_probe/#/field/time" value="//magdiag/bpol_probes/measure/value/name" type="dynamic"/>
 
   <mapping key="magnetics/method/Shape_of" value="1" type="constant"/>
@@ -58,13 +58,13 @@
   <mapping key="magnetics/method/#/ip/data" value="//magdiag/ip[#]/value/name" type="dynamic"/>
   <mapping key="magnetics/method/#/ip/data_error_index" value="1" type="constant"/>
   <mapping key="magnetics/method/#/ip/data_error_upper" value="//magdiag/ip[#]/value/name" type="error"/>
-  <mapping key="magnetics/method/#/ip/data_error_lower" value="//magdiag/ip[#]/value/name" type="error"/>
+  <!--<mapping key="magnetics/method/#/ip/data_error_lower" value="//magdiag/ip[#]/value/name" type="error"/>-->
   <mapping key="magnetics/method/#/ip/time" value="//magdiag/ip[#]/value/name" type="dynamic"/>
 
   <mapping key="magnetics/method/#/diamagnetic_flux/data" value="//magdiag/diamagflux[#]/value/name" type="dynamic"/>
   <mapping key="magnetics/method/#/diamagnetic_flux/data_error_index" value="1" type="constant"/>
   <mapping key="magnetics/method/#/diamagnetic_flux/data_error_upper" value="//magdiag/diamagflux[#]/value/name" type="error"/>
-  <mapping key="magnetics/method/#/diamagnetic_flux/data_error_lower" value="//magdiag/diamagflux[#]/value/name" type="error"/>
+  <!--<mapping key="magnetics/method/#/diamagnetic_flux/data_error_lower" value="//magdiag/diamagflux[#]/value/name" type="error"/>-->
   <mapping key="magnetics/method/#/diamagnetic_flux/time" value="//magdiag/diamagflux[#]/value/name" type="dynamic"/>
 
   <mapping key="magnetics/code/output_flag" value="//magdiag/code/output_flag/name" type="dynamic"/>

@@ -5,7 +5,7 @@
 #include <clientserver/initStructs.h>
 #include <server/makeServerRequestBlock.h>
 
-#ifdef UDA_LEGACY
+#ifndef UDA_PLUGIN_OPERATIONAL
 #define UDA_PLUGIN_CLASS_FUNCTION   PLUGINFUNCTION
 #define UDA_PLUGIN_OPERATIONAL      PLUGINOPERATIONAL
 #endif

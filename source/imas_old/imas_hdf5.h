@@ -8,6 +8,10 @@
 extern "C" {
 #endif
 
+#ifndef UDA_PLUGIN_FILE_LIST
+#define UDA_PLUGIN_FILE_LIST IDAMPLUGINFILELIST
+#endif
+
 UDA_PLUGIN_FILE_LIST* getImasPluginFileList();
 
 char* getImasErrorMsg();

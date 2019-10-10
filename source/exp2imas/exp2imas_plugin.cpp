@@ -1,10 +1,7 @@
 #include "exp2imas_plugin.h"
 
-#include <string.h>
-#include <assert.h>
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
-#include <float.h>
 
 #include <clientserver/errorLog.h>
 #include <clientserver/initStructs.h>
@@ -64,7 +61,7 @@ strndup(const char* s, size_t n)
 
     result = (char*)malloc(len + 1);
     if (!result) {
-        return 0;
+        return nullptr;
     }
 
     result[len] = '\0';
@@ -204,7 +201,7 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
         xmlChar* pre = xmlStrndup(indexedXpathExpr, (int)(p - indexedXpathExpr));
 
         len = xmlStrlen(pre) + xmlStrlen(num_str) + xmlStrlen(p + 1) + 1;
-        xmlChar* temp = (xmlChar*)malloc((len + 1) * sizeof(xmlChar));
+        auto temp = (xmlChar*)malloc((len + 1) * sizeof(xmlChar));
         xmlStrPrintf(temp, len, (XML_FMT_TYPE)"%s%s%s", pre, num_str, p + 1);
         free(indexedXpathExpr);
         indexedXpathExpr = temp;
@@ -257,7 +254,7 @@ int handle_constant(DATA_BLOCK* data_block, int dtype, const xmlChar* xPath)
 }
 
 int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
-                         const XML_MAPPING* mapping, int* indices, size_t nindices)
+                  const XML_MAPPING* mapping, int* indices, size_t nindices)
 {
     // Executing XPath
 
@@ -293,7 +290,7 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
         ++nindices;
     }
 
-    if (nindices > 1 && indices[nindices - 1] == 1 && mapping->flatten == true) {
+    if (nindices > 1 && indices[nindices - 1] == 1 && mapping->flatten) {
         --nindices;
     }
 
@@ -392,23 +389,23 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
         }
 
         if (xml_data.data_type == UDA_TYPE_DOUBLE) {
-            double* ddata = (double*)xml_data.data;
+            auto ddata = (double*)xml_data.data;
             setReturnDataDoubleScalar(data_block, ddata[data_idx] + mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_FLOAT) {
-            float* fdata = (float*)xml_data.data;
-            setReturnDataFloatScalar(data_block, fdata[data_idx] + mapping->adjust, nullptr);
+            auto fdata = (float*)xml_data.data;
+            setReturnDataFloatScalar(data_block, fdata[data_idx] + (float)mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_LONG) {
-            long* ldata = (long*)xml_data.data;
+            auto ldata = (long*)xml_data.data;
             setReturnDataLongScalar(data_block, ldata[data_idx] + mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_INT) {
-            int* idata = (int*)xml_data.data;
+            auto idata = (int*)xml_data.data;
             setReturnDataIntScalar(data_block, idata[data_idx] + mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_SHORT) {
-            short* sdata = (short*)xml_data.data;
+            auto sdata = (short*)xml_data.data;
             setReturnDataShortScalar(data_block, sdata[data_idx] + (short)mapping->adjust, nullptr);
             free(xml_data.data);
         } else if (xml_data.data_type == UDA_TYPE_STRING) {
@@ -470,9 +467,9 @@ size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int*
 }
 
 int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
-                          XML_MAPPING* mapping,
-                          const char* experiment, const char* element, int shot, int run, const int* indices,
-                          size_t nindices)
+                   XML_MAPPING* mapping,
+                   const char* experiment, const char* element, int shot, int run, const int* indices,
+                   size_t nindices)
 {
     // DYNAMIC case
 
@@ -597,9 +594,9 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
 }
 
 int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
-                        XML_MAPPING* mapping,
-                        const char* experiment, const char* element, int shot, int run, const int* indices,
-                        size_t nindices)
+                 XML_MAPPING* mapping,
+                 const char* experiment, const char* element, int shot, int run, const int* indices,
+                 size_t nindices)
 {
     // ERROR case
 
@@ -759,10 +756,8 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
                     }
                 }
 
-                if (StringEndsWith(element, "lower")) {
-                    error_arrays[n_arrays][j] -= error;
-                } else {
-                    error_arrays[n_arrays][j] += error;
+                if (StringEndsWith(element, "upper")) {
+                    error_arrays[n_arrays][j] = (float)error;
                 }
             }
 
@@ -911,7 +906,7 @@ xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, co
     // Creating the Xpath request
     const char* fmt = "//mapping[@key='%s']/@%s";
     size_t len = strlen(request) + strlen(attribute) + strlen(fmt) + 1;
-    xmlChar* xpath_expr = (xmlChar*)malloc(len * sizeof(xmlChar));
+    auto xpath_expr = (xmlChar*)malloc(len * sizeof(xmlChar));
     xmlStrPrintf(xpath_expr, (int)len, (XML_FMT_TYPE)fmt, request, attribute);
 
     /*
@@ -990,7 +985,7 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
         }
     }
 
-    XML_MAPPING* mapping = (XML_MAPPING*)calloc(1, sizeof(XML_MAPPING));
+    auto mapping = (XML_MAPPING*)calloc(1, sizeof(XML_MAPPING));
     mapping->index = -1;
 
     xmlChar* value = xmlAttributeValue(xpath_ctx, request.c_str(), "value");
@@ -1054,7 +1049,7 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
 
 char* deblank(char* token)
 {
-    int i, j;
+    size_t i, j;
     char* output = token;
     for (i = 0, j = 0; i < strlen(token); i++, j++) {
         if (token[i] != ' ' && token[i] != '\'') {

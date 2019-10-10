@@ -10,11 +10,11 @@
   equilibrium/ids_properties/creation_date
   equilibrium/vacuum_toroidal_field/r0
   equilibrium/vacuum_toroidal_field/r0_error_upper
-  equilibrium/vacuum_toroidal_field/r0_error_lower
+  <!--equilibrium/vacuum_toroidal_field/r0_error_lower-->
   equilibrium/vacuum_toroidal_field/r0_error_index
   equilibrium/vacuum_toroidal_field/b0
   equilibrium/vacuum_toroidal_field/b0_error_upper
-  equilibrium/vacuum_toroidal_field/b0_error_lower
+  <!--equilibrium/vacuum_toroidal_field/b0_error_lower-->
   equilibrium/vacuum_toroidal_field/b0_error_index
   equilibrium/code/name
   equilibrium/code/commit
