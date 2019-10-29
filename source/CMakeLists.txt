@@ -12,6 +12,7 @@ if( NOT DEFINED BUILD_PLUGINS )
     imas_remote
     imas_uda
     imasdd
+    iter_md
     jet_magnetics
     mast_imas
     source
