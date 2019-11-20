@@ -81,7 +81,10 @@ using Catch::Detail::ApproxVector;
 
 namespace uda {
 namespace test {
+
 IDAM_PLUGIN_INTERFACE generate_plugin_interface(const char* request);
+void add_plugin(PLUGINLIST* plugin_list, const std::string& request, PLUGINFUNP func);
+
 }
 }
 

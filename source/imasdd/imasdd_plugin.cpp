@@ -43,7 +43,11 @@ namespace {
 
 class IMASDDPlugin {
 public:
-    IMASDDPlugin() = default;
+    IMASDDPlugin()
+    {
+        const char* plugin = getenv("UDA_IMASDD_MAPPING_PLUGIN");
+        mapping_plugin_ = (plugin != nullptr ? plugin : "IMAS_MAPPING");
+    }
 
     void init();
     void reset();
@@ -57,6 +61,12 @@ public:
 
 private:
     pugi::xml_document doc_;
+    std::string mapping_plugin_;
+
+    void generate_requests(std::vector<std::string>& requests, const std::string& ids, const std::string& path,
+                           const pugi::xml_node& node, bool indexed);
+    void expand_requests(std::vector<std::string>& requests, const IDAM_PLUGIN_INTERFACE* idam_plugin_interface,
+                         const std::string& request, std::vector<int>& sizes);
 };
 
 template<typename Out>
@@ -85,7 +95,7 @@ int imasdd_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
+    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -253,7 +263,8 @@ int call_plugin(const std::string& plugin_name, const std::string& request, IDAM
     return 0;
 }
 
-void expand_request(std::vector<std::string>& requests, size_t depth, const std::string& request, const std::vector<int>& sizes)
+void expand_request_(std::vector<std::string>& requests, size_t depth, const std::string& request,
+        const std::vector<int>& sizes)
 {
     size_t pos = 0;
     if ((pos = request.find('#')) == std::string::npos) {
@@ -266,10 +277,54 @@ void expand_request(std::vector<std::string>& requests, size_t depth, const std:
     for (int i = 0; i < sizes[depth]; ++i) {
         auto sub_request = request;
         sub_request.replace(pos, 1, std::to_string(i+1));
-        expand_request(requests, depth + 1, sub_request, sizes);
+        expand_request_(requests, depth + 1, sub_request, sizes);
     }
 }
-    
+
+void expand_request(std::vector<std::string>& requests, const std::string& request, const std::vector<int>& sizes)
+{
+    expand_request_(requests, 0, request, sizes);
+}
+
+bool is_integer(const std::string& string)
+{
+    if (string.empty() || ((!isdigit(string[0])) && (string[0] != '-') && (string[0] != '+'))) {
+        return false;
+    }
+
+    char* end = nullptr;
+    strtol(string.c_str(), &end, 10) ;
+
+    return (*end == '\0') ;
+}
+
+} // anon namespace
+
+void IMASDDPlugin::expand_requests(std::vector<std::string>& requests,
+                                   const IDAM_PLUGIN_INTERFACE* idam_plugin_interface,
+                                   const std::string& request, std::vector<int>& sizes)
+{
+    std::vector<std::string> expanded_requests;
+
+    expand_request(expanded_requests, request, sizes);
+
+    if (expanded_requests.size() == 1) {
+        if (request.find("getDim") != std::string::npos) {
+            IDAM_PLUGIN_INTERFACE new_plugin_interface = *idam_plugin_interface;
+            DATA_BLOCK result{};
+            new_plugin_interface.data_block = &result;
+            call_plugin(mapping_plugin_, request, &new_plugin_interface);
+            int size = *(int*)result.data;
+            sizes.push_back(size);
+        }
+
+        requests.push_back(expanded_requests.front());
+        return;
+    }
+
+    for (const auto& expanded_request : expanded_requests) {
+        expand_requests(requests, idam_plugin_interface, expanded_request, sizes);
+    }
 }
 
 int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
@@ -296,56 +351,71 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
      
         auto root = doc_.child("IDSs");
 
-        auto nodes = root.find_child_by_attribute("IDS", "name", ids.c_str());
-        for (const auto& node : nodes) {
-            get_requests(requests, ids, "", node);
+    std::string ids = tokens[0];
+    std::vector<std::string> paths;
+    pugi::xml_node root = doc_.child("IDSs");
+
+    // Find node
+    for (const auto& token : tokens) {
+        // skip numbers
+        if (is_integer(token)) {
+            paths.push_back(token);
+            continue;
+        }
+
+        // is it an IDS?
+        auto nodes = root.find_child_by_attribute("IDS", "name", token.c_str());
+        if (!nodes.empty()) {
+            root = nodes;
+            continue;
+        }
+
+        // is it a field?
+        nodes = root.find_child_by_attribute("field", "name", token.c_str());
+        if (!nodes.empty()) {
+            paths.push_back(token);
+            root = nodes;
+            continue;
         }
     }
+
+    bool indexed = false;
+    if (!paths.empty() && is_integer(paths.back())) {
+        indexed = true;
+    }
+
+    if (!paths.empty() && paths.back() == root.attribute("name").value()) {
+        paths.pop_back();
+    }
+
+    std::string root_path;
+    for (const auto& el : paths) {
+        root_path += el + "/";
+    }
+
+    generate_requests(requests, ids, root_path, root, indexed);
 
     std::vector<int> sizes;
     std::vector<std::string> total_requests;
 
-    for (auto request : requests) {
-        if (request.find("Shape_of") != std::string::npos) {
-            //std::cout << request << std::endl;
-
-            auto depth = std::count(request.begin(), request.end(), '#');
-
-            IDAM_PLUGIN_INTERFACE new_plugin_interface = *plugin_interface;
-            DATA_BLOCK result{};
-            new_plugin_interface.data_block = &result;
-            int rc = call_plugin("imas_mapping", request, &new_plugin_interface);
-            int size = 0;
-            if (!rc) {
-                size = *(int*)result.data;
-            }
-
-            if (depth < sizes.size()) {
-                sizes.pop_back();
-            }
-            sizes.push_back(size);
-        } else {
-            expand_request(total_requests, 0, request, sizes);
-        }
+    for (const auto& request : requests) {
+        expand_requests(total_requests, idam_plugin_interface, request, sizes);
     }
 
     auto list = (DATA_BLOCK*)malloc(total_requests.size() * sizeof(DATA_BLOCK));
 
     int i = 0;
     for (const auto& request : total_requests) {
-        //std::cout << request << std::endl;
         IDAM_PLUGIN_INTERFACE new_plugin_interface = *plugin_interface;
 
         DATA_BLOCK result{};
         new_plugin_interface.data_block = &result;
 
-        call_plugin("imas_mapping", request, &new_plugin_interface);
+        call_plugin(mapping_plugin_, request, &new_plugin_interface);
 
         memcpy(&list[i], &result, sizeof(DATA_BLOCK));
         ++i;
     }
-
-    closeIdamError();
 
     DATA_BLOCK* data_block = plugin_interface->data_block;
     initDataBlock(data_block);
@@ -370,4 +440,53 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     data_block->data_n = (int)total_requests.size();
 
     return 0;
+}
+
+void IMASDDPlugin::generate_requests(std::vector<std::string>& requests, const std::string& ids,
+                                     const std::string& path,
+                                     const pugi::xml_node& node, bool indexed)
+{
+    std::string name = node.attribute("name").value();
+    std::string dtype = node.attribute("data_type").value();
+
+    std::stringstream out;
+
+    if (indexed) {
+        name = path;
+    } else if (dtype == "structure") {
+        name = path + name + "/";
+    } else if (dtype == "struct_array") {
+        out << mapping_plugin_
+            << "::getDim(group='" << ids << "'"
+            << ", variable='" << path << name << "'"
+            << ", rank=0"
+            << ", idx=0"
+            << ", expName='JET'"
+            << ", shot=84600"
+            << ", run=0"
+            << ", user=jholloc"
+            << ")";
+        requests.push_back(out.str());
+        name = path + name + "/#/";
+    } else if (!dtype.empty()) {
+        out << mapping_plugin_
+            << "::get(group='" << ids << "'"
+            << ", variable='" << path << name << "'"
+            << ", type='" << get_type(dtype) << "'"
+            << ", rank=" << get_rank(dtype)
+            << ", idx=0"
+            << ", expName='JET'"
+            << ", shot=84600"
+            << ", run=0"
+            << ", user=jholloc"
+            << ")";
+        requests.push_back(out.str());
+        name = path + name + "/";
+    } else {
+        name = "";
+    }
+
+    for (const auto& child : node.children("field")) {
+        generate_requests(requests, ids, name, child, false);
+    }
 }

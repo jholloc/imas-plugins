@@ -1,7 +1,7 @@
 find_package( UDA QUIET )
 
 if( NOT UDA_FOUND )
-  message( WARNING "UDA not found - skipping imasdd plugin" )
+  message( WARNING "UDA not found - skipping IMASDD plugin" )
   return()
 endif()
 
@@ -14,6 +14,7 @@ uda_plugin(
   DESCRIPTION "Plugin to expand IMAS paths using the data dictionary"
   EXAMPLE "IMASDD::get(path=/magnetics)"
   LIBNAME imasdd_plugin
+  CONFIG_FILE imasdd.cfg
   SOURCES
     imasdd_plugin.cpp
     imasdd_plugin.h

@@ -500,9 +500,8 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, int* timeCountCa
 
         if (data_block->order != 0 || data_block->rank != 1
                 || !(data_block->data_type == UDA_TYPE_FLOAT || data_block->data_type == UDA_TYPE_DOUBLE)) {
-	        UDA_LOG(UDA_LOG_DEBUG, "Incorrect order, rank or type for Caching\n");
+            UDA_LOG(UDA_LOG_DEBUG, "Incorrect order, rank or type for Caching\n");
             THROW_ERROR(999, "Data Access is not available for this data request!");
-	    
         } // Data are not Cacheable
 
         if (!isNoCacheTime) {

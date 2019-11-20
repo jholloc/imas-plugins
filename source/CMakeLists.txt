@@ -13,6 +13,7 @@ if( NOT DEFINED BUILD_PLUGINS )
     imas_uda
     imasdd
     iter_md
+    livedisplay
     jet_magnetics
     mast_imas
     source
