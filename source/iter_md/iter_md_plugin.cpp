@@ -11,6 +11,8 @@
 #include <clientserver/initStructs.h>
 #include <clientserver/udaTypes.h>
 
+#include "configuration_mapping.h"
+
 namespace iter {
 namespace md {
 
@@ -30,6 +32,7 @@ public:
     int read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
 private:
+    ConfigMapping config_mapping_ = {};
 };
 
 }
@@ -184,6 +187,34 @@ setReturnDataInt64Array(DATA_BLOCK* data_block, int64_t* values, size_t rank, co
 
 }
 
+namespace {
+
+struct DatabaseWrapper {
+    DatabaseWrapper() {
+        status_ = initDBinfo(&dbi_);
+        if (status_ != 0) {
+            return;
+        }
+        status_ = connectPostgres(&dbi_);
+        if (status_ != 0) {
+            return;
+        }
+    }
+    ~DatabaseWrapper() {
+        if (status_ == 0) {
+            db_exit(*dbi_);
+        }
+    }
+
+    int status() const { return status_; }
+    const dbinfo& dbi() const { return dbi_; }
+private:
+    int status_;
+    dbinfo dbi_;
+};
+
+} // anon namespace
+
 int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
@@ -230,22 +261,27 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     int ret = 0;
 
-    dbinfo dbi;
-
-    ret = initDBinfo(&dbi);
-    if (ret != 0) {
-        RAISE_PLUGIN_ERROR("Error while trying to retrieve database settings");
-    }
-
-    ret = connectPostgres(&dbi);
-    if (ret != 0) {
+    const DatabaseWrapper db;
+    if (db.status() != 0) {
         RAISE_PLUGIN_ERROR("Error while trying to connecting to the database");
     }
 
-    const char* machine_name = "ITER_NBI_geometry_off_on";
-    const char* machine_version = "2.2.0";
+    std::string config_name = config_mapping_.config_name(shot);
+    if (config_name.empty()) {
+        std::string msg = std::string("no configuration found for shot ") + std::to_string(shot);
+        RAISE_PLUGIN_ERROR(msg.c_str());
+    }
 
-    machDetails* md = getMachineDetailsPerMNameAndIDSPath(dbi, machine_name, machine_version, element);
+    std::string machine_version = config_mapping_.machine_version(shot);
+    if (machine_version.empty()) {
+        std::string msg = std::string("no machine version found for shot ") + std::to_string(shot);
+        RAISE_PLUGIN_ERROR(msg.c_str());
+    }
+
+//    const char* machine_name = "ITER_NBI_geometry_off_on";
+//    const char* machine_version = "2.2.0";
+
+    machDetails* md = getMachineDetailsPerMNameAndIDSPath(db.dbi(), config_name.c_str(), machine_version.c_str(), element);
     if (md == nullptr) {
         RAISE_PLUGIN_ERROR("Error while trying to retrieve machine details from database");
     }
@@ -263,8 +299,6 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     } else if (std::string{ "STR_0D" } == md->dtype) {
         setReturnDataString(idam_plugin_interface->data_block, md->vals, "");
     }
-
-    db_exit(&dbi);
 
     return 0;
 }

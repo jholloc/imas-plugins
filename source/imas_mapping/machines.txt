@@ -6,3 +6,4 @@ TCV         *           -           EXP2IMAS
 WEST        *           -           WEST_TUNNEL
 HL2A        *           -           HL2A
 TS          *           -           TORE_SUPRA
+ITER        *           -           ITER_MD

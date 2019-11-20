@@ -29,6 +29,8 @@ uda_plugin(
   SOURCES
     iter_md_plugin.cpp
     iter_md_plugin.h
+    configuration_mapping.cpp
+    configuration_mapping.h
   EXTRA_INCLUDE_DIRS
     ${Boost_INCLUDE_DIRS}
     ${UDA_CLIENT_INCLUDE_DIRS}
