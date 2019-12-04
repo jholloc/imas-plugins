@@ -1,18 +1,16 @@
+#!/bin/bash
+# Bamboo Build script
+# Stage 1 : Configure stage
+
 # Set up environment for compilation
-. /usr/share/Modules/init/sh
-module use /work/imas/etc/modulefiles
+. scripts/iter-ci-setup-env.sh || exit 1
 
-module purge
-
-module load cmake/3.0.2
-module load Boost/1.66.0-foss-2018a
-module load openssl/1.0.2g
-module load MDSplus/7.7.12-intel-2018a
-
-UDA_HOME=/home/ITER/hollocj/uda-install
-
+UDA_HOME=/home/ITER/hollocj/uda
+export ITERMD_ROOT=/home/ITER/hollocj/m-machine-description
 export LIBSSH_DIR=$HOME/libssh
-export PKG_CONFIG_PATH=$UDA_HOME/lib/pkgconfig:$HOME/IMAS/access-layer/lib/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=$UDA_DIR/lib/pkgconfig:$HOME/IMAS/access-layer/lib/pkgconfig:$PKG_CONFIG_PATH
 
 CC=gcc CXX=g++ cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=$UDA_HOME
+    -DCMAKE_INSTALL_PREFIX=$UDA_HOME \
+    -DBOOST_ROOT=${EBROOTBOOST} \
+    -DPostgreSQL_ROOT=${EBROOTPOSTGRESQL}

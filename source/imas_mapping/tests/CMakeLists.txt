@@ -10,11 +10,12 @@ link_directories( ${UDA_CPP_LIBRARY_DIRS} )
 
 add_executable( test_imas_mapping test_imas_mapping.cpp )
 target_link_libraries( test_imas_mapping PRIVATE
+  test_helpers
   ${UDA_CPP_LIBRARIES}
   ${UDA_PLUGINS_LIBRARIES}
   ${OPENSSL_LIBRARIES}
-  test_helpers
   imas_mapping_plugin
+  crypto
 )
 target_compile_options( test_imas_mapping PRIVATE ${UDA_PLUGINS_CFLAGS_OTHER}  )
 

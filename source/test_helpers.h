@@ -60,7 +60,7 @@ public:
     std::string toString() const
     {
         std::ostringstream oss;
-        oss << "ApproxVector( " << Catch::toString(vector_) << " )";
+        oss << "ApproxVector( " << Catch::rangeToString(vector_) << " )";
         return oss.str();
     }
 
@@ -71,9 +71,16 @@ private:
 }
 
 template<>
-inline std::string toString<Detail::ApproxVector>( Detail::ApproxVector const& value ) {
-    return value.toString();
-}
+struct StringMaker<Detail::ApproxVector> {
+    static std::string convert(Detail::ApproxVector const& value) {
+        return value.toString();
+    } 
+};
+
+//template<>
+//std::string toString<Detail::ApproxVector>( Detail::ApproxVector const& value ) {
+//    return value.toString();
+//}
 
 }
 

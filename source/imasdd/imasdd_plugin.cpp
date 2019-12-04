@@ -95,7 +95,7 @@ int imasdd_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
     }
 
-    idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+    idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);;
 
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -346,11 +346,6 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::vector<std::string> tokens = split(path, '/');
 
-    if (!tokens.empty()) {
-        std::string& ids = tokens[0];
-     
-        auto root = doc_.child("IDSs");
-
     std::string ids = tokens[0];
     std::vector<std::string> paths;
     pugi::xml_node root = doc_.child("IDSs");
@@ -399,7 +394,7 @@ int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     std::vector<std::string> total_requests;
 
     for (const auto& request : requests) {
-        expand_requests(total_requests, idam_plugin_interface, request, sizes);
+        expand_requests(total_requests, plugin_interface, request, sizes);
     }
 
     auto list = (DATA_BLOCK*)malloc(total_requests.size() * sizeof(DATA_BLOCK));

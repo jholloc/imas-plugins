@@ -6,7 +6,9 @@
 #include <fstream>
 #include <sstream>
 #include <libgen.h>
+extern "C" {
 #include <IDSDBHelper.h>
+}
 
 #include <clientserver/initStructs.h>
 #include <clientserver/udaTypes.h>
@@ -98,7 +100,8 @@ int iter::md::Plugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     std::stringstream ss;
     ss << ifs.rdbuf();
 
-    const char* help = ss.str().c_str();
+    std::string s = ss.str();
+    const char* help = s.c_str();
     const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
@@ -202,7 +205,7 @@ struct DatabaseWrapper {
     }
     ~DatabaseWrapper() {
         if (status_ == 0) {
-            db_exit(*dbi_);
+            db_exit(&dbi_);
         }
     }
 
@@ -212,6 +215,62 @@ private:
     int status_;
     dbinfo dbi_;
 };
+
+int read_size(const dbinfo& dbi, const char* config_name, const char* machine_version, const char* element, DataBlock* data_block)
+{
+    int size = getNumberOfEltperIDSStruct(dbi, config_name, machine_version, element);
+    return setReturnDataIntScalar(data_block, size, "");
+}
+
+int read_value(const dbinfo& dbi, const char* config_name, const char* machine_version, const char* element, DataBlock* data_block)
+{
+    machDetails* md = getMachineDetailsPerMNameAndIDSPath(dbi, config_name, machine_version, element);
+    if (md == nullptr) {
+        RAISE_PLUGIN_ERROR("Error while trying to retrieve machine details from database");
+    }
+
+    if (std::string{ "FLT_0D" } == md->dtype) {
+        setReturnDataDoubleScalar(data_block, md->valf, "");
+    } else if (std::string{ "INT_0D" } == md->dtype) {
+        setReturnDataIntScalar(data_block, md->vali, "");
+    } else if (std::string{ "FLT_1D" } == md->dtype) {
+        size_t shape[] = { (size_t)md->nb_elt };
+        setReturnDataDoubleArray(data_block, md->valaf, 1, shape, "");
+    } else if (std::string{ "INT_1D" } == md->dtype) {
+        size_t shape[] = { (size_t)md->nb_elt };
+        setReturnDataInt64Array(data_block, md->valai, 1, shape, "");
+    } else if (std::string{ "STR_0D" } == md->dtype) {
+        setReturnDataString(data_block, md->vals, "");
+    }
+}
+
+char* insert_node_indices(const char* in_string, const int* indices, size_t n_indices)
+{
+    char* out_string = strdup(in_string);
+
+    const char* p;
+    size_t n = 0;
+
+    while ((p = strchr(out_string, '#')) != nullptr) {
+        assert(n < n_indices);
+        size_t len = snprintf(nullptr, 0, "%d", indices[n]);
+        char num_str[len + 1];
+        snprintf(num_str, len + 1, "%d", indices[n]);
+        ++n;
+
+        char* pre = strndup(out_string, (int)(p - out_string));
+
+        len = strlen(pre) + strlen(num_str) + strlen(p + 1) + 1;
+        auto temp = (char*)malloc((len + 1) * sizeof(char));
+        snprintf(temp, len, "%s%s%s", pre, num_str, p + 1);
+        free(out_string);
+        out_string = temp;
+
+        free(pre);
+    }
+
+    return out_string;
+}
 
 } // anon namespace
 
@@ -278,27 +337,14 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         RAISE_PLUGIN_ERROR(msg.c_str());
     }
 
-//    const char* machine_name = "ITER_NBI_geometry_off_on";
-//    const char* machine_version = "2.2.0";
+    initDataBlock(idam_plugin_interface->data_block);
 
-    machDetails* md = getMachineDetailsPerMNameAndIDSPath(db.dbi(), config_name.c_str(), machine_version.c_str(), element);
-    if (md == nullptr) {
-        RAISE_PLUGIN_ERROR("Error while trying to retrieve machine details from database");
+    char* path = insert_node_indices(element, indices, nindices);
+
+    if (boost::ends_with(path, "/Shape_of")) {
+        path[strlen(path) - 9] = '\0';
+        return read_size(db.dbi(), config_name.c_str(), machine_version.c_str(), path, idam_plugin_interface->data_block);
+    } else {
+        return read_value(db.dbi(), config_name.c_str(), machine_version.c_str(), path, idam_plugin_interface->data_block);
     }
-
-    if (std::string{ "FLT_0D" } == md->dtype) {
-        setReturnDataDoubleScalar(idam_plugin_interface->data_block, md->valf, "");
-    } else if (std::string{ "INT_0D" } == md->dtype) {
-        setReturnDataIntScalar(idam_plugin_interface->data_block, md->vali, "");
-    } else if (std::string{ "FLT_1D" } == md->dtype) {
-        size_t shape[] = { (size_t)md->nb_elt };
-        setReturnDataDoubleArray(idam_plugin_interface->data_block, md->valaf, 1, shape, "");
-    } else if (std::string{ "INT_1D" } == md->dtype) {
-        size_t shape[] = { (size_t)md->nb_elt };
-        setReturnDataInt64Array(idam_plugin_interface->data_block, md->valai, 1, shape, "");
-    } else if (std::string{ "STR_0D" } == md->dtype) {
-        setReturnDataString(idam_plugin_interface->data_block, md->vals, "");
-    }
-
-    return 0;
 }

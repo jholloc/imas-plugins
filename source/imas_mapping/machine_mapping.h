@@ -47,14 +47,18 @@ public:
         }
     }
 
-    std::string host(const std::string& machine, const std::string& ids)
+    std::string host(std::string machine, std::string ids)
     {
+        boost::to_upper(machine);
+        boost::to_upper(ids);
         auto& plugin_map = mappings_[machine];
         return plugin_map.count(ids) > 0 ? plugin_map[ids].host : plugin_map["*"].host;
     }
 
-    std::string plugin(const std::string& machine, const std::string& ids)
+    std::string plugin(std::string machine, std::string ids)
     {
+        boost::to_upper(machine);
+        boost::to_upper(ids);
         auto& plugin_map = mappings_[machine];
         return plugin_map.count(ids) > 0 ? plugin_map[ids].plugin : plugin_map["*"].plugin;
     }
