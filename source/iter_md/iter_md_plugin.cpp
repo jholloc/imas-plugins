@@ -78,6 +78,8 @@ int itermdPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             return plugin.max_interface_version(idam_plugin_interface);
         } else if (function == "read") {
             return plugin.read(idam_plugin_interface);
+        } else if (function == "close") {
+            return 0;
         } else {
             RAISE_PLUGIN_ERROR("Unknown function requested!");
         }
@@ -341,7 +343,9 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     char* path = insert_node_indices(element, indices, nindices);
 
-    if (boost::ends_with(path, "/Shape_of")) {
+    if (boost::ends_with(path, "ids_properties/homogeneous_time")) {
+        return setReturnDataIntScalar(data_block, 0, "");
+    } else if (boost::ends_with(path, "/Shape_of")) {
         path[strlen(path) - 9] = '\0';
         return read_size(db.dbi(), config_name.c_str(), machine_version.c_str(), path, idam_plugin_interface->data_block);
     } else {
