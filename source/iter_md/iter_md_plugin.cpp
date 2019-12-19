@@ -18,13 +18,49 @@ extern "C" {
 namespace iter {
 namespace md {
 
+struct DatabaseWrapper {
+    DatabaseWrapper() : status_{0}, dbi_{} {}
+    ~DatabaseWrapper() = default;
+
+    void open()
+    {
+        status_ = initDBinfo(&dbi_);
+        if (status_ != 0) {
+            return;
+        }
+        status_ = connectPostgres(&dbi_);
+        if (status_ != 0) {
+            return;
+        }
+    }
+    void close()
+    {
+        if (status_ == 0) {
+            db_exit(&dbi_);
+        }
+    }
+    int status() const { return status_; }
+    const dbinfo& dbi() const { return dbi_; }
+private:
+    int status_;
+    dbinfo dbi_;
+};
+
 class Plugin {
 public:
     void init()
-    {}
+    {
+        if (initialised_) return;
+        db.open();
+        initialised_ = true;
+    }
 
     void reset()
-    {}
+    {
+        if (!initialised_) return;
+        db.close();
+        initialised_ = false;
+    }
 
     int help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
     int version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
@@ -34,7 +70,9 @@ public:
     int read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
 
 private:
+    bool initialised_ = false;
     ConfigMapping config_mapping_ = {};
+    DatabaseWrapper db_ = {};
 };
 
 }
@@ -79,6 +117,7 @@ int itermdPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         } else if (function == "read") {
             return plugin.read(idam_plugin_interface);
         } else if (function == "close") {
+            plugin.reset();
             return 0;
         } else {
             RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -194,30 +233,6 @@ setReturnDataInt64Array(DATA_BLOCK* data_block, int64_t* values, size_t rank, co
 
 namespace {
 
-struct DatabaseWrapper {
-    DatabaseWrapper() {
-        status_ = initDBinfo(&dbi_);
-        if (status_ != 0) {
-            return;
-        }
-        status_ = connectPostgres(&dbi_);
-        if (status_ != 0) {
-            return;
-        }
-    }
-    ~DatabaseWrapper() {
-        if (status_ == 0) {
-            db_exit(&dbi_);
-        }
-    }
-
-    int status() const { return status_; }
-    const dbinfo& dbi() const { return dbi_; }
-private:
-    int status_;
-    dbinfo dbi_;
-};
-
 int read_size(const dbinfo& dbi, const char* config_name, const char* machine_version, const char* element, DataBlock* data_block)
 {
     int size = getNumberOfEltperIDSStruct(dbi, config_name, machine_version, element);
@@ -290,12 +305,6 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* element = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
 
-    int shot = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
-
-    int run = 0;
-    FIND_INT_VALUE(request_block->nameValueList, run);
-
     int* indices = nullptr;
     size_t nindices = 0;
     FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
@@ -306,49 +315,53 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         indices = nullptr;
     }
 
-    int dtype = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
+    int shot = 0;
+    bool is_shot = FIND_INT_VALUE(request_block->nameValueList, shot);
 
-    const char* IDS_version = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, IDS_version);
+    const char* config_name = nullptr;
+    bool is_config_name = FIND_STRING_VALUE(request_block->nameValueList, config_name);
 
-    const char* experiment = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, experiment);
+    const char* machine_version = nullptr;
+    bool is_machine_version = FIND_STRING_VALUE(request_block->nameValueList, machine_version);
 
-    // keep old way of passing experiment until IMAS plugin has been updated
-    if (experiment == nullptr) {
-        experiment = request_block->archive;
+    if (!is_shot && !(config_name && machine_version)) {
+        RAISE_PLUGIN_ERROR("either shot or config_name and machine_version must be provided");
     }
 
-    int ret = 0;
-
-    const DatabaseWrapper db;
-    if (db.status() != 0) {
+    if (db_.status() != 0) {
         RAISE_PLUGIN_ERROR("Error while trying to connecting to the database");
-    }
-
-    std::string config_name = config_mapping_.config_name(shot);
-    if (config_name.empty()) {
-        std::string msg = std::string("no configuration found for shot ") + std::to_string(shot);
-        RAISE_PLUGIN_ERROR(msg.c_str());
-    }
-
-    std::string machine_version = config_mapping_.machine_version(shot);
-    if (machine_version.empty()) {
-        std::string msg = std::string("no machine version found for shot ") + std::to_string(shot);
-        RAISE_PLUGIN_ERROR(msg.c_str());
     }
 
     initDataBlock(idam_plugin_interface->data_block);
 
     char* path = insert_node_indices(element, indices, nindices);
 
+    std::string name;
+    std::string version;
+
+    if (is_shot) {
+        name = config_mapping_.config_name(shot);
+        if (name.empty()) {
+            std::string msg = std::string("no configuration found for shot ") + std::to_string(shot);
+            RAISE_PLUGIN_ERROR(msg.c_str());
+        }
+
+        version = config_mapping_.machine_version(shot);
+        if (version.empty()) {
+            std::string msg = std::string("no machine version found for shot ") + std::to_string(shot);
+            RAISE_PLUGIN_ERROR(msg.c_str());
+        }
+    } else {
+        name = config_name;
+        version = machine_version;
+    }
+
     if (boost::ends_with(path, "ids_properties/homogeneous_time")) {
         return setReturnDataIntScalar(data_block, 0, "");
     } else if (boost::ends_with(path, "/Shape_of")) {
         path[strlen(path) - 9] = '\0';
-        return read_size(db.dbi(), config_name.c_str(), machine_version.c_str(), path, idam_plugin_interface->data_block);
+        return read_size(db_.dbi(), name.c_str(), version.c_str(), path, idam_plugin_interface->data_block);
     } else {
-        return read_value(db.dbi(), config_name.c_str(), machine_version.c_str(), path, idam_plugin_interface->data_block);
+        return read_value(db_.dbi(), name.c_str(), version.c_str(), path, idam_plugin_interface->data_block);
     }
 }
