@@ -69,7 +69,7 @@ int lh_antennas_antenna_power(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 	UDA_LOG(UDA_LOG_DEBUG, "Calling lh_antennas_antenna_power\n");
 
 	int antennaId = nodeIndices[0]; //=1 or 2
-	float f = 1e3; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in kW in Arcade
 	float *forward_time = NULL;
 	float *forward_data = NULL;
 	int forward_len;
@@ -132,7 +132,7 @@ int lh_antennas_antenna_power(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 int lh_antennas_antenna_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 
 	int antennaId = nodeIndices[0]; //=1 or 2
-	float f = 1e6; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in kW in Arcad
 	float *forward_time = NULL;
 	float *forward_data = NULL;
 	int forward_len;
@@ -193,7 +193,7 @@ int lh_antennas_antenna_power_time(int shotNumber, DATA_BLOCK* data_block, int* 
 
 int lh_antennas_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
 
-	float f = 1e3; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in kW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
 	int extractionIndex = 0; //indicates that signal does not belong to a group
@@ -557,8 +557,58 @@ int lh_antennas_modules_power_forward_time(int shotNumber, DATA_BLOCK* data_bloc
 	return status;
 }
 
+int lh_antennas_modules_power_launched(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float f = 1e3; //conversion factor, power is given in kW in Arcade
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
+	if (antennaId == 1) {
+		char *object_name = "GPINJC1";
+		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
+	}
+	else {
+		char *object_name = "GPINJC2";
+		status = setUDABlockSignalFromArcade(object_name, shotNumber, extractionIndex, data_block, nodeIndices, f);
+	}
+	if (status != 0) {
+		lh_antennas_throwsIdamError2(status, "lh_antennas_modules_power_launched", "GPINJC1/GPINJC2", shotNumber, antennaId);
+	}
+	return status;
+}
+
+int lh_antennas_modules_power_launched_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
+	float *time = NULL;
+	float *data = NULL;
+	int antennaId = nodeIndices[0]; //=1 or 2
+	int len;
+	int status = -1;
+	int extractionIndex = nodeIndices[1]; //module id
+	if (antennaId == 1) {
+		char *object_name = "GPINJC1";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_launched_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	else {
+		char *object_name = "GPINJC2";
+		status = time_field(object_name, shotNumber, extractionIndex, &time, &data, &len);
+		if (status != 0) {
+			lh_antennas_throwsIdamError(status, "lh_antennas_modules_power_launched_time", object_name, shotNumber);
+			free(time);
+			free(data);
+			return status;
+		}
+	}
+	SetDynamicDataTime(data_block, len, time, data);
+	return status;
+}
+
 int lh_antennas_modules_power_reflected(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
-	float f = 1e3; //conversion factor, power is given in MW in Arcade
+	float f = 1e3; //conversion factor, power is given in kW in Arcade
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
 	int extractionIndex = nodeIndices[1]; //module id
@@ -608,7 +658,7 @@ int lh_antennas_modules_power_reflected_time(int shotNumber, DATA_BLOCK* data_bl
 }
 
 int lh_antennas_modules_reflection_coefficient(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices) {
-	float f = 1; //conversion factor, power is given in MW in Arcade
+	float f = 1;
 	int antennaId = nodeIndices[0]; //=1 or 2
 	int status = -1;
 	int extractionIndex = nodeIndices[1]; //module id

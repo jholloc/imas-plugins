@@ -19,6 +19,8 @@ int lh_antennas_modules_power(int shotNumber, DATA_BLOCK* data_block, int* nodeI
 int lh_antennas_modules_power_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_modules_power_forward(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_modules_power_forward_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int lh_antennas_modules_power_launched(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
+int lh_antennas_modules_power_launched_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_modules_power_reflected(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_modules_power_reflected_time(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int lh_antennas_modules_reflection_coefficient(int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
