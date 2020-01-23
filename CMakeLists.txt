@@ -58,6 +58,6 @@ endif()
 
 ########################################################################################################################
 
-include_directories( /opt/local/include )
+include_directories( /usr/local/include )
 
 add_subdirectory( source )

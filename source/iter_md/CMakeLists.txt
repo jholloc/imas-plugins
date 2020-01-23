@@ -37,7 +37,7 @@ uda_plugin(
     ${ITERMD_INCLUDE_DIRS}
     ${PostgreSQL_INCLUDE_DIR}
   EXTRA_LINK_DIRS
-    /opt/local/lib
+    ${UDA_CLIENT_LIBRARY_DIRS}
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
     ${Boost_LIBRARIES}

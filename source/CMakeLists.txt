@@ -30,7 +30,8 @@ endif()
 
 find_package( UDA REQUIRED )
 
-get_filename_component( UDA_HOME ${UDA_LIBRARY_DIRS} DIRECTORY )
+list( GET UDA_DIR 0 UDA_LIBRARY_DIR )
+get_filename_component( UDA_HOME ${UDA_LIBRARY_DIR} DIRECTORY )
 
 include_directories( ${UDA_CPP_INCLUDE_DIRS} )
 include_directories( ${CMAKE_CURRENT_LIST_DIR} )

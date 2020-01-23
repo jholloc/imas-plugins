@@ -30,16 +30,19 @@ int get_signal_length(MDSplus::Connection& connection, std::string signal)
     }
 }
 
+constexpr int max_hosts = 10;
+
 typedef struct ServerThreadData {
     const char* experiment;
-    const char* ssh_host;
+    const char* ssh_hosts[max_hosts];
+    int num_hosts;
     const char* mds_host;
 } SERVER_THREAD_DATA;
 
 void* server_task(void* ptr)
 {
     auto data = (SERVER_THREAD_DATA*)ptr;
-    ssh_run_server(data->experiment, data->ssh_host, data->mds_host);
+    ssh_run_server(data->experiment, data->ssh_hosts, data->num_hosts, data->mds_host);
     return nullptr;
 }
 
@@ -83,10 +86,14 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
             thread_data.experiment = experiment;
 
             if (StringIEquals(experiment, "TCV")) {
-                thread_data.ssh_host = "lac911.epfl.ch";
+                thread_data.ssh_hosts[0] = "lac911.epfl.ch";
+                thread_data.num_hosts = 1;
                 thread_data.mds_host = "tcvdata.epfl.ch";
             } else if (StringIEquals(experiment, "AUG")) {
-                thread_data.ssh_host = "gate2.aug.ipp.mpg.de";
+                thread_data.ssh_hosts[0] = "gate1.aug.ipp.mpg.de";
+                thread_data.ssh_hosts[1] = "gate2.aug.ipp.mpg.de";
+                thread_data.ssh_hosts[2] = "gate3.aug.ipp.mpg.de";
+                thread_data.num_hosts = 3;
                 thread_data.mds_host = "mdsplus.aug.ipp.mpg.de";
             }
 

@@ -51,14 +51,14 @@ public:
     void init()
     {
         if (initialised_) return;
-        db.open();
+        db_.open();
         initialised_ = true;
     }
 
     void reset()
     {
         if (!initialised_) return;
-        db.close();
+        db_.close();
         initialised_ = false;
     }
 

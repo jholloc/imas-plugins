@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-int ssh_run_server(const char* experiment, const char* ssh_host, const char* remote_host);
+int ssh_run_server(const char* experiment, const char** ssh_hosts, int num_hosts, const char* remote_host);
 
 #ifdef __cplusplus
 }

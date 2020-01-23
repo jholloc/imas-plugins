@@ -256,7 +256,7 @@ static socket_t listen_for_client(int32_t* client_port)
     return client_sock;
 }
 
-int ssh_run_server(const char* experiment, const char* ssh_host, const char* remote_host)
+int ssh_run_server(const char* experiment, const char** ssh_hosts, int num_hosts, const char* remote_host)
 {
     int32_t client_port;
     socket_t client_sock = listen_for_client(&client_port);
@@ -266,7 +266,16 @@ int ssh_run_server(const char* experiment, const char* ssh_host, const char* rem
 
     fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
-    ssh_session session = create_session(experiment, ssh_host);
+    ssh_session session = NULL;
+
+    int i;
+    for (i = 0; i < num_hosts; ++i) {
+        session = create_session(experiment, ssh_hosts[i]);
+        if (session != NULL) {
+            break;
+        }
+    }
+
     if (session == NULL) {
         return -1;
     }
