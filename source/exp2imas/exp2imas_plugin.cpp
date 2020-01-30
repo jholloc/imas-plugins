@@ -9,6 +9,7 @@
 #include <clientserver/udaTypes.h>
 #include <logging/logging.h>
 #include <plugins/udaPlugin.h>
+#include <cmath>
 
 #include "exp2imas_mds.h"
 #include "exp2imas_xml.h"
@@ -31,6 +32,7 @@ typedef struct XMLMapping {
     int adjust;
     int slice_dim;
     bool flatten;
+    int select;
     const xmlChar* dim;
 } XML_MAPPING;
 
@@ -546,42 +548,68 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
             free(time);
             free(signalName);
 
-            data_block->rank = 1;
-            data_block->data_type = UDA_TYPE_FLOAT;
-            data_block->data_n = data_n;
+            if (mapping->select < 0) {
+                data_block->rank = 1;
+                data_block->data_type = UDA_TYPE_FLOAT;
+                data_block->data_n = data_n;
 
-            size_t sz = data_n * sizeof(float);
-            data_block->data = (char*)malloc(sz);
+                size_t sz = data_n * sizeof(float);
+                data_block->data = (char*)malloc(sz);
 
-            if (data_arrays != nullptr) {
-                if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
-                    memcpy(data_block->data, (char*)data_arrays[0], sz);
-                } else if (nindices > 0 && indices[0] > 0) {
-                    memcpy(data_block->data, (char*)data_arrays[indices[0] - 1 - name_offset], sz);
-                } else {
-                    memcpy(data_block->data, (char*)data_arrays[0 - name_offset], sz);
+                if (data_arrays != nullptr) {
+                    if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
+                        memcpy(data_block->data, (char*)data_arrays[0], sz);
+                    } else if (nindices > 0 && indices[0] > 0) {
+                        memcpy(data_block->data, (char*)data_arrays[indices[0] - 1 - name_offset], sz);
+                    } else {
+                        memcpy(data_block->data, (char*)data_arrays[0 - name_offset], sz);
+                    }
+
+                    for (i = 0; i < n_arrays; ++i) {
+                        free(data_arrays[i]);
+                    }
+                    free(data_arrays);
                 }
+            } else {
+                data_block->rank = 0;
+                data_block->data_type = UDA_TYPE_FLOAT;
+                data_block->data_n = 1;
 
-                for (i = 0; i < n_arrays; ++i) {
-                    free(data_arrays[i]);
+                size_t sz = sizeof(float);
+                data_block->data = (char*)malloc(sz);
+
+                if (data_arrays != nullptr) {
+                    if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
+                        memcpy(data_block->data, &data_arrays[0][mapping->select], sz);
+                    } else if (nindices > 0 && indices[0] > 0) {
+                        memcpy(data_block->data, &data_arrays[indices[0] - 1 - name_offset][mapping->select], sz);
+                    } else {
+                        memcpy(data_block->data, &data_arrays[0 - name_offset][mapping->select], sz);
+                    }
+
+                    for (i = 0; i < n_arrays; ++i) {
+                        free(data_arrays[i]);
+                    }
+                    free(data_arrays);
                 }
-                free(data_arrays);
             }
         }
 
-        data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
+        if (mapping->select < 0) {
+            data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
 
-        for (i = 0; i < data_block->rank; i++) {
-            initDimBlock(&data_block->dims[i]);
+            for (i = 0; i < data_block->rank; i++) {
+                initDimBlock(&data_block->dims[i]);
+            }
+
+            data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
+            data_block->dims[0].dim_n = data_n;
+            data_block->dims[0].compressed = 1;
+            data_block->dims[0].dim = (char*)nullptr;
+            data_block->dims[0].dim0 = 0.0;
+            data_block->dims[0].diff = 1.0;
+            data_block->dims[0].method = 0;
         }
-
-        data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
-        data_block->dims[0].dim_n = data_n;
-        data_block->dims[0].compressed = 1;
-        data_block->dims[0].dim = (char*)nullptr;
-        data_block->dims[0].dim0 = 0.0;
-        data_block->dims[0].diff = 1.0;
-        data_block->dims[0].method = 0;
 
         strcpy(data_block->data_label, "");
         strcpy(data_block->data_units, "");
@@ -735,22 +763,22 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
                 if ((StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr)
                     || (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr)) {
+                    double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
+                    double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
                     if (abserror_signal_names != nullptr && relerror_signal_names != nullptr) {
-                        double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
-                        double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
-                        error = std::max(fabs, frel * error_arrays[n_arrays][j]);
+                        error = std::max(fabs, frel * std::abs(error_arrays[n_arrays][j]));
                     } else if (abserror_signal_names != nullptr) {
-                        error = abs_coefa * fabserror[i + j * size] + abs_coefb;
+                        error = fabs;
                     } else {
-                        error = rel_coefa * frelerror[i + j * size] + rel_coefb;
+                        error = frel * std::abs(error_arrays[n_arrays][j]);
                     }
                 } else {
                     if (xml_abserror.values != nullptr && xml_relerror.values != nullptr) {
-                        error = std::max(abs, rel * error_arrays[n_arrays][j]);
+                        error = std::max(abs, rel * std::abs(error_arrays[n_arrays][j]));
                     } else if (xml_abserror.values != nullptr) {
                         error = abs;
                     } else if (xml_relerror.values != nullptr) {
-                        error = rel * error_arrays[n_arrays][j];
+                        error = rel * std::abs(error_arrays[n_arrays][j]);
                     } else {
                         return -1;
                     }
@@ -1033,6 +1061,14 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
     if (flatten != nullptr) {
         mapping->flatten = true;
         free(flatten);
+    }
+
+    xmlChar* select = xmlAttributeValue(xpath_ctx, request.c_str(), "select");
+    if (select != nullptr) {
+        mapping->select = (int)strtol((char*)select, nullptr, 10);
+        free(select);
+    } else {
+        mapping->select = -1;
     }
 
     mapping->slice_dim = -1;
