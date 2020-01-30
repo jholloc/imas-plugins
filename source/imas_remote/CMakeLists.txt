@@ -1,5 +1,5 @@
 find_package( UDA QUIET )
-find_package( Boost QUIET )
+find_package( Boost QUIET COMPONENTS filesystem system )
 find_package( IMAS QUIET )
 find_package( MDSplus QUIET )
 

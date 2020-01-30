@@ -225,8 +225,11 @@ int ImasUdaPlugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* experiment = nullptr;
     FIND_STRING_VALUE(request_block->nameValueList, experiment);
 
+    const char* server = "rca.fusion.org.uk";
+    int port = 56565;
+
     std::string path = insertNodeIndices(element, &indices, &nindices);
-    auto request = boost::format("UDA::get(signal=%s, source=%d)") % path % shot;
+    auto request = boost::format("UDA::get(signal=%s, source=%d, server=%s, port=%d)") % path % shot % server % port;
 
     return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
 }
@@ -251,7 +254,10 @@ int ImasUdaPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int shot = 0;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
 
-    auto request = boost::format("UDA::get(signal=%s/%s, source=%d)") % group % variable % shot;
+    const char* server = "rca.fusion.org.uk";
+    int port = 56565;
+
+    auto request = boost::format("UDA::get(signal=%s/%s, source=%d, server=%s, port=%d)") % group % variable % shot % server % port;
 
     std::cerr << request.str() << std::endl;
 

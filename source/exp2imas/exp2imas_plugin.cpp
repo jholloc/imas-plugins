@@ -627,6 +627,10 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
                  size_t nindices)
 {
     // ERROR case
+    if (StringEndsWith(element, "lower")) {
+        // only upper error values are returned
+        return -1;
+    }
 
     char* abserror = StringReplace((const char*)xPath, "/value/", "/abserror/");
 
@@ -741,10 +745,10 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
             double abs = xml_abserror.values != nullptr ? xml_abserror.values[i + name_offset] : 0.0;
             double rel = xml_relerror.values != nullptr ? xml_relerror.values[i + name_offset] : 0.0;
 
-            float abs_coefa = (xml_abserror.coefas != nullptr) ? xml_abserror.coefas[i + name_offset] : 1.0f;
-            float abs_coefb = (xml_abserror.coefbs != nullptr) ? xml_abserror.coefbs[i + name_offset] : 0.0f;
-            float rel_coefa = (xml_relerror.coefas != nullptr) ? xml_relerror.coefas[i + name_offset] : 1.0f;
-            float rel_coefb = (xml_relerror.coefbs != nullptr) ? xml_relerror.coefbs[i + name_offset] : 0.0f;
+            float abs_coefa = (xml_abserror.coefas != nullptr) ? xml_abserror.coefas[i] : 1.0f;
+            float abs_coefb = (xml_abserror.coefbs != nullptr) ? xml_abserror.coefbs[i] : 0.0f;
+            float rel_coefa = (xml_relerror.coefas != nullptr) ? xml_relerror.coefas[i] : 1.0f;
+            float rel_coefb = (xml_relerror.coefbs != nullptr) ? xml_relerror.coefbs[i] : 0.0f;
 
             abs = abs_coefa * abs + abs_coefb;
             rel = rel_coefa * rel + rel_coefb;
@@ -763,13 +767,15 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
                 if ((StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr)
                     || (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr)) {
-                    double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
-                    double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
                     if (abserror_signal_names != nullptr && relerror_signal_names != nullptr) {
+                        double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
+                        double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
                         error = std::max(fabs, frel * std::abs(error_arrays[n_arrays][j]));
                     } else if (abserror_signal_names != nullptr) {
+                        double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
                         error = fabs;
                     } else {
+                        double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
                         error = frel * std::abs(error_arrays[n_arrays][j]);
                     }
                 } else {
