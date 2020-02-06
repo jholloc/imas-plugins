@@ -32,6 +32,9 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 int execute_tsmat_collect(const char* TOP_collections_parameters, char* attributes,
 		int shotNumber, DATA_BLOCK* data_block, int* nodeIndices,
 		char* normalizationAttributes);
+int execute_tsmat_collect_for_poloidal_angle(const char* TOP_collections_parameters, char* attributes,
+		int shotNumber, DATA_BLOCK* data_block, int* nodeIndices,
+		char* normalizationAttributes);
 int execute_tsmat_without_idam_index(const char* command, char* attributes,
 		int shotNumber, DATA_BLOCK* data_block, char* normalizationAttributes);
 int execute_setvalue_collect(const char* TOP_collections_parameters, char* attributes,
@@ -75,6 +78,10 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		//returns a static parameter (rank = 0) from a collection of static data (Top objects).
 		//Given the list of all static data in the collection, the element returned in the data_block is list(idam index)
 		fun = 0;
+	} else if (strcmp(fun_name, "tsmat_collect_for_poloidal_angle") == 0) {
+		//returns a static parameter (rank = 0) from a collection of static data (Top objects).
+		//Given the list of all static data in the collection, the element returned in the data_block is list(idam index)
+		fun = 800;
 	} else if (strcmp(fun_name, "shape_of_tsmat_collect") == 0) {
 		//Returns the list size of all static data in the collection
 		fun = 1;
@@ -271,6 +278,15 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 
 		break;
 	}
+
+	case 800: {
+			UDA_LOG(UDA_LOG_DEBUG, "Case of tsmat_collect from WEST plugin\n");
+			tokenizeFunParameters(mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
+			status = execute_tsmat_collect_for_poloidal_angle(TOP_collections_parameters, attributes, shotNumber, data_block, nodeIndices,
+					normalizationAttributes);
+
+			break;
+		}
 
 	case 1: {
 
@@ -967,6 +983,129 @@ int execute_tsmat_collect(const char* TOP_collections_parameters, char* attribut
 	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, setting static value... %s\n", "");
 
 	setStaticValue(data_type, data_block, value, searchedArrayIndex, normalizationFactor);
+
+	free(command);
+	free(prod_name);
+	free(object_name);
+	free(param_name);
+	free(value);
+	free(flag);
+	free(l);
+	return 0;
+}
+
+int execute_tsmat_collect_for_poloidal_angle(const char* TOP_collections_parameters, char* attributes,
+		int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, char* normalizationAttributes)
+{
+	int collectionsCount;
+	getTopCollectionsCount(TOP_collections_parameters, &collectionsCount);
+
+	int* l;
+	l = (int*)calloc(collectionsCount, sizeof(int));
+
+	int i;
+	int status = -1;
+	for (i = 0; i < collectionsCount; i++) {
+		char* command = NULL;
+		status = getCommand(i, &command, TOP_collections_parameters);
+		if (status == -1) {
+			int err = 901;
+			//UDA_LOG(UDA_LOG_ERROR, "%s", "WEST:ERROR: unable to get the shapeof command");
+			addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to get the shapeof command", err, "");
+			free(l);
+			return status;
+		}
+
+		int nb_val = 0;
+		status = getShapeOf(command, shotNumber, &nb_val);
+		if (status != 0)
+			return status;
+		l[i] = nb_val;
+	}
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searching requestedIndex... %s\n", "");
+	int requestedIndex = getNumIDAMIndex(attributes, nodeIndices);
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, after searching requestedIndex --> %d\n", requestedIndex);
+
+	int searchedArray;
+	int searchedArrayIndex;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searching index array for requested index: %d\n",
+			requestedIndex);
+	searchIndices(requestedIndex, l, &searchedArray, &searchedArrayIndex);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searched array:%d\n", searchedArray);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searched array index:%d\n", searchedArrayIndex);
+
+	char* command = NULL;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, getting command from TOP_collections_parameters: %s\n",
+			TOP_collections_parameters);
+	status = getCommand(searchedArray, &command, TOP_collections_parameters);
+	if (status != 0)
+		return status;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, after getting command...\n");
+
+	char* prod_name = NULL;     //DMAG, ...
+	char* object_name = NULL;   //GMAG_BNORM, ...
+	char* param_name = NULL;    //PosR, ...
+	char* flag = NULL;          //'Null' or blank
+
+	int data_type;
+	status = getReturnType(attributes, &data_type);
+	if (status != 0)
+		return status;
+
+	//Tokenize mapfun string to get function parameters
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, tokenizing command... %s\n", command);
+	tokenizeCommand(command, &prod_name, &object_name, &param_name, &flag);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, afetr tokenizing command...\n");
+
+	char* value = NULL;
+	int val_nb = l[searchedArray];
+	int nb_val;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, flag: %s\n", flag);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, checking if flag is Null...\n");
+
+	if (flag != NULL && strncmp("Null", flag, 4) == 0) {
+		UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, setting value for Null flag...\n");
+		int data_type;
+		status = getReturnType(attributes, &data_type);
+		if (status != 0)
+			return status;
+		value = setBuffer(data_type, "0"); //we put zero for 'Null' flag
+		searchedArrayIndex = 0;
+	} else {
+		//Reading static parameters using TSLib
+		UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, reading static parameters for param. name: %s\n",
+				param_name);
+		status = readStaticParameters(&value, &nb_val, shotNumber, prod_name, object_name, param_name, val_nb);
+		if (status != 0) {
+			int err = 901;
+			UDA_LOG(UDA_LOG_ERROR, "%s,shot:%d\n", "WEST:ERROR: unable to read static data",shotNumber);
+			addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to read static data", err, "");
+			free(command);
+			free(prod_name);
+			free(object_name);
+			free(param_name);
+			free(flag);
+			free(value);
+			free(l);
+			return status;
+		}
+	}
+
+	float normalizationFactor = 1;
+	status = getNormalizationFactor(&normalizationFactor, normalizationAttributes);
+	if (status != 0)
+		return status;
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, setting static value... %s\n", "");
+
+	value = 360 - value;
+	setStaticValue(data_type, data_block, value, searchedArrayIndex, normalizationFactor);
+
 
 	free(command);
 	free(prod_name);
