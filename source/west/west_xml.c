@@ -1103,9 +1103,11 @@ int execute_tsmat_collect_for_poloidal_angle(const char* TOP_collections_paramet
 		return status;
 	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, setting static value... %s\n", "");
 
-	value = 360 - value;
-	setStaticValue(data_type, data_block, value, searchedArrayIndex, normalizationFactor);
 
+	float* pt_float = (float*)value;
+    //Transforming angle by poloidal_angle = 360 - poloidal_angle (angle values in ARCAD are in degrees)
+	//normalizationFactor is provided by the UDA mapping file
+	setReturnDataFloatScalar(data_block, (360 - pt_float[searchedArrayIndex]) * normalizationFactor, NULL);
 
 	free(command);
 	free(prod_name);
