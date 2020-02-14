@@ -477,9 +477,9 @@ int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_inte
     int size = 0;
 
     env.backend->beginArraystructAction(array_ctx, &size);
-
+    if (size > 0) {
     array_ctx_stack_.emplace(array_ctx);
-
+    }
     setReturnDataIntScalar(idam_plugin_interface->data_block, size, nullptr);
     return 0;
 }
