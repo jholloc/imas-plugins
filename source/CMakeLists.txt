@@ -14,6 +14,7 @@ if( NOT DEFINED BUILD_PLUGINS )
     imasdd
     iter_md
     #livedisplay
+    jet_equilibrium
     jet_magnetics
     mast_imas
     source

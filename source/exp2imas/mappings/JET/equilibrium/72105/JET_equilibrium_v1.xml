@@ -205,7 +205,7 @@
             <time_dim documentation="Specifies which of the above dimension represents time (in the local DB)." type="xs:integer">1</time_dim>
          </i_plasma>
          <li documentation="internal inductance; Time-dependent; Scalar" reminder="Enter in the structure below how to retrieve this variable from the experimental database. Replicate this element if more than one signal needs to be read in the local database" list="no" type="expSignal/exp0D" path="global_param/li">
-            <name documentation="Name of the signal in the local database" type="xs:string">PPF/EFIT/XLI</name>
+            <name documentation="Name of the signal in the local database" type="xs:string">PPF/EFIT/LI3D</name>
             <download documentation="Description of the method for calculating the signal. Fill the relevant elements below." type="structure">
                <download documentation="Name of the download method, as listed in the top element mapping_info/download_method/name. In case of a constant value, put 'fixed' here and fill the 'fixed-value' element below." type="xs:string">mds+</download>
                <fixed_value documentation="Fixed value of the signal in case 'download' = 'fixed'. NB : this value will be repeated in all time slices of the ITM signal, except if 'interpolation' = 0. Optional." type="Vect1DDouble">Put value here</fixed_value>

@@ -190,6 +190,42 @@ int* get_dims(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, int* rank)
     return dims;
 }
 
+int* get_dimensions(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
+{
+    int* dimensions = nullptr;
+
+    /* First, we get the type of the element which is requested */
+
+    //Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is requested)
+    const char* typeStr = "/../dimension";
+    size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
+    xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+
+    /* Evaluate xpath expression for the type */
+    xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
+    if (xpathObj != nullptr) {
+        xmlNodeSetPtr nodes = xpathObj->nodesetval;
+
+        xmlNodePtr cur;
+
+        if (nodes != nullptr && nodes->nodeNr > 0) {
+            dimensions = (int*)malloc(nodes->nodeNr * sizeof(int));
+            int i;
+            for (i = 0; i < nodes->nodeNr; ++i) {
+                cur = nodes->nodeTab[0];
+                cur = cur->children;
+                dimensions[i] = (int)strtol((char*)cur->content, nullptr, 10);
+            }
+
+        }
+    }
+
+    free(typeXpathExpr);
+
+    return dimensions;
+}
+
 int get_time_dim(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
 {
     int time_dim = 0;
@@ -478,6 +514,7 @@ int uda::exp2imas::execute_xpath_expression(const std::string& filename, const x
     xml_data->dims = get_dims(xpathExpr, xpathCtx, &xml_data->rank);
     const char* type = get_type(xpathExpr, xpathCtx);
     xml_data->time_dim = get_time_dim(xpathExpr, xpathCtx);
+    xml_data->dimensions = get_dimensions(xpathExpr, xpathCtx);
     xml_data->sizes = get_sizes(xpathExpr, xpathCtx);
     get_coefs(&xml_data->coefas, &xml_data->coefbs, xpathExpr, xpathCtx);
     xml_data->download = get_download(xpathExpr, xpathCtx, &xml_data->values, &xml_data->n_values);

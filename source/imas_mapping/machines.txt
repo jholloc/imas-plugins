@@ -1,5 +1,6 @@
 # Machine   IDS         Host        Plugin
 JET         magnetics   -           JET_MAGNETICS
+JET         EQUILIBRIUM -           JET_EQUILIBRIUM
 JET         *           -           EXP2IMAS
 ASDEX       *           -           EXP2IMAS
 TCV         *           -           EXP2IMAS

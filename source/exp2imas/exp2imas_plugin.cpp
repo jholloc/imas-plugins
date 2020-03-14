@@ -34,6 +34,7 @@ typedef struct XMLMapping {
     bool flatten;
     int select;
     const xmlChar* dim;
+    bool no_indexing;
 } XML_MAPPING;
 
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
@@ -468,6 +469,61 @@ size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int*
     return name_index;
 }
 
+void init_int_array(int* array, int len, int val){
+    int i;
+    for (i = 0; i < len; i++){
+        array[i] = val;
+    }
+}
+
+int get_x_dimension_length(int n_dims, int data_length, int time_len){
+    int x_len = -1;
+    if (n_dims == 3) {
+        // assume square
+        x_len = std::sqrt( data_length / time_len);
+    } else {
+        x_len = data_length / time_len;
+    }
+    return x_len;
+}
+
+int* get_dimension_sizes(int time_dim, int time_len, int x_len, int n_dims){
+
+    // int dim_n[3] = {1, 1, 1};
+    int len = 3;
+    int* dim_lengths = (int*)malloc(len * sizeof(int));
+    init_int_array(dim_lengths, len, 1);
+    
+    int i;
+    for(i = 0; i < n_dims; i++){
+        if (time_dim -1 == i){
+            dim_lengths[i] = time_len;
+        }
+        else {
+            dim_lengths[i] = x_len;
+        }
+    }
+    return dim_lengths;
+}
+
+int* get_sliced_data_shape(int* dim_n, int slice_dim, int n_dims){
+    // int shape[2] = {1, 1};
+    int len = 2;
+    int* shape = (int*)malloc(len * sizeof(int));
+    init_int_array(shape, len, 1);
+
+    int i;
+    int j =0;
+    for(i = 0; i < n_dims; i++){
+        if (slice_dim != i){
+            shape[j] = dim_n[i];
+            j++;
+        }
+    }
+    return shape;
+}
+
+
 int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                    XML_MAPPING* mapping,
                    const char* experiment, const char* element, int shot, int run, const int* indices,
@@ -517,103 +573,192 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
                 return status;
             }
 
-            int size = (xml_data.sizes == nullptr || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
-            data_n = len / size;
-
             float** data_arrays = nullptr;
             size_t n_arrays = 0;
+            int size = 1;
 
-            for (i = 0; i < size; ++i) {
-                data_arrays = (float**)realloc(data_arrays, (n_arrays + 1) * sizeof(float*));
+            int* shape = nullptr;
+            
 
-                data_arrays[n_arrays] = (float*)malloc(data_n * sizeof(float));
+            if (StringEndsWith(element, "/Shape_of")){
 
-                if (StringEndsWith(element, "/time")) {
-                    memcpy(data_arrays[n_arrays], &time[0], data_n * sizeof(float));
-                } else {
-                    int j;
-                    for (j = 0; j < data_n; ++j) {
-                        if (xml_data.time_dim == 1) {
-                            data_arrays[n_arrays][j] = coefa * fdata[i * data_n + j] + coefb;
-                        } else {
-                            data_arrays[n_arrays][j] = coefa * fdata[i + j * size] + coefb;
+                int* data = (int *)malloc(sizeof(int));
+                data[0] = len;
+                data_n = 1;
+                data_block->data = (char*)data;
+                data_block->data_n = data_n;
+                data_block->data_type = UDA_TYPE_INT;
+                data_block->rank = 0;
+                
+            } else if (mapping->slice_dim >= 0){
+
+                int n_dims = xml_data.dimensions[name_index];
+
+                if(n_dims <= 3){
+
+                    int x_len = get_x_dimension_length(n_dims, len, time_len);
+                    int* dim_n = get_dimension_sizes(xml_data.time_dim, time_len, x_len, n_dims);
+                    shape = get_sliced_data_shape(dim_n, mapping->slice_dim, n_dims);
+
+                    data_n = shape[0] * shape[1];
+                    float* data = (float*)malloc(data_n * sizeof(float));
+
+                    int dim1_offset = dim_n[0];
+                    int dim2_offset = dim_n[0] * dim_n[1];
+                    int offset;
+                    int index = indices[0] - 1;
+
+                    int i, j;
+                    int k = 0;
+                    for(j = 0; j <shape[1]; ++j){
+                        for(i = 0; i < shape[0]; ++i){
+
+                            if (mapping->slice_dim == 0){
+                                offset = index + dim1_offset * i + dim2_offset * j;
+                            }
+                            else if (mapping->slice_dim == 1){
+                                offset = i + index * dim1_offset + j * dim2_offset; 
+
+                            } else {
+                                offset =  i + j * dim1_offset + index * dim2_offset;
+                            }
+                            data[k] =  coefa * fdata[offset] + coefb;
+                            ++k;
                         }
                     }
+
+                    data_block->rank = n_dims - 1;
+                    data_block->data_type = UDA_TYPE_FLOAT;
+                    data_block->data_n = data_n;
+                    data_block->data = (char*)data;
+
+                    free(dim_n);
+                   
                 }
 
-                ++n_arrays;
+            } else if (mapping->no_indexing){
+                int n_dims = xml_data.dimensions[name_index];
+                int x_len = get_x_dimension_length(n_dims, len, time_len);
+                int* dim_n = get_dimension_sizes(xml_data.time_dim, time_len, x_len, n_dims);
+                shape = get_sliced_data_shape(dim_n, n_dims + 1, n_dims);
+
+                float* data = (float*)malloc(len * sizeof(float));
+
+                int i;
+                for (i = 0; i < len; i++){
+                    data[i] =  coefa * fdata[i] + coefb;
+                }
+
+                data_block->rank = n_dims;
+                data_block->data_type = UDA_TYPE_FLOAT;
+                data_block->data_n = len;
+                data_block->data = (char*)data;
+
+            } else{
+
+                size = (xml_data.sizes == nullptr || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
+
+                data_n = len / size;
+
+                for (i = 0; i < size; ++i) {
+                    data_arrays = (float**)realloc(data_arrays, (n_arrays + 1) * sizeof(float*));
+
+                    data_arrays[n_arrays] = (float*)malloc(data_n * sizeof(float));
+
+                    if (StringEndsWith(element, "/time")) {
+                        memcpy(data_arrays[n_arrays], &time[0], data_n * sizeof(float));
+                    } else {
+                        int j;
+                        for (j = 0; j < data_n; ++j) {
+                            if (xml_data.time_dim == 1) {
+                                data_arrays[n_arrays][j] = coefa * fdata[i * data_n + j] + coefb;
+                            } else {
+                                data_arrays[n_arrays][j] = coefa * fdata[i + j * size] + coefb;
+                            }
+                        }
+                    }
+
+                    ++n_arrays;
+                }
+
+                if (mapping->select < 0) {
+                    data_block->rank = 1;
+                    data_block->data_type = UDA_TYPE_FLOAT;
+                    data_block->data_n = data_n;
+
+                    size_t sz = data_n * sizeof(float);
+                    data_block->data = (char*)malloc(sz);
+
+                    if (data_arrays != nullptr) {
+                        if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
+                            memcpy(data_block->data, (char*)data_arrays[0], sz);
+                        } else if (nindices > 0 && indices[0] > 0) {
+                            memcpy(data_block->data, (char*)data_arrays[indices[0] - 1 - name_offset], sz);
+                        } else {
+                            memcpy(data_block->data, (char*)data_arrays[0 - name_offset], sz);
+                        }
+
+                        for (i = 0; i < n_arrays; ++i) {
+                            free(data_arrays[i]);
+                        }
+                        free(data_arrays);
+                    }
+
+                } else {
+                    data_block->rank = 0;
+                    data_block->data_type = UDA_TYPE_FLOAT;
+                    data_block->data_n = 1;
+
+                    size_t sz = sizeof(float);
+                    data_block->data = (char*)malloc(sz);
+
+                    if (data_arrays != nullptr) {
+                        if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
+                            memcpy(data_block->data, &data_arrays[0][mapping->select], sz);
+                        } else if (nindices > 0 && indices[0] > 0) {
+                            memcpy(data_block->data, &data_arrays[indices[0] - 1 - name_offset][mapping->select], sz);
+                        } else {
+                            memcpy(data_block->data, &data_arrays[0 - name_offset][mapping->select], sz);
+                        }
+
+                        for (i = 0; i < n_arrays; ++i) {
+                            free(data_arrays[i]);
+                        }
+                        free(data_arrays);
+                    }
+                }
+            
+            }
+            if (data_block->data_n > 1) {
+                int j;
+                data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
+                for (j = 0; j < data_block->rank; j++) {
+                    initDimBlock(&data_block->dims[j]);
+    
+                    data_block->dims[j].data_type = UDA_TYPE_UNSIGNED_INT;
+                    data_block->dims[j].compressed = 1;
+                    data_block->dims[j].dim = (char*)nullptr;
+                    data_block->dims[j].dim0 = 0.0;
+                    data_block->dims[j].diff = 1.0;
+                    data_block->dims[j].method = 0;
+                    if(data_block->rank == 1){
+                        data_block->dims[j].dim_n = data_block->data_n;
+                    } else {
+                        data_block->dims[j].dim_n = shape[j];
+                    }
+                }
             }
 
             free(fdata);
             free(time);
             free(signalName);
+            if(shape != nullptr) free(shape);
 
-            if (mapping->select < 0) {
-                data_block->rank = 1;
-                data_block->data_type = UDA_TYPE_FLOAT;
-                data_block->data_n = data_n;
-
-                size_t sz = data_n * sizeof(float);
-                data_block->data = (char*)malloc(sz);
-
-                if (data_arrays != nullptr) {
-                    if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
-                        memcpy(data_block->data, (char*)data_arrays[0], sz);
-                    } else if (nindices > 0 && indices[0] > 0) {
-                        memcpy(data_block->data, (char*)data_arrays[indices[0] - 1 - name_offset], sz);
-                    } else {
-                        memcpy(data_block->data, (char*)data_arrays[0 - name_offset], sz);
-                    }
-
-                    for (i = 0; i < n_arrays; ++i) {
-                        free(data_arrays[i]);
-                    }
-                    free(data_arrays);
-                }
-            } else {
-                data_block->rank = 0;
-                data_block->data_type = UDA_TYPE_FLOAT;
-                data_block->data_n = 1;
-
-                size_t sz = sizeof(float);
-                data_block->data = (char*)malloc(sz);
-
-                if (data_arrays != nullptr) {
-                    if (StringEndsWith(element, "/time") && n_arrays == 1 && nindices == 1) {
-                        memcpy(data_block->data, &data_arrays[0][mapping->select], sz);
-                    } else if (nindices > 0 && indices[0] > 0) {
-                        memcpy(data_block->data, &data_arrays[indices[0] - 1 - name_offset][mapping->select], sz);
-                    } else {
-                        memcpy(data_block->data, &data_arrays[0 - name_offset][mapping->select], sz);
-                    }
-
-                    for (i = 0; i < n_arrays; ++i) {
-                        free(data_arrays[i]);
-                    }
-                    free(data_arrays);
-                }
-            }
         }
-
-        if (mapping->select < 0) {
-            data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
-
-            for (i = 0; i < data_block->rank; i++) {
-                initDimBlock(&data_block->dims[i]);
-            }
-
-            data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
-            data_block->dims[0].dim_n = data_n;
-            data_block->dims[0].compressed = 1;
-            data_block->dims[0].dim = (char*)nullptr;
-            data_block->dims[0].dim0 = 0.0;
-            data_block->dims[0].diff = 1.0;
-            data_block->dims[0].method = 0;
-        }
-
         strcpy(data_block->data_label, "");
         strcpy(data_block->data_units, "");
         strcpy(data_block->data_desc, "");
+
     } else {
         RAISE_PLUGIN_ERROR("Unsupported data type");
     }
@@ -1082,6 +1227,13 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
     if (slice_dim != nullptr) {
         mapping->slice_dim = (int)strtol((char*)slice_dim, nullptr, 10);
         free(slice_dim);
+    }
+
+    mapping->no_indexing = false;
+    xmlChar* no_indexing = xmlAttributeValue(xpath_ctx, request.c_str(), "no_indexing");
+    if (no_indexing != nullptr) {
+        mapping->no_indexing = true;
+        free(no_indexing);
     }
 
     mapping->dim = xmlAttributeValue(xpath_ctx, request.c_str(), "dim");
