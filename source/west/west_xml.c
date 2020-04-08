@@ -23,6 +23,7 @@
 #include "west_lh_antennas.h"
 #include "west_barometry.h"
 #include "west_ic_antennas.h"
+#include "west_polaro_interf.h"
 
 char* setBuffer(int data_type, char* value);
 int getShapeOf(const char* command, int shotNumber, int* nb_val);
