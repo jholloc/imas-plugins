@@ -60,7 +60,7 @@
 
 <mapping key="interferometer/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
 <mapping key="interferometer/channel/Shape_of" value="shape_of_tsmat_collect;DINTRPOL:GINTLIDRT:CALIB;0:float:#0" type="static"/>
-<mapping key="interferometer/channel/#/name" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Channel:#0;0:string:#0" type="static"/>
+<mapping key="interferometer/channel/#/name" value="polarimeter_interferometer_channel_name" type="static"/>
 <mapping key="interferometer/channel/#/identifier" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Id:#0;0:string:#0" type="static"/>
 <mapping key="interferometer/channel/#/line_of_sight/first_point/r" value="tsmat_collect;DINTRPOL:LIDRT:RPOS2;0:float:#0" type="static"/>
 <mapping key="interferometer/channel/#/line_of_sight/first_point/z" value="tsmat_collect;DINTRPOL:LIDRT:ZPOS2;0:float:#0" type="static"/>
@@ -77,7 +77,7 @@
 
 <mapping key="polarimeter/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
 <mapping key="polarimeter/channel/Shape_of" value="shape_of_tsmat_collect;DINTRPOL:GINTLIDRT:CALIB;0:float:#0" type="static"/>
-<mapping key="polarimeter/channel/#/name" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Channel:#0;0:string:#0" type="static"/>
+<mapping key="polarimeter/channel/#/name" value="polarimeter_interferometer_channel_name" type="static"/>
 <mapping key="polarimeter/channel/#/identifier" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Id:#0;0:string:#0" type="static"/>
 <mapping key="polarimeter/channel/#/line_of_sight/first_point/r" value="tsmat_collect;DINTRPOL:LIDRT:RPOS2;0:float:#0" type="static"/>
 <mapping key="polarimeter/channel/#/line_of_sight/first_point/z" value="tsmat_collect;DINTRPOL:LIDRT:ZPOS2;0:float:#0" type="static"/>

@@ -209,6 +209,10 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	else if (strcmp(fun_name, "barometry_gauge_calibration_coefficient") == 0) {
 		fun = 504;
 	}
+	else if (strcmp(fun_name, "polarimeter_interferometer_channel_name") == 0) {
+		fun = 505;
+	}
+
 
 	//------------------ic_antennas----------------------------------
 	else if (strcmp(fun_name, "ic_antennas_modules_strap_outline_r") == 0) {
@@ -280,13 +284,13 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	}
 
 	case 800: {
-			UDA_LOG(UDA_LOG_DEBUG, "Case of tsmat_collect from WEST plugin\n");
-			tokenizeFunParameters(mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
-			status = execute_tsmat_collect_for_poloidal_angle(TOP_collections_parameters, attributes, shotNumber, data_block, nodeIndices,
-					normalizationAttributes);
+		UDA_LOG(UDA_LOG_DEBUG, "Case of tsmat_collect from WEST plugin\n");
+		tokenizeFunParameters(mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
+		status = execute_tsmat_collect_for_poloidal_angle(TOP_collections_parameters, attributes, shotNumber, data_block, nodeIndices,
+				normalizationAttributes);
 
-			break;
-		}
+		break;
+	}
 
 	case 1: {
 
@@ -592,6 +596,11 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	case 504: {
 		UDA_LOG(UDA_LOG_DEBUG, "Case of barometry_gauge_calibration_coefficient from WEST plugin\n");
 		status = barometry_gauge_calibration_coefficient(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 505: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of polarimeter_interferometer_channel_name from WEST plugin\n");
+		status = polaro_or_interfero_channel_name(shotNumber, data_block, nodeIndices);
 		break;
 	}
 
@@ -1105,7 +1114,7 @@ int execute_tsmat_collect_for_poloidal_angle(const char* TOP_collections_paramet
 
 
 	float* pt_float = (float*)value;
-    //Transforming angle by poloidal_angle = 360 - poloidal_angle (angle values in ARCAD are in degrees)
+	//Transforming angle by poloidal_angle = 360 - poloidal_angle (angle values in ARCAD are in degrees)
 	//normalizationFactor is provided by the UDA mapping file
 	setReturnDataFloatScalar(data_block, (360 - pt_float[searchedArrayIndex]) * normalizationFactor, NULL);
 
