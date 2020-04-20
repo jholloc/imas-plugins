@@ -530,7 +530,7 @@ int* get_sliced_data_shape(int* dim_n, int slice_dim, int n_dims){
 int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                    XML_MAPPING* mapping,
                    const char* experiment, const char* element, int shot, int run, const int* indices,
-                   size_t nindices, const char* ppf_user, int ppf_sequence, const char* new_dda)
+                   size_t nindices)
 {
     // DYNAMIC case
 
@@ -570,8 +570,7 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
 
             char* signalName = signal_names[name_index];
 
-            status = mds_get(experiment, signalName, shot, run, &time, &fdata, &len, &time_len, xml_data.time_dim,
-            ppf_user, ppf_sequence, new_dda);
+            status = mds_get(experiment, signalName, shot, run, &time, &fdata, &len, &time_len, xml_data.time_dim);
 
             if (status != 0) {
                 return status;
@@ -773,7 +772,7 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
 int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
                  XML_MAPPING* mapping,
                  const char* experiment, const char* element, int shot, int run, const int* indices,
-                 size_t nindices, const char* ppf_user, int ppf_sequence, const char* new_dda)
+                 size_t nindices)
 {
     // ERROR case
     if (StringEndsWith(element, "lower")) {
@@ -848,7 +847,7 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         int len = -1;
 
         char* signalName = signal_names[name_index];
-        status = mds_get(experiment, signalName, shot, run, nullptr, &fdata, &len, nullptr, 0, ppf_user, ppf_sequence, new_dda);
+        status = mds_get(experiment, signalName, shot, run, nullptr, &fdata, &len, nullptr, 0);
 
         if (status != 0) {
             return status;
@@ -857,7 +856,7 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         if (StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr) {
             signalName = abserror_signal_names[name_index];
             int abslen = -1;
-            status = mds_get(experiment, signalName, shot, run, nullptr, &fabserror, &abslen, nullptr, 0, ppf_user, ppf_sequence, new_dda);
+            status = mds_get(experiment, signalName, shot, run, nullptr, &fabserror, &abslen, nullptr, 0);
 
             if (status != 0) {
                 return status;
@@ -871,7 +870,7 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         if (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr) {
             signalName = relerror_signal_names[name_index];
             int rellen = -1;
-            status = mds_get(experiment, signalName, shot, run, nullptr, &frelerror, &rellen, nullptr, 0, ppf_user, ppf_sequence, new_dda);
+            status = mds_get(experiment, signalName, shot, run, nullptr, &frelerror, &rellen, nullptr, 0);
 
             if (status != 0) {
                 return status;
@@ -1037,15 +1036,6 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         experiment = request_block->archive;
     }
 
-    int ppf_sequence = -1;
-    FIND_INT_VALUE(request_block->nameValueList, ppf_sequence);
-
-    const char* ppf_user = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, ppf_user);
-
-    const char* new_dda = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, new_dda);
-
     // Search mapping value and request type (static or dynamic)
     std::string experiment_mapping_file_name = uda::exp2imas::get_machine_mapping_filename(experiment, element, shot);
     std::string mapping_file_name = uda::exp2imas::get_mapping_filename(IDS_version, element);
@@ -1072,11 +1062,11 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             break;
         case DYNAMIC:
             err = handle_dynamic(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
-                                 indices, nindices, ppf_user, ppf_sequence, new_dda);
+                                 indices, nindices);
             break;
         case ERROR:
             err = handle_error(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
-                               indices, nindices, ppf_user, ppf_sequence, new_dda);
+                               indices, nindices);
             break;
         default:
             free(xPath);

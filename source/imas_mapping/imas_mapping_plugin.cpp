@@ -74,15 +74,6 @@ private:
     std::vector<std::pair<std::string, std::string>> arraystruct_stack_;
     std::unordered_map<int, Pulse> pulses_;
     int next_pulse_ = 0;
-    std::string ppf_user_ = "";
-    int ppf_sequence_ = -1;
-    std::string new_dda_ = "";
-
-    void reset_ppf_vals(void){
-        ppf_user_ = "";
-        ppf_sequence_ = -1;
-        new_dda_ = "";
-    }
 };
 
 } // anon namespace
@@ -330,24 +321,6 @@ int MappingPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int interp;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
 
-    const char* ppfUser = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, ppfUser);
-    if(ppfUser != nullptr){
-        ppf_user_ = ppfUser; 
-    }
-
-    int ppfSequence = -1;
-    FIND_INT_VALUE(request_block->nameValueList, ppfSequence);
-    if(ppfSequence != -1){
-        ppf_sequence_ = ppfSequence;
-    }
-
-    const char* newDDA = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, newDDA);
-    if(newDDA != nullptr){
-        new_dda_ = newDDA; 
-    }
-
     if (pulses_.count(ctxId) == 0) {
         RAISE_PLUGIN_ERROR("invalid ctxId");
     }
@@ -378,7 +351,6 @@ int MappingPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         auto plugin_name = machine_mapping_.plugin(expName, ids_);
         auto request = boost::format("%s::close()") % plugin_name;
         call_plugin(idam_plugin_interface, machine_mapping_.host(expName, ids_), request.str());
-        reset_ppf_vals();
     } else {
         arraystruct_stack_.pop_back();
     }
@@ -456,27 +428,9 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
             boost::format(
                     "%s::read(experiment='%s', element='%s/%s/Shape_of', shot=%d, indices='%s', dtype=%d, IDS_version='')")
             % plugin_name % pulse.tokamak % ids_ % element_ss.str() % pulse.shot % indices_ss.str() % uda_type;
-    std::string request_string = request.str();
+    std::cout << request.str() << std::endl;
 
-    if(ppf_user_ != ""){
-        request_string.pop_back();
-        std::string temp = (boost::format(", ppf_user = %s)") % ppf_user_).str();
-        request_string.append(temp);
-    }
-    if(ppf_sequence_ != -1){
-        request_string.pop_back();
-        std::string temp = (boost::format(", ppf_sequence = %)d") % ppf_sequence_).str();
-        request_string.append(temp);
-    }
-    if(new_dda_ != ""){
-        request_string.pop_back();
-        std::string temp = (boost::format(", new_dda = %s)") % new_dda_).str();
-        request_string.append(temp);
-    }
-
-    std::cout << request_string << std::endl;
-
-    int rc = call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request_string);
+    int rc = call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request.str());
     if (rc == 0
         && idam_plugin_interface->data_block != nullptr
         && idam_plugin_interface->data_block->data_type == UDA_TYPE_INT
@@ -628,30 +582,9 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
                     "%s::read(experiment='%s', element='%s/%s', shot=%d, indices='%s', dtype=%d, IDS_version='%s', run=%d, user='%s')")
             % plugin_name % pulse.tokamak % ids_ % element % pulse.shot % indices % uda_type
             % pulse.version % pulse.run % pulse.user;
-    std::string request_string = request.str();
+    std::cout << request.str() << std::endl;
 
-    // could be neater to pass in to function anyway -- saves a few lines.
-    // OR could replace run and user here.
-    if(ppf_user_ != ""){
-        request_string.pop_back();
-        std::string temp = (boost::format(", ppf_user = %s )") % ppf_user_).str();
-        request_string.append(temp);
-    }
-
-    if(ppf_sequence_ != -1){
-        request_string.pop_back();
-        std::string temp = (boost::format(", ppf_sequence = %d )") % ppf_sequence_).str();
-        request_string.append(temp);
-    }
-    if(new_dda_ != ""){
-        request_string.pop_back();
-        std::string temp = (boost::format(", new_dda = %s )") % new_dda_).str();
-        request_string.append(temp);
-    }
-
-    std::cout << request_string << std::endl;
-
-    return call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request_string);
+    return call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request.str());
 }
 
 int MappingPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)

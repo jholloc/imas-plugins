@@ -7,8 +7,7 @@ extern "C" {
 
 int
 mds_get(const char* experiment, const char* signalName, int shot, int run,
-        float** time, float** data, int* len, int* time_len, int time_dim,
-        const char* ppf_user, int ppf_sequence, const char* new_dda);
+        float** time, float** data, int* len, int* time_len, int time_dim);
 int mds_close();
 
 #ifdef __cplusplus
