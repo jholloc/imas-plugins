@@ -16,13 +16,14 @@
 #include "west_utilities.h"
 #include "west_static_data_utilities.h"
 
-#include "west_ece.h"
 #include "west_pf_passive.h"
 #include "west_pf_active.h"
 #include "west_soft_x_rays.h"
 #include "west_summary.h"
 #include "west_lh_antennas.h"
 #include "west_barometry.h"
+#include "west_ic_antennas.h"
+#include "west_polaro_interf.h"
 
 char* setBuffer(int data_type, char* value);
 int getShapeOf(const char* command, int shotNumber, int* nb_val);
@@ -30,6 +31,9 @@ int shape_of_tsmat_collect(int shotNumber, char* TOP_collections_parameters, DAT
 
 int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nodeIndices);
 int execute_tsmat_collect(const char* TOP_collections_parameters, char* attributes,
+		int shotNumber, DATA_BLOCK* data_block, int* nodeIndices,
+		char* normalizationAttributes);
+int execute_tsmat_collect_for_poloidal_angle(const char* TOP_collections_parameters, char* attributes,
 		int shotNumber, DATA_BLOCK* data_block, int* nodeIndices,
 		char* normalizationAttributes);
 int execute_tsmat_without_idam_index(const char* command, char* attributes,
@@ -75,6 +79,10 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		//returns a static parameter (rank = 0) from a collection of static data (Top objects).
 		//Given the list of all static data in the collection, the element returned in the data_block is list(UDA index)
 		fun = 0;
+	} else if (strcmp(fun_name, "tsmat_collect_for_poloidal_angle") == 0) {
+		//returns a static parameter (rank = 0) from a collection of static data (Top objects).
+		//Given the list of all static data in the collection, the element returned in the data_block is list(idam index)
+		fun = 800;
 	} else if (strcmp(fun_name, "shape_of_tsmat_collect") == 0) {
 		//Returns the list size of all static data in the collection
 		fun = 1;
@@ -92,13 +100,6 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		fun = 5;
 	}  else if (strcmp(fun_name, "tsmat_collect_poloidal_angle") == 0) {
 		fun = 6;
-	}
-
-	//--------------------ece----------------------------------
-	else if (strcmp(fun_name, "homogeneous_time") == 0) {
-		fun = 7;
-	} else if (strcmp(fun_name, "ece_t_e_data_shape_of") == 0) {
-		fun = 9;
 	}
 
 	//------------------pf_passive----------------------------------
@@ -209,6 +210,58 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	else if (strcmp(fun_name, "barometry_gauge_calibration_coefficient") == 0) {
 		fun = 504;
 	}
+	else if (strcmp(fun_name, "polarimeter_interferometer_channel_name") == 0) {
+		fun = 505;
+	}
+
+
+	//------------------ic_antennas----------------------------------
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_outline_r") == 0) {
+		fun = 600;
+	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_outline_phi") == 0) {
+		fun = 601;
+	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_width_tor") == 0) {
+		fun = 602;
+	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_distance_to_conductor") == 0) {
+		fun = 603;
+	}
+	else if (strcmp(fun_name, "ic_antennas_ids_properties_comment") == 0) {
+		fun = 604;
+	}
+	else if (strcmp(fun_name, "ic_antennas_name") == 0) {
+		fun = 605;
+	}
+	else if (strcmp(fun_name, "ic_antennas_identifier") == 0) {
+		fun = 606;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_name") == 0) {
+		fun = 607;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_identifier") == 0) {
+		fun = 608;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_matching_element_name") == 0) {
+		fun = 609;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_matching_element_identifier") == 0) {
+		fun = 610;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_pressure_name") == 0) {
+		fun = 611;
+	}
+	else if (strcmp(fun_name, "ic_antennas_module_pressure_identifier") == 0) {
+		fun = 612;
+	}
+	else if (strcmp(fun_name, "ic_antennas_modules_strap_outline_z") == 0) {
+		fun = 613;
+	}
+	// ------ LH_ANTENNAS
+	else if (strcmp(fun_name, "lh_antennas_ids_properties_comment") == 0) {
+		fun = 700;
+	}
 
 	UDA_LOG(UDA_LOG_DEBUG, "Case: %d", fun);
 	int status = -1;
@@ -226,6 +279,15 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		UDA_LOG(UDA_LOG_DEBUG, "Case of tsmat_collect from WEST plugin\n");
 		tokenizeFunParameters(mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
 		status = execute_tsmat_collect(TOP_collections_parameters, attributes, shotNumber, data_block, nodeIndices,
+				normalizationAttributes);
+
+		break;
+	}
+
+	case 800: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of tsmat_collect from WEST plugin\n");
+		tokenizeFunParameters(mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
+		status = execute_tsmat_collect_for_poloidal_angle(TOP_collections_parameters, attributes, shotNumber, data_block, nodeIndices,
 				normalizationAttributes);
 
 		break;
@@ -304,25 +366,6 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 		tokenizeFunParameters(mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
 		execute_tsmat_collect_poloidal_angle(TOP_collections_parameters, attributes, shotNumber, data_block, nodeIndices,
 				normalizationAttributes);*/
-		break;
-	}
-
-	case 7: {
-		UDA_LOG(UDA_LOG_DEBUG, "Case of homogeneous_time from WEST plugin\n");
-		status = homogeneous_time(shotNumber, data_block, nodeIndices);
-		break;
-	}
-
-	case 9: {
-		UDA_LOG(UDA_LOG_DEBUG, "Case of ece_t_e_data_shape_of from WEST plugin\n");
-		char* ece_mapfun = NULL;
-		status = ece_t_e_data_shape_of(shotNumber, &ece_mapfun);
-		if (status != 0)
-			return status;
-		UDA_LOG(UDA_LOG_DEBUG, "Calling tokenizeFunParameters() from WEST plugin\n");
-		tokenizeFunParameters(ece_mapfun, &TOP_collections_parameters, &attributes, &normalizationAttributes);
-		status = shape_of_tsmat_collect(shotNumber, TOP_collections_parameters, data_block);
-		free(ece_mapfun);
 		break;
 	}
 
@@ -554,6 +597,87 @@ int execute(const char* mapfun, int shotNumber, DATA_BLOCK* data_block, int* nod
 	case 504: {
 		UDA_LOG(UDA_LOG_DEBUG, "Case of barometry_gauge_calibration_coefficient from WEST plugin\n");
 		status = barometry_gauge_calibration_coefficient(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 505: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of polarimeter_interferometer_channel_name from WEST plugin\n");
+		status = polaro_or_interfero_channel_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+
+	case 600: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_outline_r from WEST plugin\n");
+		status = ic_antennas_modules_strap_outline_r(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 601: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_outline_phi from WEST plugin\n");
+		status = ic_antennas_modules_strap_outline_phi(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 602: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_width_tor from WEST plugin\n");
+		status = ic_antennas_modules_strap_width_tor(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 603: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_distance_to_conductor from WEST plugin\n");
+		status = ic_antennas_modules_strap_distance_to_conductor(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 604: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_ids_properties_comment from WEST plugin\n");
+		status = ic_antennas_ids_properties_comment(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 605: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_name from WEST plugin\n");
+		status = ic_antennas_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 606: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_identifier from WEST plugin\n");
+		status = ic_antennas_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 607: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_name from WEST plugin\n");
+		status = ic_antennas_module_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 608: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_identifier from WEST plugin\n");
+		status = ic_antennas_module_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 609: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_matching_element_name from WEST plugin\n");
+		status = ic_antennas_module_matching_element_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 610: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_matching_element_identifier from WEST plugin\n");
+		status = ic_antennas_module_matching_element_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 611: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_pressure_name from WEST plugin\n");
+		status = ic_antennas_module_pressure_name(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 612: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_module_pressure_identifier from WEST plugin\n");
+		status = ic_antennas_module_pressure_identifier(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 613: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of ic_antennas_modules_strap_outline_z from WEST plugin\n");
+		status = ic_antennas_modules_strap_outline_z(shotNumber, data_block, nodeIndices);
+		break;
+	}
+	case 700: {
+		UDA_LOG(UDA_LOG_DEBUG, "Case of lh_antennas_ids_properties_comment from WEST plugin\n");
+		status = lh_antennas_ids_properties_comment(shotNumber, data_block, nodeIndices);
 		break;
 	}
 
@@ -869,6 +993,131 @@ int execute_tsmat_collect(const char* TOP_collections_parameters, char* attribut
 	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, setting static value... %s\n", "");
 
 	setStaticValue(data_type, data_block, value, searchedArrayIndex, normalizationFactor);
+
+	free(command);
+	free(prod_name);
+	free(object_name);
+	free(param_name);
+	free(value);
+	free(flag);
+	free(l);
+	return 0;
+}
+
+int execute_tsmat_collect_for_poloidal_angle(const char* TOP_collections_parameters, char* attributes,
+		int shotNumber, DATA_BLOCK* data_block, int* nodeIndices, char* normalizationAttributes)
+{
+	int collectionsCount;
+	getTopCollectionsCount(TOP_collections_parameters, &collectionsCount);
+
+	int* l;
+	l = (int*)calloc(collectionsCount, sizeof(int));
+
+	int i;
+	int status = -1;
+	for (i = 0; i < collectionsCount; i++) {
+		char* command = NULL;
+		status = getCommand(i, &command, TOP_collections_parameters);
+		if (status == -1) {
+			int err = 901;
+			//UDA_LOG(UDA_LOG_ERROR, "%s", "WEST:ERROR: unable to get the shapeof command");
+			addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to get the shapeof command", err, "");
+			free(l);
+			return status;
+		}
+
+		int nb_val = 0;
+		status = getShapeOf(command, shotNumber, &nb_val);
+		if (status != 0)
+			return status;
+		l[i] = nb_val;
+	}
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searching requestedIndex... %s\n", "");
+	int requestedIndex = getNumIDAMIndex(attributes, nodeIndices);
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, after searching requestedIndex --> %d\n", requestedIndex);
+
+	int searchedArray;
+	int searchedArrayIndex;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searching index array for requested index: %d\n",
+			requestedIndex);
+	searchIndices(requestedIndex, l, &searchedArray, &searchedArrayIndex);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searched array:%d\n", searchedArray);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, searched array index:%d\n", searchedArrayIndex);
+
+	char* command = NULL;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, getting command from TOP_collections_parameters: %s\n",
+			TOP_collections_parameters);
+	status = getCommand(searchedArray, &command, TOP_collections_parameters);
+	if (status != 0)
+		return status;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, after getting command...\n");
+
+	char* prod_name = NULL;     //DMAG, ...
+	char* object_name = NULL;   //GMAG_BNORM, ...
+	char* param_name = NULL;    //PosR, ...
+	char* flag = NULL;          //'Null' or blank
+
+	int data_type;
+	status = getReturnType(attributes, &data_type);
+	if (status != 0)
+		return status;
+
+	//Tokenize mapfun string to get function parameters
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, tokenizing command... %s\n", command);
+	tokenizeCommand(command, &prod_name, &object_name, &param_name, &flag);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, afetr tokenizing command...\n");
+
+	char* value = NULL;
+	int val_nb = l[searchedArray];
+	int nb_val;
+
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, flag: %s\n", flag);
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, checking if flag is Null...\n");
+
+	if (flag != NULL && strncmp("Null", flag, 4) == 0) {
+		UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, setting value for Null flag...\n");
+		int data_type;
+		status = getReturnType(attributes, &data_type);
+		if (status != 0)
+			return status;
+		value = setBuffer(data_type, "0"); //we put zero for 'Null' flag
+		searchedArrayIndex = 0;
+	} else {
+		//Reading static parameters using TSLib
+		UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, reading static parameters for param. name: %s\n",
+				param_name);
+		status = readStaticParameters(&value, &nb_val, shotNumber, prod_name, object_name, param_name, val_nb);
+		if (status != 0) {
+			int err = 901;
+			UDA_LOG(UDA_LOG_ERROR, "%s,shot:%d\n", "WEST:ERROR: unable to read static data",shotNumber);
+			addIdamError(CODEERRORTYPE, "WEST:ERROR: unable to read static data", err, "");
+			free(command);
+			free(prod_name);
+			free(object_name);
+			free(param_name);
+			free(flag);
+			free(value);
+			free(l);
+			return status;
+		}
+	}
+
+	float normalizationFactor = 1;
+	status = getNormalizationFactor(&normalizationFactor, normalizationAttributes);
+	if (status != 0)
+		return status;
+	UDA_LOG(UDA_LOG_DEBUG, "In execute_tsmat_collect, setting static value... %s\n", "");
+
+
+	float* pt_float = (float*)value;
+	//Transforming angle by poloidal_angle = 360 - poloidal_angle (angle values in ARCAD are in degrees)
+	//normalizationFactor is provided by the UDA mapping file
+	setReturnDataFloatScalar(data_block, (360 - pt_float[searchedArrayIndex]) * normalizationFactor, NULL);
 
 	free(command);
 	free(prod_name);

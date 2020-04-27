@@ -13,7 +13,7 @@
 <mapping key="magnetics/bpol_probe/#/identifier" value="set_value;identifier not defined;0:string" type="static"/>
 <mapping key="magnetics/bpol_probe/#/position/r" value="tsmat_collect;DMAG:GMAG_BNORM:PosR,DMAG:GMAG_BTANG:PosR,DMAG:GMAG_BTORO1:PosR,DMAG:GMAG_BTORO2:PosR;0:float:#0" type="static"/>
 <mapping key="magnetics/bpol_probe/#/position/z" value="tsmat_collect;DMAG:GMAG_BNORM:PosZ,DMAG:GMAG_BTANG:PosZ,DMAG:GMAG_BTORO1:PosZ,DMAG:GMAG_BTORO2:PosZ;0:float:#0" type="static"/>
-<mapping key="magnetics/bpol_probe/#/poloidal_angle" value="tsmat_collect;DMAG:GMAG_BNORM:PolAngle,DMAG:GMAG_BTANG:PolAngle,DMAG:GMAG_BTORO1:CALIB:Null,DMAG:GMAG_BTORO2:CALIB:Null;0:float:#0;multiply:cste:0.017453292519943295" type="static"/>
+<mapping key="magnetics/bpol_probe/#/poloidal_angle" value="tsmat_collect_for_poloidal_angle;DMAG:GMAG_BNORM:PolAngle,DMAG:GMAG_BTANG:PolAngle,DMAG:GMAG_BTORO1:CALIB:Null,DMAG:GMAG_BTORO2:CALIB:Null;0:float:#0;multiply:cste:0.017453292519943295" type="static"/>
 <mapping key="magnetics/bpol_probe/#/toroidal_angle" value="set_value_collect;DMAG:GMAG_BNORM:CALIB:0.0,DMAG:GMAG_BTANG:CALIB:0.0,DMAG:GMAG_BTORO1:CALIB:1.5707963267948966,DMAG:GMAG_BTORO2:CALIB:1.5707963267948966;0:float:#0" type="static"/>
 <mapping key="magnetics/bpol_probe/#/field/data" value="tsbase_collect;DMAG:GMAG_BNORM,DMAG:GMAG_BTANG,DMAG:GMAG_BTORO1,DMAG:GMAG_BTORO2;1:float:#0" type="dynamic"/>
 <mapping key="magnetics/method/Shape_of" value="set_value;1;0:int" type="static"/>
@@ -23,7 +23,7 @@
 <mapping key="magnetics/time" value="tsbase_time;DMAG:GMAG_FLXLOOP;1:float:1" type="dynamic"/>
 
 <mapping key="tf/ids_properties/homogeneous_time" value="set_value;1;0:int" type="static"/>
-<mapping key="tf/b_field_tor_vacuum_r/data" value="tsbase_collect;DMAG:GMAG_ITOR;1:float:1;multiply:cste:0.0073008" type="dynamic"/>
+<mapping key="tf/b_field_tor_vacuum_r/data" value="tsbase_collect;DMAG:GMAG_ITOR;1:float:1;multiply:cste:-0.0073008" type="dynamic"/>
 <!-- mapping key="tf/b_field_tor_vacuum_r/time" value="tsbase_time;DMAG:GMAG_ITOR;1:float:1" type="dynamic"/ -->
 <mapping key="tf/time" value="tsbase_time;DMAG:GMAG_ITOR;1:float:1" type="dynamic"/>
 
@@ -60,7 +60,7 @@
 
 <mapping key="interferometer/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
 <mapping key="interferometer/channel/Shape_of" value="shape_of_tsmat_collect;DINTRPOL:GINTLIDRT:CALIB;0:float:#0" type="static"/>
-<mapping key="interferometer/channel/#/name" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Channel:#0;0:string:#0" type="static"/>
+<mapping key="interferometer/channel/#/name" value="polarimeter_interferometer_channel_name" type="static"/>
 <mapping key="interferometer/channel/#/identifier" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Id:#0;0:string:#0" type="static"/>
 <mapping key="interferometer/channel/#/line_of_sight/first_point/r" value="tsmat_collect;DINTRPOL:LIDRT:RPOS2;0:float:#0" type="static"/>
 <mapping key="interferometer/channel/#/line_of_sight/first_point/z" value="tsmat_collect;DINTRPOL:LIDRT:ZPOS2;0:float:#0" type="static"/>
@@ -77,7 +77,7 @@
 
 <mapping key="polarimeter/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
 <mapping key="polarimeter/channel/Shape_of" value="shape_of_tsmat_collect;DINTRPOL:GINTLIDRT:CALIB;0:float:#0" type="static"/>
-<mapping key="polarimeter/channel/#/name" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Channel:#0;0:string:#0" type="static"/>
+<mapping key="polarimeter/channel/#/name" value="polarimeter_interferometer_channel_name" type="static"/>
 <mapping key="polarimeter/channel/#/identifier" value="set_value_collect;DINTRPOL:LIDRT:CHANNEL:Id:#0;0:string:#0" type="static"/>
 <mapping key="polarimeter/channel/#/line_of_sight/first_point/r" value="tsmat_collect;DINTRPOL:LIDRT:RPOS2;0:float:#0" type="static"/>
 <mapping key="polarimeter/channel/#/line_of_sight/first_point/z" value="tsmat_collect;DINTRPOL:LIDRT:ZPOS2;0:float:#0" type="static"/>
@@ -91,20 +91,6 @@
 <mapping key="polarimeter/channel/#/faraday_angle/data" value="tsbase_collect;DINTRPOL:GINTFARART;1:float:#0" type="dynamic"/>
 <mapping key="polarimeter/channel/#/faraday_angle/time" value="tsbase_time;DINTRPOL:GINTFARART;1:float:#0" type="dynamic"/>
 
-<mapping key="ece/ids_properties/homogeneous_time" value="homogeneous_time" type="static"/>
-<mapping key="ece/channel/Shape_of" value="ece_t_e_data_shape_of" type="static"/>
-<mapping key="ece/channel/#/t_e_voltage/data" value="ece_t_e_data" type="dynamic"/>
-<mapping key="ece/channel/#/t_e_voltage/time" value="ece_t_e_time" type="dynamic"/>
-<mapping key="ece/time" value="ece_time" type="dynamic"/>
-<mapping key="ece/line_of_sight/first_point/r" value="set_value;4.264881;0:float" type="static"/>
-<mapping key="ece/line_of_sight/first_point/z" value="set_value;0.;0:float" type="static"/>
-<mapping key="ece/line_of_sight/first_point/phi" value="set_value;1.4573069;0:float" type="static"/>
-<mapping key="ece/line_of_sight/second_point/r" value="set_value;1.8347117;0:float" type="static"/>
-<mapping key="ece/line_of_sight/second_point/z" value="set_value;0.;0:float" type="static"/>
-<mapping key="ece/line_of_sight/second_point/phi" value="set_value;1.4573069;0:float" type="static"/>
-<mapping key="ece/channel/#/frequency/data" value="ece_frequencies" type="dynamic"/>
-<mapping key="ece/channel/#/frequency/time" value="ece_harmonic_time" type="dynamic"/>
-
 <mapping key="soft_x_rays/ids_properties/comment" value="soft_x_rays_idsproperties_comment" type="static"/>
 <mapping key="soft_x_rays/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
 <mapping key="soft_x_rays/channel/Shape_of" value="soft_x_rays_channels_shapeof" type="static"/>
@@ -117,8 +103,6 @@
 <mapping key="soft_x_rays/channel/#/energy_band/Shape_of" value="soft_x_rays_channels_energy_band_shapeof" type="static"/>
 <mapping key="soft_x_rays/channel/#/energy_band/#/lower_bound" value="soft_x_rays_channels_energy_band_lower_bound" type="static"/>
 <mapping key="soft_x_rays/channel/#/energy_band/#/upper_bound" value="soft_x_rays_channels_energy_band_upper_bound" type="static"/>
-<mapping key="soft_x_rays/channel/#/power_density/data" value="soft_x_rays_channels_power_density_data" type="dynamic"/>
-<mapping key="soft_x_rays/channel/#/power_density/time" value="soft_x_rays_channels_power_density_time" type="dynamic"/>
 
 <mapping key="summary/ids_properties/homogeneous_time" value="set_value;1;0:int" type="static"/>
 <!-- mapping key="summary/global_quantities/ip/value" value="flt1D_contrib;DMAG:GMAG_IFREEB:1:DMAG:SMAG_IP:0" type="dynamic"/ -->
@@ -143,26 +127,85 @@
 <!-- mapping key="summary/local/magnetic_axis/position/z" value="flt1D_contrib;DMAG:GMAG_BARYFB:2:DMAG:GMAG_BARY:2" type="dynamic"/ -->
 <mapping key="summary/time" value="tsbase_time;DMAG:SMAG_IP;1:float:1" type="dynamic"/>
 
-<mapping key="lh_antennas/ids_properties/homogeneous_time" value="set_value;1;0:int" type="static"/>
+<mapping key="lh_antennas/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
+<mapping key="lh_antennas/ids_properties/comment" value="lh_antennas_ids_properties_comment" type="static"/>
 <mapping key="lh_antennas/antenna/Shape_of" value="set_value;2;0:int" type="static"/>
 <mapping key="lh_antennas/power/data" value="lh_antennas_power" type="dynamic"/>
-<mapping key="lh_antennas/antenna/#/power/data" value="lh_antennas_power_forward" type="dynamic"/>
+<mapping key="lh_antennas/power/time" value="lh_antennas_power_time" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/power_launched/data" value="lh_antennas_antenna_power" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/power_launched/time" value="lh_antennas_antenna_power_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/power_forward/data" value="lh_antennas_power_forward" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/power_forward/time" value="lh_antennas_power_forward_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/power_reflected/data" value="lh_antennas_power_reflected" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/power_reflected/time" value="lh_antennas_power_reflected_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/reflection_coefficient/data" value="lh_antennas_reflection_coefficient" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/reflection_coefficient/time" value="lh_antennas_reflection_coefficient_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/module/Shape_of" value="set_value;16;0:int" type="static"/>
 <mapping key="lh_antennas/antenna/#/module/#/power/data" value="lh_antennas_modules_power" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/module/#/power/time" value="lh_antennas_modules_power_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/module/#/power_forward/data" value="lh_antennas_modules_power_forward" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/module/#/power_forward/time" value="lh_antennas_modules_power_forward_time" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/module/#/power_launched/data" value="lh_antennas_modules_power_launched" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/module/#/power_launched/time" value="lh_antennas_modules_power_launched_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/module/#/power_reflected/data" value="lh_antennas_modules_power_reflected" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/module/#/power_reflected/time" value="lh_antennas_modules_power_reflected_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/module/#/reflection_coefficient/data" value="lh_antennas_modules_reflection_coefficient" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/module/#/reflection_coefficient/time" value="lh_antennas_modules_reflection_coefficient_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/module/#/phase/data" value="lh_antennas_modules_phase" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/module/#/phase/time" value="lh_antennas_modules_phase_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/phase_average/data" value="lh_antennas_phase_average" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/phase_average/time" value="lh_antennas_phase_average_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/n_parallel_peak/data" value="lh_antennas_n_parallel_peak" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/n_parallel_peak/time" value="lh_antennas_n_parallel_peak_time" type="dynamic"/>
 <mapping key="lh_antennas/antenna/#/position/r/data" value="lh_antennas_position_r" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/position/r/time" value="lh_antennas_position_r_time" type="dynamic"/>
 <!-- mapping key="lh_antennas/antenna/#/position/z/data" value="lh_antennas_position_z" type="dynamic"/ -->
 <mapping key="lh_antennas/antenna/#/position/definition" value="lh_antennas_position_definition" type="static"/>
 <mapping key="lh_antennas/antenna/#/pressure_tank/data" value="lh_antennas_pressure_tank" type="dynamic"/>
-<mapping key="lh_antennas/time" value="tsbase_time;DHYB:SHYBPTOT;1:float:1" type="dynamic"/>
+<mapping key="lh_antennas/antenna/#/pressure_tank/time" value="lh_antennas_pressure_tank_time" type="dynamic"/>
+
+<mapping key="ic_antennas/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
+<mapping key="ic_antennas/ids_properties/comment" value="ic_antennas_ids_properties_comment" type="static"/>
+<mapping key="ic_antennas/antenna/Shape_of" value="set_value;3;0:int" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/Shape_of" value="set_value;2;0:int" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/voltage/Shape_of" value="set_value;2;0:int" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/current/Shape_of" value="set_value;2;0:int" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/matching_element/Shape_of" value="set_value;2;0:int" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/pressure/Shape_of" value="set_value;1;0:int" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/strap/Shape_of" value="set_value;2;0:int" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/power_forward/data" value="ic_antennas_module_power_forward" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/power_forward/time" value="ic_antennas_module_power_forward_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/power_reflected/data" value="ic_antennas_module_power_reflected" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/power_reflected/time" value="ic_antennas_module_power_reflected_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/phase_forward/data" value="ic_antennas_module_phase_forward" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/phase_forward/time" value="ic_antennas_module_phase_forward_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/phase_reflected/data" value="ic_antennas_module_phase_reflected" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/phase_reflected/time" value="ic_antennas_module_phase_reflected_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/voltage/#/amplitude/data" value="ic_antennas_module_voltage" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/voltage/#/amplitude/time" value="ic_antennas_module_voltage_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/voltage/#/phase/data" value="ic_antennas_module_voltage_phase" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/voltage/#/phase/time" value="ic_antennas_module_voltage_phase_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/current/#/amplitude/data" value="ic_antennas_module_current" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/current/#/amplitude/time" value="ic_antennas_module_current_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/matching_element/#/capacitance/data" value="ic_antennas_module_matching_element_capacity" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/matching_element/#/capacitance/time" value="ic_antennas_module_matching_element_capacity_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/pressure/#/amplitude/data" value="ic_antennas_module_pressure" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/module/#/pressure/#/amplitude/time" value="ic_antennas_module_pressure_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/power_launched/data" value="ic_antennas_power_launched" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/power_launched/time" value="ic_antennas_power_launched_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/frequency/data" value="ic_antennas_frequency" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/frequency/time" value="ic_antennas_frequency_time" type="dynamic"/>
+<mapping key="ic_antennas/antenna/#/name" value="ic_antennas_name" type="static"/>
+<mapping key="ic_antennas/antenna/#/identifier" value="ic_antennas_identifier" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/name" value="ic_antennas_module_name" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/identifier" value="ic_antennas_module_identifier" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/matching_element/#/name" value="ic_antennas_module_matching_element_name" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/matching_element/#/identifier" value="ic_antennas_module_matching_element_identifier" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/strap/#/outline/r" value="ic_antennas_modules_strap_outline_r" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/strap/#/outline/z" value="ic_antennas_modules_strap_outline_z" type="static"/>
+<!-- mapping key="ic_antennas/antenna/#/module/#/strap/#/outline/phi" value="ic_antennas_modules_strap_outline_phi" type="static"/ -->
+<mapping key="ic_antennas/antenna/#/module/#/strap/#/width_tor" value="ic_antennas_modules_strap_width_tor" type="static"/>
+<mapping key="ic_antennas/antenna/#/module/#/strap/#/distance_to_conductor" value="ic_antennas_modules_strap_distance_to_conductor" type="static"/>
 
 <mapping key="barometry/ids_properties/homogeneous_time" value="set_value;0;0:int" type="static"/>
 <mapping key="barometry/gauge/Shape_of" value="set_value;4;0:int" type="static"/>

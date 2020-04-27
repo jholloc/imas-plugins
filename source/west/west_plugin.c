@@ -96,10 +96,13 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         err = do_maxinterfaceversion(idam_plugin_interface);
     } else if (STR_IEQUALS(request_block->function, "read")) {
         err = do_read(idam_plugin_interface);
-    } else {
+    } else if (STR_IEQUALS(request_block->function, "close")) {
+        err = 0;
+    }else {
         // ======================================================================================
         // Error ...
         err = 999;
+        UDA_LOG(UDA_LOG_DEBUG, "unknown requested function is: %s\n", request_block->function);
         addIdamError(CODEERRORTYPE, __func__, err, "WEST:ERROR: unknown function requested!");
     }
 

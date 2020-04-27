@@ -274,10 +274,13 @@ void SetDynData(DATA_BLOCK* data_block, int len, float* data_time, float* data, 
 		initDimBlock(&data_block->dims[i]);
 	}
 
-	data_block->dims[0].data_type = UDA_TYPE_FLOAT;
+	data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
 	data_block->dims[0].dim_n = len;
-	data_block->dims[0].compressed = 0;
-	data_block->dims[0].dim = (char*)data_time;
+	data_block->dims[0].compressed = 1;
+	data_block->dims[0].dim = (char*)NULL;
+	data_block->dims[0].dim0 = 0.0;
+	data_block->dims[0].diff = 1.0;
+	data_block->dims[0].method = 0;
 
 	strcpy(data_block->data_label, "");
 	strcpy(data_block->data_units, "");
@@ -441,6 +444,13 @@ void sum(float* sum_data, float* data, int len) {
 	}
 }
 
+void substract(float* diff_data, float* data, int len) {
+	int i;
+	for (i = 0; i < len; i++) {
+		diff_data[i] = diff_data[i] - data[i];
+	}
+}
+
 void normalize(float* sum_data, int len, int normalizationFactor) {
 	int i;
 	for (i = 0; i < len; i++) {
@@ -519,5 +529,14 @@ void setReturnData2DFloat (DATA_BLOCK* data_block, int dim1_shape, int dim2_shap
 	data_block->dims[1].dim_n = dim2_shape;
 	data_block->data_n = dim1_shape*dim2_shape;
 	data_block->data = (char*)data;
+}
+
+int time_field(char *object_name, int shotNumber, int extractionIndex, float **time, float **data, int* len) {
+	UDA_LOG(UDA_LOG_DEBUG, "Calling time_field function\n");
+	char nomsigp_to_extract[50];
+	addExtractionChars(nomsigp_to_extract, object_name, extractionIndex); //Concatenate nomsigp_to_extract avec !extractionIndex, example: !1, !2, ...
+	int rang[2] = { 0, 0 };
+	int status = readSignal(nomsigp_to_extract, shotNumber, 0, rang, time, data, len);
+	return status;
 }
 
