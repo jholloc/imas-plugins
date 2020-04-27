@@ -24,6 +24,7 @@ typedef struct XMLData {
     float* coefbs;
     int* dims;
     int rank;
+    int* dimensions;
     char* download;
     double* values;
     size_t n_values;

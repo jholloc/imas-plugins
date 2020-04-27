@@ -1,26 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mappings>
-
-  <mapping key="equilibrium/time_slice/Shape_of" value="1" type="static"/>
-
-  equilibrium/ids_properties/comment
-  equilibrium/ids_properties/homogeneous_time
-  equilibrium/ids_properties/source
-  equilibrium/ids_properties/provider
-  equilibrium/ids_properties/creation_date
-  equilibrium/vacuum_toroidal_field/r0
-  equilibrium/vacuum_toroidal_field/r0_error_upper
-  <!--equilibrium/vacuum_toroidal_field/r0_error_lower-->
-  equilibrium/vacuum_toroidal_field/r0_error_index
-  equilibrium/vacuum_toroidal_field/b0
-  equilibrium/vacuum_toroidal_field/b0_error_upper
-  <!--equilibrium/vacuum_toroidal_field/b0_error_lower-->
-  equilibrium/vacuum_toroidal_field/b0_error_index
-  equilibrium/code/name
-  equilibrium/code/commit
-  equilibrium/code/version
-  equilibrium/code/repository
-  equilibrium/code/parameters
-  equilibrium/code/output_flag
-  equilibrium/time
+    <!-- Ids properties -->
+    <mapping key="equilibrium/ids_properties/comment" value="Test instance of JET EFIT mappings" type="constant"/>
+    <mapping key="equilibrium/ids_properties/homogeneous_time" value="1" type="constant"/>
+    <!-- vaccuum toroidal field -->
+    <!-- <mapping key="equilibrium/vacuum_toroidal_field/r0" value="//equilibrium/global_param/toroid_field/r0/name" type="dynamic"/> -->
+    <mapping key="equilibrium/vacuum_toroidal_field/r0" value="2.96" type="constant"/>
+    <mapping key="equilibrium/vacuum_toroidal_field/b0" value="//equilibrium/global_param/toroid_field/b0/name" type="dynamic"/>
+    <!-- Time slice -->
+    <mapping key="equilibrium/time_slice/Shape_of" value="//equilibrium/time_base/time/name" type="dynamic"/>
+    <!-- <mapping key="equilibrium/time_slice/Shape_of" value="1" type="constant"/> -->
+    <!-- Boundary -->
+    <mapping key="equilibrium/time_slice/#/boundary/minor_radius" value="//equilibrium/eqgeometry/a_minor/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/elongation" value="//equilibrium/eqgeometry/elongation/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/triangularity_upper" value="//equilibrium/eqgeometry/tria_upper/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/triangularity_lower" value="//equilibrium/eqgeometry/tria_lower/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/outline/r" value="//equilibrium/eqgeometry/boundary/r/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/boundary/outline/z" value="//equilibrium/eqgeometry/boundary/z/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/boundary/geometric_axis/r" value="//equilibrium/eqgeometry/geom_axis/r/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/geometric_axis/z" value="//equilibrium/eqgeometry/geom_axis/z/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/xpoint/shape_of" value="2" type="constant"/>
+    <mapping key="equilibrium/time_slice/#/boundary/xpoint/1/r" value="//equilibrium/eqgeometry/xpts/r[1]/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/xpoint/1/z" value="//equilibrium/eqgeometry/xpts/r[2]/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/xpoint/2/r" value="//equilibrium/eqgeometry/xpts/z[1]/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/boundary/xpoint/2/z" value="//equilibrium/eqgeometry/xpts/z[2]/name" type="dynamic" slice_dim="0"/>
+    <!-- Global Quantities -->
+    <mapping key="equilibrium/time_slice/#/global_quantities/beta_pol" value="//equilibrium/global_param/beta_pol/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/global_quantities/ip" value="//equilibrium/global_param/i_plasma/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/global_quantities/li_3" value="//equilibrium/global_param/li/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/global_quantities/psi_axis" value="//equilibrium/global_param/psi_ax/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/global_quantities/psi_boundary" value="//equilibrium/global_param/psi_bound/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/global_quantities/q_95" value="//equilibrium/global_param/q_95/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/global_quantities/magnetic_axis/r" value="//equilibrium/global_param/mag_axis/position/r/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/global_quantities/magnetic_axis/z" value="//equilibrium/global_param/mag_axis/position/z/name" type="dynamic" slice_dim="0"/>
+    <!-- Profiles 1D -->
+    <mapping key="equilibrium/time_slice/#/profiles_1d/psi" value="//equilibrium/profiles_1d/psi/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/phi" value="//equilibrium/profiles_1d/phi/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/pressure" value="//equilibrium/profiles_1d/pressure/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/f" value="//equilibrium/profiles_1d/F_dia/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/dpressure_dpsi" value="//equilibrium/profiles_1d/pprime/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/f_df_dpsi" value="//equilibrium/profiles_1d/ffprime/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/j_tor" value="//equilibrium/profiles_1d/jphi/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/q" value="//equilibrium/profiles_1d/q/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/r_inboard" value="//equilibrium/profiles_1d/r_inboard/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/r_outboard" value="//equilibrium/profiles_1d/r_outboard/name" type="dynamic" slice_dim="1"/>
+    <!-- <mapping key="equilibrium/time_slice/#/profiles_1d/rho_volume_norm" value="//equilibrium/profiles_1d/rho_vol/name" type="dynamic" slice_dim="0"/> -->
+    <mapping key="equilibrium/time_slice/#/profiles_1d/lcfs_vol" value="//equilibrium/profiles_1d/rho_vol/name" type="dynamic" slice_dim="0"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/vjac" value="//equilibrium/profiles_1d/vjac/name" type="dynamic" slice_dim="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_1d/psi_norm" value="//equilibrium/profiles_1d/psi_norm/name" type="dynamic" slice_dim="1"/>
+    <!-- Profiles 2D -->
+    <mapping key="equilibrium/time_slice/#/profiles_2d/Shape_of" value="1" type="constant"/>
+    <mapping key="equilibrium/time_slice/#/profiles_2d/#/psi" value="//equilibrium/profiles_2d/psi/name" type="dynamic" slice_dim="2"/>
+    <!-- 2D Grid type required? -->
+    <mapping key="equilibrium/time_slice/#/profiles_2d/#/grid_type/index" value="1" type="constant"/>
+    <mapping key="equilibrium/time_slice/#/profiles_2d/#/grid_type/name" value="rectangular" type="constant"/>
+    <mapping key="equilibrium/time_slice/#/profiles_2d/#/grid/dim1" value="//equilibrium/profiles_2d/grid/dim1/name" type="dynamic" no_indexing="1"/>
+    <mapping key="equilibrium/time_slice/#/profiles_2d/#/grid/dim2" value="//equilibrium/profiles_2d/grid/dim2/name" type="dynamic" no_indexing="1"/>
+    <!-- Time base -->
+    <mapping key="equilibrium/time" value="//equilibrium/time_base/time/name" type="dynamic"/>
 </mappings>

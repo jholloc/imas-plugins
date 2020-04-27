@@ -233,7 +233,8 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
     std::string buf;
 
     if (time != nullptr) {
-        buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
+         buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
+        // buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim) + ");";
 
         *time = nullptr;
 
