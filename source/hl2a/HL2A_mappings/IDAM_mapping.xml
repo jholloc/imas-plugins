@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings>
+<mapping key="magnetics/ids_properties/homogeneous_time" value="magnetics_ids_properties_homogeneous_time" type="static"/>
+<mapping key="magnetics/flux_loop/Shape_of" value="magnetics_flux_loop_shape_of" type="static"/>
+<mapping key="magnetics/flux_loop/#/name" value="magnetics_flux_loop_name" type="static"/>
+<mapping key="magnetics/flux_loop/#/position/Shape_of" value="magnetics_flux_loop_position_shape_of" type="static"/>
+<mapping key="magnetics/flux_loop/#/position/#/r" value="magnetics_flux_loop_position_r" type="static"/>
+<mapping key="magnetics/flux_loop/#/position/#/z" value="magnetics_flux_loop_position_z" type="static"/>
+<!--<mapping key="magnetics/flux_loop/#/flux/data" value="magnetics_flux_loop_flux_data" type="dynamic"/>-->
+<!-- mapping key="magnetics/flux_loop/#/flux/time" value="magnetics_flux_loop_flux_time" type="dynamic"/ --> <!-- To be used only with ids_properties.homogeneous_time = 0 -->
+<mapping key="magnetics/time" value="magnetics_time" type="dynamic"/>
+
+<mapping key="magnetics/bpol_probe/Shape_of" value="magnetics_bpol_probe_shape_of" type="static"/>
+<mapping key="magnetics/bpol_probe/#/name" value="magnetics_bpol_probe_name" type="static"/>
+
+<mapping key="soft_x_rays/ids_properties/homogeneous_time" value="soft_x_rays_ids_properties_homogeneous_time" type="static"/>
+<mapping key="soft_x_rays/channel/Shape_of" value="soft_x_rays_channel_shape_of" type="static"/>
+<mapping key="soft_x_rays/channel/#/power_density/data" value="soft_x_rays_channel_power_density_data" type="dynamic"/>
+<mapping key="soft_x_rays/time" value="soft_x_rays_time" type="dynamic"/>
+
+<!--mapping flux_loop-->
+<mapping key="magnetics/bpol_probe/#/field/data" value="magnetics_flux_loop_ydata;VAX;FBIrad_02" type="dynamic"/>
+<mapping key="magnetics/flux_loop/#/flux/data" value="magnetics_flux_loop_ydata;FBC;Fay_I_u" type="dynamic"/>
+</mappings>

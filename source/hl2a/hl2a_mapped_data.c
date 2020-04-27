@@ -12,6 +12,7 @@
 
 #include "hl2a_magnetics.h"
 #include "hl2a_soft_x_rays.h"
+#include "hl2a_flux_loop_data.h"
 
 void getFunName(const char* s, char** fun_name);
 void RemoveSpaces(char* source);
@@ -26,11 +27,17 @@ int GetHL2AData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, int*
 
     UDA_LOG(UDA_LOG_DEBUG, "UDA request: %s\n", fun_name);
 
+	char* system = NULL;
+	char* channel = NULL;
 
-    if (strcmp(fun_name, "magnetics_ids_properties_homogeneous_time") == 0) {
+	getExtendParameters(mapfun, &system, &channel);
+
+    if(strcmp(fun_name, "magnetics_ids_properties_homogeneous_time") == 0) {
         magnetics_ids_properties_homogeneous_time(shotNumber, data_block, nodeIndices);
     } else if (strcmp(fun_name, "magnetics_flux_loop_shape_of") == 0) {
         magnetics_flux_loop_shape_of(shotNumber, data_block, nodeIndices);
+    } else if (strcmp(fun_name, "magnetics_flux_loop_name") == 0) {
+        magnetics_flux_loop_name(shotNumber, data_block, nodeIndices);
     } else if (strcmp(fun_name, "magnetics_flux_loop_position_shape_of") == 0) {
         magnetics_flux_loop_position_shape_of(shotNumber, data_block, nodeIndices);
     } else if (strcmp(fun_name, "magnetics_flux_loop_position_r") == 0) {
@@ -51,10 +58,14 @@ int GetHL2AData(int shotNumber, const char* mapfun, DATA_BLOCK* data_block, int*
         soft_x_rays_channel_shape_of(shotNumber, data_block, nodeIndices);
     } else if (strcmp(fun_name, "soft_x_rays_channel_power_density_data") == 0) {
         soft_x_rays_channel_power_density_data(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "magnetics_flux_loop_xdata") == 0) {
+		magnetics_flux_loop_xdata(shotNumber, data_block, nodeIndices);
+	}else if (strcmp(fun_name, "magnetics_flux_loop_ydata") == 0) {
+		magnetics_flux_loop_ydata(shotNumber, data_block, system, channel);
     } else {
-        const char* errorMsg = "HL2A:ERROR: mapped C function not found in hl2a_mapped_data.c";
-	    UDA_LOG(UDA_LOG_DEBUG, "%s:%s\n", errorMsg, fun_name);
-	    UDA_LOG(UDA_LOG_ERROR, "%s:%s\n", errorMsg, fun_name);
+        const char* errorMsg = "HL2A:ERROR: mapped C function not found in hl2a_dynamic_data.c !\n";
+	    UDA_LOG(UDA_LOG_DEBUG, "%s\n", errorMsg);
+	    UDA_LOG(UDA_LOG_ERROR, "%s\n", errorMsg);
         return status;
       }
     free(fun_name);
@@ -70,6 +81,31 @@ void getFunName(const char* s, char** fun_name)
 	RemoveSpaces(*fun_name);
 	free(s_copy);
 }
+
+void getExtendParameters(const char* s, char** system, char** channel)
+{
+	const char delim[] = ";";
+	char* s_copy = strdup(s);
+	strdup(strtok(s_copy, delim)); //function name
+
+	char* token = strtok(NULL, delim);
+	if (token != NULL)
+	{
+		*system = strdup(token);
+		RemoveSpaces(*system);
+
+		token = strtok(NULL, delim);
+		if (token != NULL)
+		{
+			*channel = strdup(strdup(token));
+			RemoveSpaces(*channel);
+		}
+	}
+
+
+	free(s_copy);
+}
+
 
 void RemoveSpaces(char* source)
 {

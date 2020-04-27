@@ -1,5 +1,5 @@
-#ifndef UDA_PLUGINS_HL2A_HL2A_PLUGIN_H
-#define UDA_PLUGINS_HL2A_HL2A_PLUGIN_H
+#ifndef IDAM_PLUGINS_HL2A_HL2A_PLUGIN_H
+#define IDAM_PLUGINS_HL2A_HL2A_PLUGIN_H
 
 #include <plugins/pluginStructs.h>
 
@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+#define THISPLUGIN_VERSION                  1
 #define THISPLUGIN_MAX_INTERFACE_VERSION    1        // Interface versions higher than this will not be understood!
 #define THISPLUGIN_DEFAULT_METHOD           "help"
 
@@ -16,4 +17,4 @@ int hl2aPlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface);
 }
 #endif
 
-#endif // UDA_PLUGINS_HL2A_HL2A_PLUGIN_H
+#endif // IDAM_PLUGINS_HL2A_HL2A_PLUGIN_H

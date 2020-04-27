@@ -1,5 +1,5 @@
-#ifndef UDA_PLUGIN_HL2A_DYN_DATA_UTILITIES_H
-#define UDA_PLUGIN_HL2A_DYN_DATA_UTILITIES_H
+#ifndef IDAM_PLUGIN_HL2A_DYN_DATA_UTILITIES_H
+#define IDAM_PLUGIN_HL2A_DYN_DATA_UTILITIES_H
 
 #include <clientserver/udaStructs.h>
 
@@ -9,4 +9,4 @@ void SetDynamicDataTime(DATA_BLOCK* data_block, int len, float *time, float *dat
 
 void setReturnData2DFloat (DATA_BLOCK* data_block, int dim1_shape, int dim2_shape, float* data);
 
-#endif // UDA_PLUGIN_HL2A_DYN_DATA_UTILITIES_H
+#endif // IDAM_PLUGIN_HL2A_DYN_DATA_UTILITIES_H
