@@ -76,7 +76,7 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 		RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
 	}
 
-	idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
+	idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
 	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
@@ -199,7 +199,7 @@ int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
  */
 int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-	return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION, "Plugin version number");
+    return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, "Plugin version number");
 }
 
 /**
