@@ -459,7 +459,7 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
     std::string request_string = request.str();
 
     if (!ppf_user_.empty()) {
-        std::string temp = (boost::format(", ppf_user = %s") % ppf_user_).str();
+        std::string temp = (boost::format(", ppf_user = '%s'") % ppf_user_).str();
         request_string += temp;
     }
     if (ppf_sequence_ != -1) {
@@ -467,7 +467,7 @@ int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_i
         request_string += temp;;
     }
     if (!ppf_dda_.empty()) {
-        std::string temp = (boost::format(", ppf_dda = %s") % ppf_dda_).str();
+        std::string temp = (boost::format(", ppf_dda = '%s'") % ppf_dda_).str();
         request_string += temp;
     }
 
@@ -621,28 +621,43 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     int uda_type = convert_IMAS_to_UDA_type(datatype);
 
-    auto request =
+    std::string request_string;
+
+    if (plugin_name == "EXP2IMAS"){
+
+        auto request =
             boost::format(
-                    "%s::read(experiment='%s', element='%s/%s', shot=%d, indices='%s', dtype=%d, IDS_version='%s', run=%d, user='%s'")
+                    "%s::read(experiment='%s',element='%s/%s',shot=%d,indices='%s',dtype=%d,IDS_version='%s',run=%d")
             % plugin_name % pulse.tokamak % ids_ % element % pulse.shot % indices % uda_type
-            % pulse.version % pulse.run % pulse.user;
-    std::string request_string = request.str();
+            % pulse.version % pulse.run;
 
-    if (!ppf_user_.empty()) {
-        std::string temp = (boost::format(", ppf_user = %s ") % ppf_user_).str();
-        request_string += temp;
+        request_string = request.str();
+
+        if (!ppf_user_.empty()) {
+            std::string temp = (boost::format(",ppf_user=%s") % ppf_user_).str();
+            request_string += temp;
+        }
+
+        if (ppf_sequence_ != -1) {
+            std::string temp = (boost::format(",ppf_sequence=%d") % ppf_sequence_).str();
+            request_string += temp;
+        }
+        if (!ppf_dda_.empty()) {
+            std::string temp = (boost::format(",ppf_dda=%s") % ppf_dda_).str();
+            request_string += temp;
+        }
+
+        request_string += ")";
+
+    } else {
+        auto request =
+                boost::format(
+                        "%s::read(experiment='%s',element='%s/%s',shot=%d,indices='%s',dtype=%d,IDS_version='%s',run=%d,user='%s'")
+                % plugin_name % pulse.tokamak % ids_ % element % pulse.shot % indices % uda_type
+                % pulse.version % pulse.run % pulse.user;
+        request_string = request.str();
     }
 
-    if (ppf_sequence_ != -1) {
-        std::string temp = (boost::format(", ppf_sequence = %d ") % ppf_sequence_).str();
-        request_string += temp;
-    }
-    if (!ppf_dda_.empty()) {
-        std::string temp = (boost::format(", ppf_dda = %s ") % ppf_dda_).str();
-        request_string += temp;
-    }
-
-    request_string += ")";
     std::cout << request_string << std::endl;
 
     return call_plugin(idam_plugin_interface, machine_mapping_.host(pulse.tokamak, ids_), request_string);
