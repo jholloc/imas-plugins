@@ -99,8 +99,8 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 		pthread_t server_thread;
 		SERVER_THREAD_DATA thread_data = {};
 		thread_data.experiment = "WEST";
-		thread_data.ssh_host = "gemma.intra.cea.fr";
-		thread_data.uda_host = "gemma.intra.cea.fr";
+		thread_data.ssh_host = "altair.partenaires.cea.fr";
+		thread_data.uda_host = "altair.partenaires.cea.fr";
 
 		pthread_create(&server_thread, NULL, server_task, &thread_data);
 
