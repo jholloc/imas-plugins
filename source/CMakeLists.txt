@@ -16,6 +16,7 @@ if( NOT DEFINED BUILD_PLUGINS )
     #livedisplay
     jet_equilibrium
     jet_magnetics
+    jet_summary
     mast_imas
     source
     tcv

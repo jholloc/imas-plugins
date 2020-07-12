@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings>
+    <!-- Ids properties -->
+    <mapping key="summary/ids_properties/comment" value="Test instance of JET summary mappings" type="constant"/>
+    <mapping key="summary/ids_properties/homogeneous_time" value="1" type="constant"/>
+    
+    <!-- global quantities -->
+    <mapping key="summary/global_quantities/r0/value" value="2.96" type="constant"/>
+
+    <mapping key="summary/global_quantities/b0/value" value="//summary/equilibrium/global_param/toroid_field/b0/name" type="dynamic"/>
+    <mapping key="summary/global_quantities/b0/time" value="//summary/equilibrium/global_param/toroid_field/b0/name" type="dynamic"/>
+    
+    <mapping key="summary/global_quantities/q_95/value" value="//summary/equilibrium/global_param/q_95/name" type="dynamic"/>
+    <mapping key="summary/global_quantities/q_95/time" value="//summary/equilibrium/global_param/q_95/name" type="dynamic"/>
+
+    <mapping key="summary/global_quantities/power_ohm/value" value="//summary/equilibrium/global_param/power_ohm/name" type="dynamic"/>
+    <mapping key="summary/global_quantities/power_ohm/time" value="//summary/equilibrium/global_param/power_ohm/name" type="dynamic"/>
+
+    <mapping key="summary/global_quantities/beta_tor/value" value="//summary/equilibrium/global_param/beta_tor/name" type="dynamic"/>
+    <mapping key="summary/global_quantities/beta_tor/time" value="//summary/equilibrium/global_param/beta_tor/name" type="dynamic"/>
+   
+    <!-- local -->
+    <mapping key="summary/local/magnetic_axis/n_e/value" value="//summary/thomson_scattering/ne/name" type="dynamic"/>
+    <mapping key="summary/local/magnetic_axis/n_e/time" value="//summary/thomson_scattering/ne/name" type="dynamic"/>
+    
+    <mapping key="summary/local/magnetic_axis/t_e/value" value="//summary/thomson_scattering/te/name" type="dynamic"/>
+    <mapping key="summary/local/magnetic_axis/t_e/time" value="//summary/thomson_scattering/te/name" type="dynamic"/>
+
+    <!-- boundary -->
+    <mapping key="summary/boundary/elongation/value" value="//summary/equilibrium/eqgeometry/elongation/name" type="dynamic"/>
+    <mapping key="summary/boundary/elongation/time" value="//summary/equilibrium/eqgeometry/elongation/name" type="dynamic"/>
+
+    <mapping key="summary/boundary/triangularity_upper/value" value="//summary/equilibrium/eqgeometry/tria_upper/name" type="dynamic"/>
+    <mapping key="summary/boundary/triangularity_upper/time" value="//summary/equilibrium/eqgeometry/tria_upper/name" type="dynamic"/>
+
+    <mapping key="summary/boundary/triangularity_lower/value" value="//summary/equilibrium/eqgeometry/tria_lower/name" type="dynamic"/>
+    <mapping key="summary/boundary/triangularity_lower/time" value="//summary/equilibrium/eqgeometry/tria_lower/name" type="dynamic"/>
+
+    <!-- line average -->
+    <mapping key="summary/line_average/n_e/value" value="//summary/line_average/ne/name" type="dynamic"/>
+    <mapping key="summary/line_average/n_e/time" value="//summary/line_average/ne/name" type="dynamic"/>
+
+    <!-- heating current drive-->
+    <mapping key="summary/heating_current_drive/power_nbi/value" value="//summary/heating_current_drive/nbi/name" type="dynamic"/>
+    <mapping key="summary/heating_current_drive/power_nbi/time" value="//summary/heating_current_drive/nbi/name" type="dynamic"/>
+    
+    <mapping key="summary/heating_current_drive/power_ic/value" value="//summary/heating_current_drive/ic/name" type="dynamic"/>
+    <mapping key="summary/heating_current_drive/power_ic/time" value="//summary/heating_current_drive/ic/name" type="dynamic"/>
+</mappings>
