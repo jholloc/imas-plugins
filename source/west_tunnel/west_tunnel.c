@@ -277,6 +277,36 @@ int open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 		strcpy(request_block->signal, request);
 
+	} 
+	else if (strcmp(tokamak,"WEST_SIMU") == 0 || strcmp(tokamak,"west_simu") == 0) {
+
+		int backend_id;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, backend_id);
+
+		int shot;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+
+		int run;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+
+		const char* user;
+		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+
+		const char* version;
+		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
+
+		int mode;
+		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, mode);
+
+		const char* options;
+		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, options);
+
+		char request[1024];
+		sprintf(request,"openPulse(backend_id=%d, shot=%d, run=%d, user=%s, tokamak=%s, version=%s, mode=%d, options='%s')",
+				backend_id, shot, run, "imas_simulation", "west_simu_preparation", version, mode, options);
+
+		strcpy(request_block->signal, request);
+
 	}
 
 	int fr = forwardRequest(idam_plugin_interface);
