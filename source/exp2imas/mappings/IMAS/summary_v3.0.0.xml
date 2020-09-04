@@ -1,49 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- would be better to get the plugin to read source signal from the JET xml than to hard code here-->
 <mappings>
     <!-- Ids properties -->
-    <mapping key="summary/ids_properties/comment" value="Test instance of JET summary mappings" type="constant"/>
+    <mapping key="summary/ids_properties/comment" value="Test instance of JET summary mappings. Time bases are all interpolated onto 100 points." type="constant"/>
     <mapping key="summary/ids_properties/homogeneous_time" value="1" type="constant"/>
     
     <!-- global quantities -->
     <mapping key="summary/global_quantities/r0/value" value="2.96" type="constant"/>
+    <mapping key="summary/global_quantities/r0/source" value="JET MDSplus signal PPF/EFIT/R0" type="constant"/>
 
     <mapping key="summary/global_quantities/b0/value" value="//summary/equilibrium/global_param/toroid_field/b0/name" type="dynamic"/>
     <mapping key="summary/global_quantities/b0/time" value="//summary/equilibrium/global_param/toroid_field/b0/name" type="dynamic"/>
-    
+    <mapping key="summary/global_quantities/b0/source" value="JET MDSplus signal PPF/EFIT/BVAC" type="constant"/>
+
     <mapping key="summary/global_quantities/q_95/value" value="//summary/equilibrium/global_param/q_95/name" type="dynamic"/>
     <mapping key="summary/global_quantities/q_95/time" value="//summary/equilibrium/global_param/q_95/name" type="dynamic"/>
+    <mapping key="summary/global_quantities/q_95/source" value="JET MDSplus signal PPF/EFIT/Q95" type="constant"/>
 
     <mapping key="summary/global_quantities/power_ohm/value" value="//summary/equilibrium/global_param/power_ohm/name" type="dynamic"/>
     <mapping key="summary/global_quantities/power_ohm/time" value="//summary/equilibrium/global_param/power_ohm/name" type="dynamic"/>
+    <mapping key="summary/global_quantities/power_ohm/source" value="JET MDSplus signal PPF/EFIT/POHM" type="constant"/>
 
     <mapping key="summary/global_quantities/beta_tor/value" value="//summary/equilibrium/global_param/beta_tor/name" type="dynamic"/>
     <mapping key="summary/global_quantities/beta_tor/time" value="//summary/equilibrium/global_param/beta_tor/name" type="dynamic"/>
-   
+    <mapping key="summary/global_quantities/beta_tor/source" value="JET MDSplus signal PPF/EFIT/BTTD" type="constant"/>
+
     <!-- local -->
     <mapping key="summary/local/magnetic_axis/n_e/value" value="//summary/thomson_scattering/ne/name" type="dynamic"/>
     <mapping key="summary/local/magnetic_axis/n_e/time" value="//summary/thomson_scattering/ne/name" type="dynamic"/>
-    
+    <mapping key="summary/local/magnetic_axis/n_e/source" value="JET MDSplus signal PPF/HRTX/NE0" type="constant"/>
+
     <mapping key="summary/local/magnetic_axis/t_e/value" value="//summary/thomson_scattering/te/name" type="dynamic"/>
     <mapping key="summary/local/magnetic_axis/t_e/time" value="//summary/thomson_scattering/te/name" type="dynamic"/>
+    <mapping key="summary/local/magnetic_axis/t_e/source" value="JET MDSplus signal PPF/HRTX/TE0" type="constant"/>
 
     <!-- boundary -->
     <mapping key="summary/boundary/elongation/value" value="//summary/equilibrium/eqgeometry/elongation/name" type="dynamic"/>
     <mapping key="summary/boundary/elongation/time" value="//summary/equilibrium/eqgeometry/elongation/name" type="dynamic"/>
+    <mapping key="summary/boundary/elongation/source" value="JET MDSplus signal PPF/EFIT/ELON" type="constant"/>
 
     <mapping key="summary/boundary/triangularity_upper/value" value="//summary/equilibrium/eqgeometry/tria_upper/name" type="dynamic"/>
     <mapping key="summary/boundary/triangularity_upper/time" value="//summary/equilibrium/eqgeometry/tria_upper/name" type="dynamic"/>
+    <mapping key="summary/boundary/triangularity_upper/source" value="JET MDSplus signal PPF/EFIT/TRIU" type="constant"/>
 
     <mapping key="summary/boundary/triangularity_lower/value" value="//summary/equilibrium/eqgeometry/tria_lower/name" type="dynamic"/>
     <mapping key="summary/boundary/triangularity_lower/time" value="//summary/equilibrium/eqgeometry/tria_lower/name" type="dynamic"/>
-
+    <mapping key="summary/boundary/triangularity_lower/source" value="JET MDSplus signal PPF/EFIT/TRIL" type="constant"/>
     <!-- line average -->
     <mapping key="summary/line_average/n_e/value" value="//summary/line_average/ne/name" type="dynamic"/>
     <mapping key="summary/line_average/n_e/time" value="//summary/line_average/ne/name" type="dynamic"/>
-
+    <mapping key="summary/line_average/n_e/source" value="JET MDSplus signal PPF/KG1L/LAD3" type="constant"/>
+    
     <!-- heating current drive-->
     <mapping key="summary/heating_current_drive/power_nbi/value" value="//summary/heating_current_drive/nbi/name" type="dynamic"/>
     <mapping key="summary/heating_current_drive/power_nbi/time" value="//summary/heating_current_drive/nbi/name" type="dynamic"/>
-    
+    <mapping key="summary/heating_current_drive/power_nbi/source" value="JET MDSplus signal PPF/NBI/NBLM" type="constant"/>
+
     <mapping key="summary/heating_current_drive/power_ic/value" value="//summary/heating_current_drive/ic/name" type="dynamic"/>
     <mapping key="summary/heating_current_drive/power_ic/time" value="//summary/heating_current_drive/ic/name" type="dynamic"/>
+    <mapping key="summary/heating_current_drive/power_ic/source" value="JET MDSplus signal PPF/ICRH/PTOT" type="constant"/>
 </mappings>
