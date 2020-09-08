@@ -229,7 +229,7 @@ int ImasUdaPlugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int port = 56565;
 
     std::string path = insertNodeIndices(element, &indices, &nindices);
-    auto request = boost::format("UDA::get(signal=%s, source=%d, server=%s, port=%d)") % path % shot % server % port;
+    auto request = boost::format("UDA::get(signal=%s, source=%d, host=%s, port=%d)") % path % shot % server % port;
 
     return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
 }

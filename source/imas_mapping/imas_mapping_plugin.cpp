@@ -623,8 +623,7 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     std::string request_string;
 
-    if (plugin_name == "EXP2IMAS"){
-
+    if (plugin_name == "EXP2IMAS") {
         auto request =
             boost::format(
                     "%s::read(experiment='%s',element='%s/%s',shot=%d,indices='%s',dtype=%d,IDS_version='%s',run=%d")
@@ -637,7 +636,6 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             std::string temp = (boost::format(",ppf_user=%s") % ppf_user_).str();
             request_string += temp;
         }
-
         if (ppf_sequence_ != -1) {
             std::string temp = (boost::format(",ppf_sequence=%d") % ppf_sequence_).str();
             request_string += temp;
@@ -646,9 +644,6 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             std::string temp = (boost::format(",ppf_dda=%s") % ppf_dda_).str();
             request_string += temp;
         }
-
-        request_string += ")";
-
     } else {
         auto request =
                 boost::format(
@@ -657,6 +652,8 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
                 % pulse.version % pulse.run % pulse.user;
         request_string = request.str();
     }
+
+    request_string += ")";
 
     std::cout << request_string << std::endl;
 
