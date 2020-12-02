@@ -138,7 +138,8 @@ int IMASForwardPlugin::help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     std::stringstream ss;
     ss << ifs.rdbuf();
 
-    const char* help = ss.str().c_str();
+    auto str = ss.str();
+    const char* help = str.c_str();
     const char* desc = PLUGIN_NAME ": help = description of this plugin";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);

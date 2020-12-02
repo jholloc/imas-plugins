@@ -12,34 +12,52 @@
 
 namespace {
 
-typedef struct data_signal{
+typedef struct data_signal
+{
     float* data;
     float* times;
-    int n; 
+    int n;
 
-}DATA_SIGNAL;
+} DATA_SIGNAL;
 
 int forward_to_exp2imas(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
 int establish_new_timebase(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float** time_cache, int n);
+
 void return_times_from_cache(DATA_BLOCK* data_block, float* time_cache, int n_times);
-void prepare_time_request(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* time_request, char* element);
-int get_mds_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, DATA_SIGNAL* mds_data, char* element);
+
+void prepare_time_request(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* time_request, const char* element);
+
+int get_mds_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, DATA_SIGNAL* mds_data, const char* element);
+
 float* do_linear_interpolation(DATA_SIGNAL* mds_data, float* new_times, int new_length);
-void replace_element(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* old_element, char* new_element, char* request);
-int call_exp2imas_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* request);
-float* get_exp2imas_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* request, int* data_n, int* err);
-int get_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface); 
+
+void replace_element(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* old_element, const char* new_element,
+                     char* request);
+
+int call_exp2imas_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* request);
+
+float* get_exp2imas_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* request, int* data_n, int* err);
+
+int get_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
 int data_in_xml(char* element);
-int set_return_1d_float(DATA_BLOCK* data_block, float* data, int n);
+
+int set_return_1d_float(DATA_BLOCK* data_block, const float* data, int n);
+
 DIMS* set_compressed_dims(int n);
 
 int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
-int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float** times);
 
+int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
+int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
+int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
+int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface);
+
+int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float** times);
 
 } // anon namespace
 
@@ -91,7 +109,7 @@ int jetSummaryPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             // Not previously initialised: Nothing to do!
             return 0;
         }
-        if (times != nullptr)free((void*)times);
+        if (times != nullptr) { free((void*)times); }
         times = nullptr;
 
         // Free Heap & reset counters
@@ -181,11 +199,11 @@ int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, desc);
 }
 
-void replace(char* out, char* in, const char* replace, const char* with)
+void replace(char* out, const char* in, const char* replace, const char* with)
 {
-    char* pos = strstr(in, replace);
+    const char* pos = strstr(in, replace);
     if (pos != nullptr) {
-        char* tmp = StringReplaceAll((const char*) in, replace, with);
+        char* tmp = StringReplaceAll((const char*)in, replace, with);
         sprintf(out, "%s", tmp);
         free(tmp);
     } else {
@@ -193,7 +211,8 @@ void replace(char* out, char* in, const char* replace, const char* with)
     }
 }
 
-int forward_to_exp2imas(IDAM_PLUGIN_INTERFACE* idam_plugin_interface){
+int forward_to_exp2imas(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
 
     char request[STRING_LENGTH];
@@ -207,29 +226,29 @@ int establish_new_timebase(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float**
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
     const char* element = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
-    
+
     char request[STRING_LENGTH];
-    replace_element(idam_plugin_interface, (char*) element, "equilibrium/time", request);
+    replace_element(idam_plugin_interface, element, "equilibrium/time", request);
     int err = call_exp2imas_plugin(idam_plugin_interface, request);
-    if ( err != 0){
+    if (err != 0) {
         return err;
     }
-    
+
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
     int n_total = data_block->data_n;
 
-    float* time_data = (float*)data_block->data;
+    auto time_data = (float*)data_block->data;
     float start_time = time_data[0];
     float end_time = time_data[n_total - 1];
 
-    float* new_times = (float*)malloc(n_times * sizeof(float));
+    auto new_times = (float*)malloc(n_times * sizeof(float));
     int i;
-    float dt = (end_time - start_time) / (float)(n_times -1);
-    for(i = 0; i < n_times; i++){
+    float dt = (end_time - start_time) / (float)(n_times - 1);
+    for (i = 0; i < n_times; i++) {
         new_times[i] = start_time + (dt * i);
     }
 
-    free((void*) time_data);
+    free((void*)time_data);
     *time_cache = new_times;
     return 0;
 }
@@ -238,29 +257,29 @@ void return_times_from_cache(DATA_BLOCK* data_block, float* time_cache, int n_ti
 {
     set_return_1d_float(data_block, time_cache, n_times);
     time_cache = nullptr;
-
 }
 
-void prepare_time_request(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* time_request, char* element){
+void prepare_time_request(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* time_request, const char* element)
+{
     char signal_name[STRING_LENGTH];
-    replace(signal_name,(char*)element, "value", "time");
-    replace_element(idam_plugin_interface, (char*)element, signal_name, time_request);
+    replace(signal_name, element, "value", "time");
+    replace_element(idam_plugin_interface, element, signal_name, time_request);
 }
 
-int get_mds_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, DATA_SIGNAL* mds_data, char* element)
+int get_mds_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, DATA_SIGNAL* mds_data, const char* element)
 {
     // get data
     int err = forward_to_exp2imas(idam_plugin_interface);
-    if (err == 0){
+    if (err == 0) {
         DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-        mds_data->data = (float*) data_block-> data;
+        mds_data->data = (float*)data_block->data;
         mds_data->n = data_block->data_n;
 
         data_block->data = nullptr;
-        if(data_block->dims != nullptr) free((void*) data_block->dims);
+        if (data_block->dims != nullptr) { free((void*)data_block->dims); }
         data_block->dims = nullptr;
         initDataBlock(data_block);
-    } else { 
+    } else {
         return err;
     }
 
@@ -268,40 +287,39 @@ int get_mds_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, DATA_SIGNAL* mds_
     char time_request[STRING_LENGTH];
     prepare_time_request(idam_plugin_interface, time_request, element);
     err = call_exp2imas_plugin(idam_plugin_interface, time_request);
-    if (err == 0){
+    if (err == 0) {
         DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-        mds_data->times = (float*) data_block-> data;
-        
+        mds_data->times = (float*)data_block->data;
+
         data_block->data = nullptr;
-        if(data_block->dims != nullptr) free((void*) data_block->dims);
+        if (data_block->dims != nullptr) { free((void*)data_block->dims); }
         data_block->dims = nullptr;
         initDataBlock(data_block);
-    } else { 
+    } else {
         return err;
     }
 
     return 0;
-
 }
 
 float* do_linear_interpolation(DATA_SIGNAL* mds_data, float* new_times, int new_length)
 {
-    float* old_data = mds_data-> data;
+    float* old_data = mds_data->data;
     float* old_times = mds_data->times;
     int old_length = mds_data->n;
 
     int i = 0;
     int j = 0;
     int upper = 0;
-    int lower =0;
+    int lower = 0;
     float dy = 0.0;
     float dt = 1.0;
-    float* new_data = (float*)malloc(new_length * sizeof(float));
+    auto new_data = (float*)malloc(new_length * sizeof(float));
 
-    for(i = 0; i < new_length; i++){
+    for (i = 0; i < new_length; i++) {
         //find interval
         j = 0;
-        while(old_times[j] <= new_times[i] && j < old_length){
+        while (old_times[j] <= new_times[i] && j < old_length) {
             j++;
         }
         upper = j;
@@ -309,34 +327,36 @@ float* do_linear_interpolation(DATA_SIGNAL* mds_data, float* new_times, int new_
         //do interpolation
         dy = old_data[upper] - old_data[lower];
         dt = old_times[upper] - old_times[lower];
-        new_data[i] = old_data[lower] + ( dy/dt * (new_times[i] - old_times[lower]) );
+        new_data[i] = old_data[lower] + (dy / dt * (new_times[i] - old_times[lower]));
     }
     return new_data;
 }
 
 // currently doing 2 things...
-void replace_element(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* old_element, char* new_element, char* request){
+void
+replace_element(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* old_element, const char* new_element,
+                char* request)
+{
     char temp[STRING_LENGTH];
     sprintf(temp, "EXP2IMAS::%s", idam_plugin_interface->request_block->signal);
-
-    replace(request, temp, (const char*) old_element, (const char*) new_element);
+    replace(request, temp, old_element, new_element);
 }
 
-int call_exp2imas_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* request){
-
+int call_exp2imas_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* request)
+{
     initDataBlock(idam_plugin_interface->data_block);
     return callPlugin(idam_plugin_interface->pluginList, request, idam_plugin_interface);
 }
 
-float* get_exp2imas_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* request, int* data_n, int* err){
-    
+float* get_exp2imas_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* request, int* data_n, int* err)
+{
     *err = call_exp2imas_plugin(idam_plugin_interface, request);
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-    if (*err == 0){
+    if (*err == 0) {
         float* data = (float*)data_block->data;
         data_block->data = nullptr;
-        if(data_block->dims != nullptr) free((void*) data_block->dims);
+        if (data_block->dims != nullptr) { free((void*)data_block->dims); }
         data_block->dims = nullptr;
         *data_n = data_block->data_n;
         initDataBlock(data_block);
@@ -346,24 +366,24 @@ float* get_exp2imas_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, char* req
     }
 }
 
-int get_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface){
-    
+int get_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
+{
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
     int shot = 0;
     FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
-    
+
     char host[100];
     strcpy(host, "mdsplus.jet.efda.org:8000");
 
     MDSplus::Connection* conn = nullptr;
 
     try {
-            conn = new MDSplus::Connection((char*)host);
+        conn = new MDSplus::Connection((char*)host);
     } catch (MDSplus::MdsException& ex) {
-            return -1;
+        return -1;
     }
     char signal[250];
-    sprintf(signal,"_s=jet(\"PPF/EFIT/BVAC\",%d);PPFINF(_shot,_seq,_iwdat);_sig=_iwdat[1]",shot);
+    sprintf(signal, "_s=jet(\"PPF/EFIT/BVAC\",%d);PPFINF(_shot,_seq,_iwdat);_sig=_iwdat[1]", shot);
     fprintf(stderr, "fetching signal %s", signal);
     //int* date_time = (int*)malloc(sizeof(int));
     int date_time = -1;
@@ -379,49 +399,48 @@ int get_date(IDAM_PLUGIN_INTERFACE* idam_plugin_interface){
     conn = nullptr;
 
     int len = 6;
-    len++; 
+    len++;
     char* data = (char*)malloc(len * sizeof(char));
     sprintf(data, "%d", date_time);
 
-
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
     initDataBlock(data_block);
-    data_block->data = (char *) data;
+    data_block->data = (char*)data;
     data_block->data_n = len;
     data_block->data_type = UDA_TYPE_STRING;
     data_block->rank = 1;
-    if(data_block->dims != nullptr) free((void*)data_block->dims);
-    data_block->dims=set_compressed_dims(len);
+    if (data_block->dims != nullptr) { free((void*)data_block->dims); }
+    data_block->dims = set_compressed_dims(len);
 
     return 0;
 }
 
 int data_in_xml(char* element)
 {
-    int is_ids_properties = strstr(element, "summary/ids_properties") != nullptr; 
-    int is_r0 = StringEndsWith(element, "summary/global_quantities/r0/value"); 
+    int is_ids_properties = strstr(element, "summary/ids_properties") != nullptr;
+    int is_r0 = StringEndsWith(element, "summary/global_quantities/r0/value");
     int is_source = StringEndsWith(element, "source");
 
     return (is_ids_properties || is_r0 || is_source);
-
 }
 
-int set_return_1d_float(DATA_BLOCK* data_block, float* data, int n)
+int set_return_1d_float(DATA_BLOCK* data_block, const float* data, int n)
 {
     initDataBlock(data_block);
-    data_block->data = (char *) data;
+    data_block->data = (char*)data;
     data_block->data_n = n;
     data_block->data_type = UDA_TYPE_FLOAT;
     data_block->rank = 1;
 
     DIMS* dims = data_block->dims;
-    if(dims != nullptr) free((void*)dims);
+    if (dims != nullptr) { free((void*)dims); }
     data_block->dims = set_compressed_dims(n);
+    return 0;
 }
 
 DIMS* set_compressed_dims(int n)
 {
-    DIMS* new_dims = (DIMS *)malloc(sizeof(DIMS));
+    DIMS* new_dims = (DIMS*)malloc(sizeof(DIMS));
     initDimBlock(new_dims);
 
     new_dims->data_type = UDA_TYPE_UNSIGNED_INT;
@@ -435,8 +454,6 @@ DIMS* set_compressed_dims(int n)
     return new_dims;
 }
 
-// ----------------------------------------------------------------------------------------
-// Add functionality here ....
 int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float** times)
 {
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
@@ -445,29 +462,28 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float** times)
     const char* element = nullptr;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
 
-    if(strstr(element,"ids_properties/creation_date")!=nullptr){
+    if (strstr(element, "ids_properties/creation_date") != nullptr) {
 
         return get_date(idam_plugin_interface);
 
-    }
-    else if(data_in_xml((char*)element)) { // nothing extra to do
+    } else if (data_in_xml((char*)element)) { // nothing extra to do
 
         return forward_to_exp2imas(idam_plugin_interface);
 
-    } else { // data retrieval and iterpolation required
-        
+    } else { // data retrieval and interpolation required
+
         int n_times = 100;
         int times_not_cached = (*times == nullptr);
-        
-        if(times_not_cached){
+
+        if (times_not_cached) {
             int err = establish_new_timebase(idam_plugin_interface, times, n_times);
-            if ( err != 0){
+            if (err != 0) {
                 RAISE_PLUGIN_ERROR("Could not get data for constructing time vector");
             }
         }
 
         int time_data_requested = (StringEndsWith(element, "summary/time"));
-        //int interpolation_required = !time_data_requested; 
+        //int interpolation_required = !time_data_requested;
 
         if (time_data_requested) {
 
@@ -477,9 +493,9 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float** times)
 
         } else { // interpolation_required
 
-            DATA_SIGNAL mds_data; 
-            int err = get_mds_data(idam_plugin_interface, &mds_data, (char*) element);
-            if (err != 0){
+            DATA_SIGNAL mds_data;
+            int err = get_mds_data(idam_plugin_interface, &mds_data, (char*)element);
+            if (err != 0) {
                 RAISE_PLUGIN_ERROR("could not retrieve experimental data");
             }
             float* summary_data = do_linear_interpolation(&mds_data, *times, n_times);
@@ -492,4 +508,4 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, float** times)
     }
 }
 
-} // namespace
+} // anon namespace

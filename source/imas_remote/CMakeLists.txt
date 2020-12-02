@@ -12,7 +12,7 @@ elseif( NOT Boost_FOUND )
 elseif( NOT IMAS_FOUND )
   message( WARNING "IMAS not found - skipping IMAS_REMOTE plugin" )
   return()
-elseif( NOT MDSPLUS_FOUND )
+elseif( NOT MDSplus_FOUND )
   message( WARNING "MDSplus not found - skipping IMAS_REMOTE plugin" )
   return()
 endif()
@@ -33,10 +33,10 @@ uda_plugin(
     ${Boost_INCLUDE_DIRS}
     ${IMAS_LOW_LEVEL_INCLUDE_DIRS}
     ${UDA_CLIENT_INCLUDE_DIRS}
-    ${MDSPLUS_INCLUDES}
+    ${MDSplus_INCLUDES}
   EXTRA_LINK_DIRS
     ${IMAS_LOW_LEVEL_LIBRARY_DIRS}
-    ${MDSPLUS_LIBRARY_DIRS}
+    ${MDSplus_LIBRARY_DIRS}
     ${UDA_CLIENT_LIBRARY_DIRS}
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}

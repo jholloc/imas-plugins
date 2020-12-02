@@ -256,9 +256,10 @@ int MappingPlugin::get_requestedPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interf
     REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
     const char* tokamak;
     FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
-    const char* plugin_name = machine_mapping_.plugin(tokamak, ids_).c_str();
-    if (strstr(plugin_name, "TUNNEL") != NULL) {
-        setReturnDataString(idam_plugin_interface->data_block, plugin_name, NULL);
+    auto plugin = machine_mapping_.plugin(tokamak, ids_);
+    const char* plugin_name = plugin.c_str();
+    if (strstr(plugin_name, "TUNNEL") != nullptr) {
+        setReturnDataString(idam_plugin_interface->data_block, plugin_name, nullptr);
     }
     return 0;
 }

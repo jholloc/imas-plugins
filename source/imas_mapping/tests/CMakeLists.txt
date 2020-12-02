@@ -15,7 +15,6 @@ target_link_libraries( test_imas_mapping PRIVATE
   ${UDA_PLUGINS_LIBRARIES}
   ${OPENSSL_LIBRARIES}
   imas_mapping_plugin
-  crypto
 )
 target_compile_options( test_imas_mapping PRIVATE ${UDA_PLUGINS_CFLAGS_OTHER}  )
 

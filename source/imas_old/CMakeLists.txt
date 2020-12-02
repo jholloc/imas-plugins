@@ -3,7 +3,7 @@ find_package( MDSplus QUIET )
 find_package( HDF5 COMPONENTS C HL QUIET )
 find_package( OpenSSL QUIET )
 
-if( NOT MDSPLUS_FOUND )
+if( NOT MDSplus_FOUND )
   message( WARNING "mdsplus not found - skipping IMAS plugin" )
   return()
 elseif( NOT LIBXML2_FOUND )
@@ -48,7 +48,7 @@ uda_plugin(
   CONFIG_FILE imas.cfg
   EXTRA_INCLUDE_DIRS
     ${LIBXML2_INCLUDE_DIR}
-    ${MDSPLUS_INCLUDES}
+    ${MDSplus_INCLUDES}
     ${CMAKE_SOURCE_DIR}/client
     ${HDF5_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
@@ -56,7 +56,7 @@ uda_plugin(
     /usr/local/mdsplus/lib
   EXTRA_LINK_LIBS
     ${LIBXML2_LIBRARIES}
-    ${MDSPLUS_LIBRARIES}
+    ${MDSplus_LIBRARIES}
     TreeShr
     MdsLib
     MdsShr

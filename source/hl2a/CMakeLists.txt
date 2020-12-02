@@ -2,15 +2,15 @@ find_package( LibXml2 QUIET )
 find_package( MDSplus QUIET )
 find_package( LibHL2A QUIET )
 
-if( NOT MDSPLUS_FOUND )
+if( NOT MDSplus_FOUND )
   message( WARNING "mdsplus not found - skipping hl2a plugin" )
   return()
 elseif( NOT LIBXML2_FOUND )
   message( WARNING "Libxml2 not found - skipping hl2a plugin" )
   return()
-#elseif( NOT LIBHL2A_FOUND )
-#  message( WARNING "LibHL2ATestLIB not found - skipping hl2a plugin" )
-#  return()
+elseif( NOT LibHL2A_FOUND )
+  message( WARNING "LibHL2ATestLIB not found - skipping hl2a plugin" )
+  return()
 endif()
 
 add_definitions( -Wno-error )
@@ -29,11 +29,11 @@ uda_plugin(
   CONFIG_FILE hl2a.cfg
   EXTRA_INCLUDE_DIRS
     ${LIBXML2_INCLUDE_DIR}
-    ${MDSPLUS_INCLUDES}
+    ${MDSplus_INCLUDES}
     ${LIBHL2A_INCLUDE_DIRS}
   EXTRA_LINK_LIBS
     ${LIBXML2_LIBRARIES}
-    ${MDSPLUS_LIBRARIES}
+    ${MDSplus_LIBRARIES}
     ${LIBHL2A_LIBRARIES}
 )
 

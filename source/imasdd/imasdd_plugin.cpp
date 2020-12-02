@@ -245,7 +245,7 @@ int call_plugin(const std::string& plugin_name, const std::string& request, IDAM
 
     strcpy(new_request.signal, request.c_str());
 
-    makeRequestBlock(&new_request, *plugin_interface->pluginList, plugin_interface->environment);
+    make_request_block(&new_request, *plugin_interface->pluginList, plugin_interface->environment);
 
     plugin_interface->request_block = &new_request;
 

@@ -5,13 +5,13 @@ find_package( GTK3 QUIET )
 find_package( UDA REQUIRED )
 find_package( Boost REQUIRED filesystem system )
 
-if( NOT MDSPLUS_FOUND )
+if( NOT MDSplus_FOUND )
   message( WARNING "mdsplus not found - skipping exp2imas plugin" )
   return()
 elseif( NOT LIBXML2_FOUND )
   message( WARNING "Libxml2 not found - skipping exp2imas plugin" )
   return()
-elseif( NOT LIBSSH_FOUND )
+elseif( NOT LibSSH_FOUND )
   message( WARNING "Libssh not found - skipping exp2imas plugin" )
   return()
 #elseif( NOT GTK3_FOUND )
@@ -52,16 +52,16 @@ uda_plugin(
   VERSION ${PROJECT_VERSION}
   EXTRA_INCLUDE_DIRS
     ${LIBXML2_INCLUDE_DIR}
-    ${MDSPLUS_INCLUDES}
-    ${LIBSSH_INCLUDE_DIRS}
+    ${MDSplus_INCLUDES}
+    ${LibSSH_INCLUDE_DIRS}
     ${GTK3_INCLUDE_DIRS}
     ${UDA_CLIENT_INCLUDE_DIRS}
   EXTRA_LINK_DIRS
     ${UDA_CLIENT_LIBRARY_DIRS}
   EXTRA_LINK_LIBS
     ${LIBXML2_LIBRARIES}
-    ${MDSPLUS_LIBRARIES}
-    ${LIBSSH_LIBRARIES}
+    ${MDSplus_LIBRARIES}
+    ${LibSSHLIBRARIES}
     ${GTK3_LIBRARIES}
     ${UDA_CLIENT_LIBRARIES}
     ${Boost_LIBRARIES}

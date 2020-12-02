@@ -1,7 +1,7 @@
 find_package( LibXml2 QUIET )
 find_package( MDSplus QUIET )
 
-if( NOT MDSPLUS_FOUND )
+if( NOT MDSplus_FOUND )
   message( WARNING "mdsplus not found - skipping tore_supra plugin" )
   return()
 elseif( NOT LIBXML2_FOUND )
@@ -22,8 +22,8 @@ uda_plugin(
   CONFIG_FILE tore_supra.cfg
   EXTRA_INCLUDE_DIRS
     ${LIBXML2_INCLUDE_DIR}
-    ${MDSPLUS_INCLUDES}
+    ${MDSplus_INCLUDES}
   EXTRA_LINK_LIBS
     ${LIBXML2_LIBRARIES}
-    ${MDSPLUS_LIBRARIES}
+    ${MDSplus_LIBRARIES}
 )

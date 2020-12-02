@@ -258,7 +258,7 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
     next_request_block.source[0] = '\0';
     strcpy(next_request_block.signal, work);
 
-    makeRequestBlock(&next_request_block, *plugin_list, idam_plugin_interface->environment);
+    make_request_block(&next_request_block, *plugin_list, idam_plugin_interface->environment);
 
     // Call the UDA client via the UDA plugin (ignore the request identified)
 
@@ -287,7 +287,7 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
         return 999;
     }
 
-    freeNameValueList(&next_request_block.nameValueList);
+    free_name_value_list(&next_request_block.nameValueList);
 
     // Return data is automatic since both next_request_block and request_block point to the same DATA_BLOCK etc.
 

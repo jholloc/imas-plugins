@@ -15,6 +15,6 @@ export PKG_CONFIG_PATH=$UDA_HOME/lib/pkgconfig:$PKG_CONFIG_PATH
 
 cmake3 -Bbuild_freia -H. -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=$UDA_HOME \
-    -DLIBSSH_ROOT=/common/projects/UDA/libssh \
+    -DLibSSH_ROOT=/common/projects/UDA/libssh \
     -DBUILD_PLUGINS="exp2imas;imasdd;source;mast_imas" \
-    $*
+    "$@"

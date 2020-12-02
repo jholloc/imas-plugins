@@ -7,7 +7,7 @@
 
 UDA_HOME=/home/ITER/hollocj/uda
 export ITERMD_ROOT=/home/ITER/hollocj/m-machine-description
-export LIBSSH_DIR=$HOME/libssh
+export LibSSH_DIR=$HOME/libssh
 export PKG_CONFIG_PATH=$UDA_DIR/lib/pkgconfig:$HOME/IMAS/access-layer/lib/pkgconfig:$PKG_CONFIG_PATH
 
 CC=gcc CXX=g++ cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug \

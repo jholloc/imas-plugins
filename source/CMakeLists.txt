@@ -30,7 +30,7 @@ endif()
 ########################################################################################################################
 # Build the plugins
 
-find_package( UDA REQUIRED )
+find_package( UDA 2.3.1.35 REQUIRED )
 
 set( UDA_HOME ${UDA_DIR} )
 #list( GET UDA_DIR 0 UDA_LIBRARY_DIR )

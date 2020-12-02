@@ -2,7 +2,7 @@ find_package( UDA REQUIRED )
 find_package( Boost REQUIRED filesystem system )
 find_package( MDSplus QUIET )
 
-if( NOT MDSPLUS_FOUND )
+if( NOT MDSplus_FOUND )
   message( WARNING "mdsplus not found - skipping jet_summary plugin" )
   return()
 endif()
@@ -26,11 +26,11 @@ uda_plugin(
   VERSION ${PROJECT_VERSION}
   EXTRA_INCLUDE_DIRS
     ${UDA_CLIENT_INCLUDE_DIRS}
-    ${MDSPLUS_INCLUDES}
+    ${MDSplus_INCLUDES}
   EXTRA_LINK_DIRS
     ${UDA_CLIENT_LIBRARY_DIRS}
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
-    ${MDSPLUS_LIBRARIES}
+    ${MDSplus_LIBRARIES}
     ${Boost_LIBRARIES}
 )

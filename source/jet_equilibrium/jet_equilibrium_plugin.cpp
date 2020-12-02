@@ -155,9 +155,9 @@ int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, desc);
 }
 
-void replace(char* out, char* in, const char* replace, const char* with)
+void replace(char* out, const char* in, const char* replace, const char* with)
 {
-    char* pos = strstr(in, replace);
+    const char* pos = strstr(in, replace);
     if (pos != nullptr) {
         char* tmp = StringReplaceAll(in, replace, with);
         sprintf(out, "%s", tmp);

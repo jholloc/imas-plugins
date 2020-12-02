@@ -13,6 +13,6 @@ export BOOST_ROOT=/Applications/boost_1_66_0
 export PKG_CONFIG_PATH=$UDA_HOME/lib/pkgconfig
 
 cmake -Bbuild -H. \
-    -DCMAKE_INSTALL_PREFIX=$UDA_HOME \
+    -DCMAKE_INSTALL_PREFIX="$UDA_HOME" \
     -DBUILD_PLUGINS=imas_mapping\;west\
-    -DLIBTS_ROOT=/Home/devarc/PortageMatlab7/tslib_client2013 \
+    -DLibTS_ROOT=/Home/devarc/PortageMatlab7/tslib_client2013 \

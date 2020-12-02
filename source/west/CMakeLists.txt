@@ -4,13 +4,13 @@ find_package( LibXml2 QUIET )
 find_package( MDSplus QUIET )
 find_package( LibTS QUIET )
 
-if( NOT MDSPLUS_FOUND )
+if( NOT MDSplus_FOUND )
   message( WARNING "mdsplus not found - skipping west plugin" )
   return()
 elseif( NOT LIBXML2_FOUND )
   message( WARNING "Libxml2 not found - skipping west plugin" )
   return()
-elseif( NOT LIBTS_FOUND )
+elseif( NOT LibTS_FOUND )
   message( WARNING "LibTS not found - skipping west plugin" )
   return()
 endif()
@@ -30,9 +30,9 @@ uda_plugin(
   CONFIG_FILE west.cfg
   EXTRA_INCLUDE_DIRS
     ${LIBXML2_INCLUDE_DIR}
-    ${MDSPLUS_INCLUDES}
+    ${MDSplus_INCLUDES}
   EXTRA_LINK_LIBS
     ${LIBXML2_LIBRARIES}
-    ${MDSPLUS_LIBRARIES}
-    ${LIBTS_LIBRARIES}
+    ${MDSplus_LIBRARIES}
+    ${LibTS_LIBRARIES}
 )

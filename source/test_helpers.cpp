@@ -1,11 +1,9 @@
 #include "test_helpers.h"
 
-#include <cstdarg>
 #include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
 #include <uda.h>
 #include <structures/struct.h>
-#include <server/serverPlugin.h>
 
 #ifndef UDA_PLUGIN_OPERATIONAL
 #define UDA_PLUGIN_CLASS_FUNCTION   PLUGINFUNCTION
@@ -60,7 +58,7 @@ IDAM_PLUGIN_INTERFACE uda::test::generate_plugin_interface(const char* request)
     sprintf(environment->api_delim, "%s", "::");
 
     sprintf(request_block->signal, "%s", request);
-    makeRequestBlock(request_block, *plugin_list, environment);
+    make_request_block(request_block, *plugin_list, environment);
 
     plugin_interface.interfaceVersion = 1;
     plugin_interface.pluginVersion = 0;

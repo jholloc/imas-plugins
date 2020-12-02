@@ -1,7 +1,7 @@
 find_package( UDA REQUIRED )
 find_package( LibSSH QUIET )
 
-if( NOT LIBSSH_FOUND )
+if( NOT LibSSH_FOUND )
   message( WARNING "Libssh not found - skipping west_tunnel plugin" )
   return()
 endif()
@@ -22,12 +22,12 @@ uda_plugin(
   VERSION ${PROJECT_VERSION}
   EXTRA_INCLUDE_DIRS
     ${UDA_CLIENT_INCLUDE_DIRS}
-    ${LIBSSH_INCLUDE_DIRS}
+    ${LibSSH_INCLUDE_DIRS}
   EXTRA_LINK_DIRS
     ${UDA_CLIENT_LIBRARY_DIRS}
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
-    ${LIBSSH_LIBRARIES}
+    ${LibSSH_LIBRARIES}
     resolv
 )
 

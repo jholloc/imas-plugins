@@ -27,7 +27,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, int* timeCountCa
 
 int source_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    idamSetLogLevel(UDA_LOG_DEBUG);
+    udaSetLogLevel(UDA_LOG_DEBUG);
 
     int err = 0;
 
@@ -433,7 +433,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, int* timeCountCa
     UDA_LOG(UDA_LOG_DEBUG, "signal #1 = %s\n", next_request_block.signal);
     UDA_LOG(UDA_LOG_DEBUG, "source #1 = %s\n", next_request_block.source);
 
-    makeRequestBlock(&next_request_block, *pluginList, idam_plugin_interface->environment);
+    make_request_block(&next_request_block, *pluginList, idam_plugin_interface->environment);
 
     char api_signal[STRING_LENGTH];
     char api_source[STRING_LENGTH];
@@ -478,7 +478,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, int* timeCountCa
         UDA_LOG(UDA_LOG_DEBUG, "UDA Plugin executed without error\n");
     }
 
-    freeNameValueList(&next_request_block.nameValueList);
+    free_name_value_list(&next_request_block.nameValueList);
 
     // Return data is automatic since both next_request_block and request_block point to the same DATA_BLOCK etc.
     // IMAS data must be DOUBLE

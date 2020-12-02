@@ -1,28 +1,28 @@
 # - Find MDSplus
 # Find the MDSplus includes and libraries
 #
-# To provide the module with a hint about where to find your MDSPLUS
-# installation, you can set the environment variables MDSPLUS_DIR. The
-# Find module will then look in this path when searching for MDSPLUS
+# To provide the module with a hint about where to find your MDSplus
+# installation, you can set the environment variables MDSplus_DIR. The
+# Find module will then look in this path when searching for MDSplus
 # paths and libraries.
 #
-#  MDSPLUS_INCLUDES    - where to find mdslib.h, etc
-#  MDSPLUS_LIBRARIES   - Link these libraries when using MDSplus
-#  MDSPLUS_FOUND       - True if MDSplus found
+#  MDSplus_INCLUDES    - where to find mdslib.h, etc
+#  MDSplus_LIBRARIES   - Link these libraries when using MDSplus
+#  MDSplus_FOUND       - True if MDSplus found
 #
 # Normal usage would be:
 #  find_package (MDSplus REQUIRED)
-#  target_link_libraries (uses_mdsplus ${MDSPLUS_LIBRARIES})
+#  target_link_libraries (uses_mdsplus ${MDSplus_LIBRARIES})
 
-if( MDSPLUS_INCLUDES AND MDSPLUS_LIBRARIES )
+if( MDSplus_INCLUDES AND MDSplus_LIBRARIES )
   # Already in cache, be silent
-  set( MDSPLUS_FIND_QUIETLY TRUE )
-endif( MDSPLUS_INCLUDES AND MDSPLUS_LIBRARIES )
+  set( MDSplus_FIND_QUIETLY TRUE )
+endif( MDSplus_INCLUDES AND MDSplus_LIBRARIES )
 
-find_path( MDSPLUS_INCLUDES mdslib.h
+find_path( MDSplus_INCLUDES mdslib.h
   HINTS
-    ${MDSPLUS_DIR}
-    ENV MDSPLUS_DIR
+    ${MDSplus_DIR}
+    ENV MDSplus_DIR
   PATHS
     /usr/local/mdsplus
   PATH_SUFFIXES include )
@@ -31,21 +31,21 @@ set( MDS_LIBS
   MdsObjectsCppShr MdsLib
 )
 
-set( MDSPLUS_LIBRARIES "" )
+set( MDSplus_LIBRARIES "" )
 
 foreach( MDS_LIB ${MDS_LIBS} )
 
   find_library( ${MDS_LIB}-FIND NAMES "${MDS_LIB}"
     HINTS
-      ${MDSPLUS_DIR}
-      ENV MDSPLUS_DIR
+      ${MDSplus_DIR}
+      ENV MDSplus_DIR
     PATHS
       /usr/local/mdsplus
     PATH_SUFFIXES lib lib64 )
 
   if( ${MDS_LIB}-FIND )
-    list( APPEND MDSPLUS_LIBRARIES "${${MDS_LIB}-FIND}" )
-    get_filename_component( MDSPLUS_LIBRARY_DIRS "${${MDS_LIB}-FIND}" DIRECTORY )
+    list( APPEND MDSplus_LIBRARIES "${${MDS_LIB}-FIND}" )
+    get_filename_component( MDSplus_LIBRARY_DIRS "${${MDS_LIB}-FIND}" DIRECTORY )
   else()
     if( MDSplus_FIND_REQUIRED )
       message( FATAL_ERROR "Failed to find MDS library: ${MDS_LIB}" )
@@ -55,6 +55,6 @@ foreach( MDS_LIB ${MDS_LIBS} )
 endforeach()
 
 include( FindPackageHandleStandardArgs )
-find_package_handle_standard_args( MDSplus DEFAULT_MSG MDSPLUS_LIBRARIES MDSPLUS_INCLUDES )
+find_package_handle_standard_args( MDSplus DEFAULT_MSG MDSplus_LIBRARIES MDSplus_INCLUDES )
 
-mark_as_advanced( MDSPLUS_LIBRARIES MDSPLUS_INCLUDES )
+mark_as_advanced( MDSplus_LIBRARIES MDSplus_INCLUDES )
