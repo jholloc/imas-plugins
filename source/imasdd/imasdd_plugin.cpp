@@ -97,30 +97,30 @@ int imasdd_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
         plugin.reset();
         return 0;
     }
 
     plugin.init();
 
-    if (STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise")) {
+    if (STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
         return 0;
     }
 
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         return plugin.help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         return plugin.version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         return plugin.build_date(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         return plugin.default_method(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         return plugin.max_interface_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "get")) {
+    } else if (STR_IEQUALS(request_data->function, "get")) {
         return plugin.get(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -240,14 +240,14 @@ void get_requests(std::vector<std::string>& requests, const std::string& ids, co
 
 int call_plugin(const std::string& plugin_name, const std::string& request, IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    REQUEST_BLOCK new_request{};
-    copyRequestBlock(&new_request, *plugin_interface->request_block);
+    REQUEST_DATA new_request = *plugin_interface->request_data;
+    //copyRequestData(&new_request, *plugin_interface->request_data);
 
     strcpy(new_request.signal, request.c_str());
 
-    make_request_block(&new_request, *plugin_interface->pluginList, plugin_interface->environment);
+    makeRequestData(&new_request, *plugin_interface->pluginList, plugin_interface->environment);
 
-    plugin_interface->request_block = &new_request;
+    plugin_interface->request_data = &new_request;
 
     int plugin_id = findPluginIdByFormat(plugin_name.c_str(), plugin_interface->pluginList);
     if (plugin_id < 0) {
@@ -329,10 +329,10 @@ void IMASDDPlugin::expand_requests(std::vector<std::string>& requests,
 
 int IMASDDPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    REQUEST_BLOCK* request_block = plugin_interface->request_block;
+    REQUEST_DATA* request_data = plugin_interface->request_data;
 
     const char* path = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path);
 
     if (path == nullptr || path[0] == '\0') {
         RAISE_PLUGIN_ERROR("invalid path provided");

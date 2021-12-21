@@ -172,30 +172,30 @@ int imasPartial(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-        REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+        REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-        if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+        if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
             plugin.reset();
             return 0;
         }
 
         plugin.init();
 
-        if (STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
 
-        if (STR_IEQUALS(request_block->function, "help")) {
+        if (STR_IEQUALS(request_data->function, "help")) {
             return plugin.help(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "version")) {
+        } else if (STR_IEQUALS(request_data->function, "version")) {
             return plugin.version(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "builddate")) {
+        } else if (STR_IEQUALS(request_data->function, "builddate")) {
             return plugin.build_date(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+        } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
             return plugin.default_method(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+        } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
             return plugin.max_interface_version(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "get")) {
+        } else if (STR_IEQUALS(request_data->function, "get")) {
             return plugin.get(idam_plugin_interface);
         } else {
             RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -401,25 +401,25 @@ LLenv open_pulse(IDAM_PLUGIN_INTERFACE* plugin_interface, int shot, int run, con
 
 int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    REQUEST_BLOCK* request_block = plugin_interface->request_block;
+    REQUEST_DATA* request_data = plugin_interface->request_data;
 
     int shot = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int run = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, run);
 
     const char* user = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, user);
 
     const char* tokamak = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, tokamak);
 
     const char* version = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, version);
 
     const char* path = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path);
 
     if (env_.backend == nullptr) {
         env_ = open_pulse(plugin_interface, shot, run, user, tokamak, version);
@@ -510,7 +510,7 @@ int IMASPartialPlugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         results[request] = mds_data;
     }
 
-    closeIdamError();
+    closeUdaError();
 
     USERDEFINEDTYPE data_usertype;
     initUserDefinedType(&data_usertype);

@@ -1,9 +1,11 @@
 #include "test_helpers.h"
 
+#include <cstdarg>
 #include <clientserver/makeRequestBlock.h>
 #include <plugins/udaPlugin.h>
 #include <uda.h>
 #include <structures/struct.h>
+#include <server/serverPlugin.h>
 
 #ifndef UDA_PLUGIN_OPERATIONAL
 #define UDA_PLUGIN_CLASS_FUNCTION   PLUGINFUNCTION
@@ -36,7 +38,7 @@ IDAM_PLUGIN_INTERFACE uda::test::generate_plugin_interface(const char* request)
 
     auto data_block = (DATA_BLOCK*)calloc(1, sizeof(DATA_BLOCK));
     auto client_block = (CLIENT_BLOCK*)calloc(1, sizeof(CLIENT_BLOCK));
-    auto request_block = (REQUEST_BLOCK*)calloc(1, sizeof(REQUEST_BLOCK));
+    auto request_data = (REQUEST_DATA*)calloc(1, sizeof(REQUEST_DATA));
     auto data_source = (DATA_SOURCE*)calloc(1, sizeof(DATA_SOURCE));
     auto signal_desc = (SIGNAL_DESC*)calloc(1, sizeof(SIGNAL_DESC));
     auto environment = (ENVIRONMENT*)calloc(1, sizeof(ENVIRONMENT));
@@ -46,7 +48,7 @@ IDAM_PLUGIN_INTERFACE uda::test::generate_plugin_interface(const char* request)
 
     initIdamDataBlock(data_block);
     initClientBlock(client_block, 7, "test");
-    initRequestBlock(request_block);
+    initRequestData(request_data);
     initDataSource(data_source);
     initSignalDesc(signal_desc);
     initUserDefinedTypeList(userdefinedtypelist);
@@ -57,14 +59,14 @@ IDAM_PLUGIN_INTERFACE uda::test::generate_plugin_interface(const char* request)
     sprintf(environment->api_device, "%s", "MAST");
     sprintf(environment->api_delim, "%s", "::");
 
-    sprintf(request_block->signal, "%s", request);
-    make_request_block(request_block, *plugin_list, environment);
+    sprintf(request_data->signal, "%s", request);
+    makeRequestData(request_data, *plugin_list, environment);
 
     plugin_interface.interfaceVersion = 1;
     plugin_interface.pluginVersion = 0;
     plugin_interface.data_block = data_block;
     plugin_interface.client_block = client_block;
-    plugin_interface.request_block = request_block;
+    plugin_interface.request_data = request_data;
     plugin_interface.data_source = data_source;
     plugin_interface.signal_desc = signal_desc;
     plugin_interface.environment = environment;

@@ -78,9 +78,9 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 	idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
-	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+	REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-	if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+	if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
 		if (!init) return 0; // Not previously initialised: Nothing to do!
 		// Free Heap & reset counters
 		init = 0;
@@ -121,31 +121,31 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 		init = 1;
 	}
 
-	if (STR_IEQUALS(request_block->function, "help")) {
+	if (STR_IEQUALS(request_data->function, "help")) {
 		return do_help(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "version")) {
+	} else if (STR_IEQUALS(request_data->function, "version")) {
 		return do_version(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "builddate")) {
+	} else if (STR_IEQUALS(request_data->function, "builddate")) {
 		return do_builddate(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+	} else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
 		return do_defaultmethod(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+	} else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
 		return do_maxinterfaceversion(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "openPulse")) {
+	} else if (STR_IEQUALS(request_data->function, "openPulse")) {
 		return open_pulse(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "closePulse")) {
+	} else if (STR_IEQUALS(request_data->function, "closePulse")) {
 		return close_pulse(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "beginAction")) {
+	} else if (STR_IEQUALS(request_data->function, "beginAction")) {
 		return begin_action(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "endAction")) {
+	} else if (STR_IEQUALS(request_data->function, "endAction")) {
 		return end_action(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "writeData")) {
+	} else if (STR_IEQUALS(request_data->function, "writeData")) {
 		return write_data(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "readData")) {
+	} else if (STR_IEQUALS(request_data->function, "readData")) {
 		return read_data(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "deleteData")) {
+	} else if (STR_IEQUALS(request_data->function, "deleteData")) {
 		return delete_data(idam_plugin_interface);
-	} else if (STR_IEQUALS(request_block->function, "beginArraystructAction")) {
+	} else if (STR_IEQUALS(request_data->function, "beginArraystructAction")) {
 		return begin_arraystruct_action(idam_plugin_interface);
 	} else {
 		RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -154,28 +154,30 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 }
 
 int forwardRequest(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
-	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+	REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 	REQUEST_BLOCK new_request_block;
 	initRequestBlock(&new_request_block);
 	int err = 0;
 
 	char request[1024];
-	sprintf(request,"IMAS_REMOTE::%s",request_block->signal);
-	//printf(stdout, "forwarded request: %s\n", request_block->signal);
+	sprintf(request,"IMAS_REMOTE::%s",request_data->signal);
+	//printf(stdout, "forwarded request: %s\n", request_data->signal);
 
 	UDA_LOG(UDA_LOG_DEBUG,"forwarded request: %s\n", request);
 
-	if ((err = makeClientRequestBlock(request, "", &new_request_block)) != 0) {
+    const char* source = "";
+	if ((err = makeClientRequestBlock(&request, &source, 1, &new_request_block)) != 0) {
 		fprintf(stderr, "failed to create request block");
 		return err;
 	}
-	int handle = idamClient(&new_request_block);
-	if (handle < 0) {
+    int handles[1];
+	int rc = idamClient(&new_request_block, handles);
+	if (rc < 0) {
 		fprintf(stderr, "UDA call failed\n");
-		return handle;
+		return rc;
 	}
 
-	*idam_plugin_interface->data_block = *getIdamDataBlock(handle);
+	*idam_plugin_interface->data_block = *getIdamDataBlock(handles[0]);
 	return 0;
 }
 
@@ -244,68 +246,68 @@ int open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 	UDA_LOG(UDA_LOG_DEBUG, "%s", "Calling open_pulse of west_tunnel plugin");
 
-	REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+	REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 	const char* tokamak;
-	FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
+	FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, tokamak);
 
 	if (strcmp(tokamak,"WEST") == 0 || strcmp(tokamak,"west") == 0) {
 
 		int backend_id;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, backend_id);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, backend_id);
 
 		int shot;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
 		int run;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, run);
 
 		const char* user;
-		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+		FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, user);
 
 		const char* version;
-		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
+		FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, version);
 
 		int mode;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, mode);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, mode);
 
 		const char* options;
-		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, options);
+		FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, options);
 
 		char request[1024];
 		sprintf(request,"openPulse(backend_id=%d, shot=%d, run=%d, user=%s, tokamak=%s, version=%s, mode=%d, options='%s')",
 				backend_id, shot, run, "imas_public", "west", version, mode, options);
 
-		strcpy(request_block->signal, request);
+		strcpy(request_data->signal, request);
 
 	} 
 	else if (strcmp(tokamak,"WEST_SIMU") == 0 || strcmp(tokamak,"west_simu") == 0) {
 
 		int backend_id;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, backend_id);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, backend_id);
 
 		int shot;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
 		int run;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, run);
 
 		const char* user;
-		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+		FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, user);
 
 		const char* version;
-		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
+		FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, version);
 
 		int mode;
-		FIND_REQUIRED_INT_VALUE(request_block->nameValueList, mode);
+		FIND_REQUIRED_INT_VALUE(request_data->nameValueList, mode);
 
 		const char* options;
-		FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, options);
+		FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, options);
 
 		char request[1024];
 		sprintf(request,"openPulse(backend_id=%d, shot=%d, run=%d, user=%s, tokamak=%s, version=%s, mode=%d, options='%s')",
 				backend_id, shot, run, "imas_simulation", "west_simu_preparation", version, mode, options);
 
-		strcpy(request_block->signal, request);
+		strcpy(request_data->signal, request);
 
 	}
 

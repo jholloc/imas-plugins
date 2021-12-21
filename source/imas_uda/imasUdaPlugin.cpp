@@ -36,28 +36,28 @@ int imasUdaPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
         plugin.reset();
         return 0;
     }
 
     plugin.init();
 
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         return plugin.help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         return plugin.version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         return plugin.build_date(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         return plugin.default_method(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         return plugin.max_interface_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
+    } else if (STR_IEQUALS(request_data->function, "read")) {
         return plugin.read(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "get")) {
+    } else if (STR_IEQUALS(request_data->function, "get")) {
         return plugin.get(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -198,17 +198,17 @@ int ImasUdaPlugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     data_block->rank = 0;
     data_block->dims = nullptr;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
 
     int shot = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int* indices = nullptr;
     size_t nindices = 0;
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices);
 
     if (nindices == 1 && indices[0] == -1) {
         nindices = 0;
@@ -217,13 +217,13 @@ int ImasUdaPlugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     }
 
     int dtype = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, dtype);
 
     const char* IDS_version = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, IDS_version);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, IDS_version);
 
     const char* experiment = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, experiment);
+    FIND_STRING_VALUE(request_data->nameValueList, experiment);
 
     const char* server = "rca.fusion.org.uk";
     int port = 56565;
@@ -243,16 +243,16 @@ int ImasUdaPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     data_block->rank = 0;
     data_block->dims = nullptr;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* group = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, group);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, group);
 
     const char* variable = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, variable);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, variable);
 
     int shot = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     const char* server = "rca.fusion.org.uk";
     int port = 56565;

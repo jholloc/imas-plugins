@@ -84,14 +84,14 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     static short init = 0;
 
     // ----------------------------------------------------------------------------------------
     // Heap Housekeeping
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
         if (!init) {
             // Not previously initialised: Nothing to do!
             return 0;
@@ -105,12 +105,12 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // ----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_block->function, "init")
-        || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init")
+        || STR_IEQUALS(request_data->function, "initialise")) {
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init")
-            || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init")
+            || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -121,19 +121,19 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     int err = 0;
 
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         err = do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         err = do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         err = do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         err = do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         err = do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
+    } else if (STR_IEQUALS(request_data->function, "read")) {
         err = do_read(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "close")) {
+    } else if (STR_IEQUALS(request_data->function, "close")) {
         err = do_close(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -1001,20 +1001,20 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     data_block->rank = 0;
     data_block->dims = nullptr;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
 
     int shot = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int run = 0;
-    FIND_INT_VALUE(request_block->nameValueList, run);
+    FIND_INT_VALUE(request_data->nameValueList, run);
 
     int* indices = nullptr;
     size_t nindices = 0;
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices);
 
     if (nindices == 1 && indices[0] == -1) {
         nindices = 0;
@@ -1023,27 +1023,27 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     }
 
     int dtype = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, dtype);
 
     const char* IDS_version = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, IDS_version);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, IDS_version);
 
     const char* experiment = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, experiment);
+    FIND_STRING_VALUE(request_data->nameValueList, experiment);
 
     // keep old way of passing experiment until IMAS plugin has been updated
     if (experiment == nullptr) {
-        experiment = request_block->archive;
+        experiment = request_data->archive;
     }
 
     int ppf_sequence = -1;
-    FIND_INT_VALUE(request_block->nameValueList, ppf_sequence);
+    FIND_INT_VALUE(request_data->nameValueList, ppf_sequence);
 
     const char* ppf_user = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, ppf_user);
+    FIND_STRING_VALUE(request_data->nameValueList, ppf_user);
 
     const char* ppf_dda = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, ppf_dda);
+    FIND_STRING_VALUE(request_data->nameValueList, ppf_dda);
 
     // Search mapping value and request type (static or dynamic)
     std::string experiment_mapping_file_name = uda::exp2imas::get_machine_mapping_filename(experiment, element, shot);

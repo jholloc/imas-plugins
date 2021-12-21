@@ -13,9 +13,9 @@ std::vector<std::string> received_requests;
 
 extern "C" int mock_plugin_func(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    received_requests.emplace_back(idam_plugin_interface->request_block->signal);
+    received_requests.emplace_back(idam_plugin_interface->request_data->signal);
 
-    if (std::string(idam_plugin_interface->request_block->function) == "getDim") {
+    if (std::string(idam_plugin_interface->request_data->function) == "getDim") {
         setReturnDataIntScalar(idam_plugin_interface->data_block, 3, nullptr);
     }
 

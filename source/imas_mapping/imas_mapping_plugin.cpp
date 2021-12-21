@@ -98,9 +98,9 @@ int imas_mapping_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-        REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+        REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-        std::string function = request_block->function;
+        std::string function = request_data->function;
 
         if (idam_plugin_interface->housekeeping || function == "reset") {
             plugin.reset();
@@ -214,21 +214,23 @@ namespace {
 int call_remote_plugin(const IDAM_PLUGIN_INTERFACE* old_plugin_interface, const char* host, const char* request)
 {
     IDAM_PLUGIN_INTERFACE idam_plugin_interface = *old_plugin_interface;
-    REQUEST_BLOCK request_block = *old_plugin_interface->request_block;
-    idam_plugin_interface.request_block = &request_block;
 
-    makeClientRequestBlock(request, "", &request_block);
+    const char* source = "";
+    REQUEST_BLOCK request_block;
+    makeClientRequestBlock(&request, &source, 1, &request_block);
+    REQUEST_DATA* request_data = &request_block.requests[0];
+    idam_plugin_interface.request_data = request_data;
 
-    request_block.request = findPluginRequestByFormat("UDA", old_plugin_interface->pluginList);
+    request_data->request = findPluginRequestByFormat("UDA", old_plugin_interface->pluginList);
 
-    if (request_block.request < 0) {
+    if (request_data->request < 0) {
         RAISE_PLUGIN_ERROR("UDA plugin not found!");
     }
 
-    strcpy(request_block.server, host);
+    strcpy(old_plugin_interface->request_data->server, host);
 
     int err = 0;
-    int id = findPluginIdByRequest(request_block.request, old_plugin_interface->pluginList);
+    int id = findPluginIdByRequest(request_data->request, old_plugin_interface->pluginList);
     PLUGIN_DATA* plugin = &(old_plugin_interface->pluginList->plugin[id]);
     if (id >= 0 && plugin->idamPlugin != nullptr) {
         err = plugin->idamPlugin(&idam_plugin_interface);
@@ -253,35 +255,34 @@ int call_plugin(IDAM_PLUGIN_INTERFACE* interface, const std::string& host, const
 
 int MappingPlugin::get_requestedPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
     const char* tokamak;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
-    auto plugin = machine_mapping_.plugin(tokamak, ids_);
-    const char* plugin_name = plugin.c_str();
-    if (strstr(plugin_name, "TUNNEL") != nullptr) {
-        setReturnDataString(idam_plugin_interface->data_block, plugin_name, nullptr);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, tokamak);
+    const char* plugin_name = machine_mapping_.plugin(tokamak, ids_).c_str();
+    if (strstr(plugin_name, "TUNNEL") != NULL) {
+        setReturnDataString(idam_plugin_interface->data_block, plugin_name, NULL);
     }
     return 0;
 }
 
 int MappingPlugin::open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int shot;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int run;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, run);
 
     const char* user;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, user);
 
     const char* tokamak;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, tokamak);
 
     const char* version;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, version);
 
     pulses_.emplace(next_pulse_, Pulse{ shot, run, user, tokamak, version });
 
@@ -293,10 +294,10 @@ int MappingPlugin::open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int MappingPlugin::close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     pulses_.erase(ctxId);
 
@@ -306,45 +307,45 @@ int MappingPlugin::close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int MappingPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     const char* dataObject;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, dataObject);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, dataObject);
 
     int access;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, access);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, access);
 
     int range;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, range);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, range);
 
 #ifdef FIND_REQUIRED_DOUBLE_VALUE
     double time;
-    FIND_REQUIRED_DOUBLE_VALUE(request_block->nameValueList, time);
+    FIND_REQUIRED_DOUBLE_VALUE(request_data->nameValueList, time);
 #else
     float time;
-    FIND_REQUIRED_FLOAT_VALUE(request_block->nameValueList, time);
+    FIND_REQUIRED_FLOAT_VALUE(request_data->nameValueList, time);
 #endif
 
     int interp;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, interp);
 
     const char* ppfUser = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, ppfUser);
+    FIND_STRING_VALUE(request_data->nameValueList, ppfUser);
     if (ppfUser != nullptr) {
         ppf_user_ = ppfUser; 
     }
 
     int ppfSequence = -1;
-    FIND_INT_VALUE(request_block->nameValueList, ppfSequence);
+    FIND_INT_VALUE(request_data->nameValueList, ppfSequence);
     if (ppfSequence != -1) {
         ppf_sequence_ = ppfSequence;
     }
 
     const char* ppfDDA = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, ppfDDA);
+    FIND_STRING_VALUE(request_data->nameValueList, ppfDDA);
     if (ppfDDA != nullptr) {
         ppf_dda_ = ppfDDA; 
     }
@@ -361,13 +362,13 @@ int MappingPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int MappingPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     int type;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, type);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, type);
 
     if (pulses_.count(ctxId) == 0) {
         RAISE_PLUGIN_ERROR("invalid ctxId");
@@ -410,13 +411,13 @@ bool is_integer(const std::string& string)
 
 int MappingPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     const char* path;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path);
 
     if (pulses_.count(ctxId) == 0) {
         RAISE_PLUGIN_ERROR("invalid ctxId");
@@ -577,22 +578,22 @@ int convert_IMAS_to_UDA_type(int type)
 
 int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     const char* field;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, field);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, field);
 
     const char* timebase;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, timebase);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, timebase);
 
     int datatype;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, datatype);
 
     int index;
-    bool is_index = FIND_INT_VALUE(request_block->nameValueList, index);
+    bool is_index = FIND_INT_VALUE(request_data->nameValueList, index);
 
     if (!arraystruct_stack_.empty() && !is_index) {
         RAISE_PLUGIN_ERROR("no index given while reading an arraystruct field");
@@ -663,28 +664,28 @@ int MappingPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int MappingPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* expName;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, expName);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, expName);
 
     const char* group;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, group);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, group);
 
     const char* type;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, type);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, type);
 
     const char* variable;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, variable);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, variable);
 
     int shot;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int run;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, run);
 
     const char* user;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, user);
 
     auto plugin_name = machine_mapping_.plugin(expName, ids_);
 
@@ -707,25 +708,25 @@ int MappingPlugin::get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int MappingPlugin::get_dim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* expName;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, expName);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, expName);
 
     const char* group;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, group);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, group);
 
     const char* variable;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, variable);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, variable);
 
     int shot;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int run;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, run);
 
     const char* user;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, user);
 
     auto plugin_name = machine_mapping_.plugin(expName, ids_);
 

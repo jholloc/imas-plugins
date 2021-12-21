@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <sstream>
+#include <limits>
 #include <boost/filesystem.hpp>
 
 namespace bf = boost::filesystem;

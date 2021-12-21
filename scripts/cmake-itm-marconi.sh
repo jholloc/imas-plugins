@@ -12,7 +12,8 @@ module load libssh
 
 module unload uda
 module load itm-boost/1.78.0/gcc/4.8
-module load uda/2.5.0/gcc/4.8.5
+module use ../uda/modulefiles
+module load uda/2.5.0.9
 
 
 export CC=gcc
@@ -24,4 +25,4 @@ AL_VERSION=$(echo $IMAS_PREFIX | rev | cut -d '/' -f 1 | rev)
 cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug \
     -DLIBSSH_ROOT=$LIBSSH_ROOT \
     -DCMAKE_INSTALL_PREFIX=$LIBSSH_INSTALL \
-    -DBUILD_PLUGINS=exp2imas\;imas_mapping\;imasdd\;imas_uda\;west_tunnel\;imas_partial\;imas_remote
+    -DBUILD_PLUGINS=exp2imas\;imas_mapping\;imasdd\;imas_uda\;west_tunnel\;imas_partial\;imas_remote $*

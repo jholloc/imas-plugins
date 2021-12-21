@@ -19,18 +19,18 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& function, con
     interface.data_block = new DATA_BLOCK;
     initDataBlock(interface.data_block);
 
-    interface.request_block = new REQUEST_BLOCK;
-    initRequestBlock(interface.request_block);
+    interface.request_data = new REQUEST_DATA;
+    initRequestData(interface.request_data);
 
-    strcpy(interface.request_block->function, function.c_str());
+    strcpy(interface.request_data->function, function.c_str());
 
-    initNameValueList(&interface.request_block->nameValueList);
-    interface.request_block->nameValueList.listSize = (int)arguments.size();
-    interface.request_block->nameValueList.pairCount = (int)arguments.size();
-    interface.request_block->nameValueList.nameValue = (NAMEVALUE*)calloc(arguments.size(), sizeof(NAMEVALUE));
+    initNameValueList(&interface.request_data->nameValueList);
+    interface.request_data->nameValueList.listSize = (int)arguments.size();
+    interface.request_data->nameValueList.pairCount = (int)arguments.size();
+    interface.request_data->nameValueList.nameValue = (NAMEVALUE*)calloc(arguments.size(), sizeof(NAMEVALUE));
     int i = 0;
     for (auto& pair : arguments) {
-        NAMEVALUE* nv = &interface.request_block->nameValueList.nameValue[i];
+        NAMEVALUE* nv = &interface.request_data->nameValueList.nameValue[i];
         nv->pair = strdup((pair.first + "=" + pair.second).c_str());
         nv->name = strdup(pair.first.c_str());
         nv->value = strdup(pair.second.c_str());
@@ -61,8 +61,8 @@ TEST_CASE( "get flux_loop flux data", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
-    delete interface.request_block->nameValueList.nameValue;
-    delete interface.request_block;
+    delete interface.request_data->nameValueList.nameValue;
+    delete interface.request_data;
     delete interface.data_block;
     delete interface.userdefinedtypelist;
     delete interface.logmalloclist;
@@ -85,8 +85,8 @@ TEST_CASE( "get flux_loop flux", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
-    delete interface.request_block->nameValueList.nameValue;
-    delete interface.request_block;
+    delete interface.request_data->nameValueList.nameValue;
+    delete interface.request_data;
     delete interface.data_block;
     delete interface.userdefinedtypelist;
     delete interface.logmalloclist;
@@ -109,8 +109,8 @@ TEST_CASE( "get flux_loop", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
-    delete interface.request_block->nameValueList.nameValue;
-    delete interface.request_block;
+    delete interface.request_data->nameValueList.nameValue;
+    delete interface.request_data;
     delete interface.data_block;
     delete interface.userdefinedtypelist;
     delete interface.logmalloclist;
@@ -133,8 +133,8 @@ TEST_CASE( "get flux_loops", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
-    delete interface.request_block->nameValueList.nameValue;
-    delete interface.request_block;
+    delete interface.request_data->nameValueList.nameValue;
+    delete interface.request_data;
     delete interface.data_block;
     delete interface.userdefinedtypelist;
     delete interface.logmalloclist;
@@ -183,8 +183,8 @@ TEST_CASE( "get all magnetics", "[MAG]" )
 //
 //    rc = imasPartial(&interface);
 //
-//    delete interface.request_block->nameValueList.nameValue;
-//    delete interface.request_block;
+//    delete interface.request_data->nameValueList.nameValue;
+//    delete interface.request_data;
 //    delete interface.data_block;
 //    delete interface.userdefinedtypelist;
 //    delete interface.logmalloclist;
@@ -207,8 +207,8 @@ TEST_CASE( "get flux data for a range of flux_loops", "[MAG]" )
 
     int rc = imasPartial(&interface);
 
-    delete interface.request_block->nameValueList.nameValue;
-    delete interface.request_block;
+    delete interface.request_data->nameValueList.nameValue;
+    delete interface.request_data;
     delete interface.data_block;
     delete interface.userdefinedtypelist;
     delete interface.logmalloclist;

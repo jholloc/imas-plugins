@@ -57,9 +57,9 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-        REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+        REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-        std::string function = request_block->function;
+        std::string function = request_data->function;
 
         if (idam_plugin_interface->housekeeping || function == "reset") {
             plugin.reset();
@@ -171,31 +171,31 @@ int IMASPlugin::max_interface_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interfa
 
 int IMASPlugin::open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int backend_id;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, backend_id);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, backend_id);
 
     int shot;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int run;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, run);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, run);
 
     const char* user;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, user);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, user);
 
     const char* tokamak;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, tokamak);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, tokamak);
 
     const char* version;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, version);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, version);
 
     int mode;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, mode);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, mode);
 
     const char* options;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, options);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, options);
 
     int ctxId = Lowlevel::beginPulseAction(backend_id, shot, run, user, tokamak, version);
     LLenv env = Lowlevel::getLLenv(ctxId);
@@ -208,16 +208,16 @@ int IMASPlugin::open_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int IMASPlugin::close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     int mode;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, mode);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, mode);
 
     const char* options;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, options);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, options);
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
@@ -229,30 +229,30 @@ int IMASPlugin::close_pulse(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int IMASPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     const char* dataObject;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, dataObject);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, dataObject);
 
     int access;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, access);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, access);
 
     int range;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, range);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, range);
 
 #ifdef FIND_REQUIRED_DOUBLE_VALUE
     double time;
-    FIND_REQUIRED_DOUBLE_VALUE(request_block->nameValueList, time);
+    FIND_REQUIRED_DOUBLE_VALUE(request_data->nameValueList, time);
 #else
     float time;
-    FIND_REQUIRED_FLOAT_VALUE(request_block->nameValueList, time);
+    FIND_REQUIRED_FLOAT_VALUE(request_data->nameValueList, time);
 #endif
 
     int interp;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, interp);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, interp);
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
@@ -269,13 +269,13 @@ int IMASPlugin::begin_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int IMASPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     int type;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, type);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, type);
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
@@ -293,24 +293,24 @@ int IMASPlugin::end_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int IMASPlugin::write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     const char* field;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, field);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, field);
 
     const char* timebase;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, timebase);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, timebase);
 
     int idata;
     void* data = &idata;
 
     int datatype;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, datatype);
 
-    PUTDATA_BLOCK* putdata = idam_plugin_interface->request_block->putDataBlockList.putDataBlock;
+    PUTDATA_BLOCK* putdata = idam_plugin_interface->request_data->putDataBlockList.putDataBlock;
 
     Context* ctx = nullptr;
     if (!array_ctx_stack_.empty()) {
@@ -332,23 +332,23 @@ int IMASPlugin::write_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int IMASPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
     const char* field;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, field);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, field);
 
     const char* timebase;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, timebase);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, timebase);
 
     void* data = nullptr;
 
     int datatype;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, datatype);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, datatype);
 
     int rank = 0;
     int dims[64] = {0};
@@ -401,13 +401,13 @@ int IMASPlugin::read_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
 int IMASPlugin::delete_data(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     const char* path;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path);
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
@@ -459,16 +459,16 @@ ArraystructContext* IMASPlugin::build_arraystruct_context(const char* path, cons
 
 int IMASPlugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     int ctxId;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, ctxId);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, ctxId);
 
     const char* path;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, path);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path);
 
     const char* timebase;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, timebase);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, timebase);
 
     LLenv env = Lowlevel::getLLenv(ctxId);
 
