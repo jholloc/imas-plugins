@@ -18,7 +18,7 @@ if( NOT DEFINED BUILD_PLUGINS )
     jet_magnetics
     jet_summary
     mast_imas
-    source
+    #source
     tcv
     tcvm
     tore_supra

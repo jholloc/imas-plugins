@@ -220,7 +220,14 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
 
             sprintf(host, "localhost:%d", g_server_port);
         } else {
-            strcpy(host, "mdsplus.jet.efda.org:8000");
+            const char* ssh_username = getenv("JET_MDSPLUS_USERNAME");
+            if (ssh_username != nullptr)
+            {
+                sprintf(host, "ssh://%s@mdsplus.jetdata.eu", ssh_username);
+            } else
+            {
+                strcpy(host, "mdsplus.jet.uk:8000");
+            }
         }
 
         try {

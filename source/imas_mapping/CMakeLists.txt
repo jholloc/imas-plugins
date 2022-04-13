@@ -30,6 +30,7 @@ uda_plugin(
     ${UDA_CLIENT_LIBRARY_DIRS}
   EXTRA_LINK_LIBS
     ${UDA_CLIENT_LIBRARIES}
+  COPY_ASSET_FILE machines.txt
 )
 
 add_subdirectory( tests )

@@ -1,5 +1,5 @@
 # Machine   IDS         Host        Plugin
-JET         magnetics   -           JET_MAGNETICS
+#JET         magnetics   -           JET_MAGNETICS
 JET         EQUILIBRIUM -           JET_EQUILIBRIUM
 JET         SUMMARY     -           JET_SUMMARY
 JET         *           -           EXP2IMAS
@@ -9,3 +9,4 @@ WEST        *           -           WEST_TUNNEL
 HL2A        *           -           HL2A
 TS          *           -           TORE_SUPRA
 ITER        *           -           ITER_MD
+MAST        *           -           IMAS_UDA

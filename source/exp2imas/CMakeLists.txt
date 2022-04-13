@@ -67,6 +67,7 @@ uda_plugin(
     ${Boost_LIBRARIES}
     pthread
     resolv
+  COPY_ASSET_DIR mappings
 )
 
 add_subdirectory( tests )

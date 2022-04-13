@@ -17,7 +17,7 @@ macro( uda_plugin )
   include( CMakeParseArguments )
 
   set( optionArgs )
-  set( oneValueArgs NAME LIBNAME ENTRY_FUNC DESCRIPTION EXAMPLE CONFIG_FILE VERSION )
+  set( oneValueArgs NAME LIBNAME ENTRY_FUNC DESCRIPTION EXAMPLE CONFIG_FILE VERSION COPY_ASSET_DIR COPY_ASSET_FILE)
   set( multiValueArgs SOURCES EXTRA_INCLUDE_DIRS EXTRA_LINK_DIRS EXTRA_LINK_LIBS EXTRA_DEFINITIONS EXTRA_INSTALL_FILES )
 
   cmake_parse_arguments(
@@ -116,6 +116,25 @@ macro( uda_plugin )
       "${CMAKE_BINARY_DIR}/etc/plugins.d/${PLUGIN_CONFIG_FILE}"
       @ONLY
     )
+  install(
+    FILES "${CMAKE_BINARY_DIR}/etc/plugins.d/${PLUGIN_CONFIG_FILE}"
+    DESTINATION etc/plugins.d
+  )
+  endif()
+
+  if( NOT "${PLUGIN_COPY_ASSET_DIR}" STREQUAL "" )
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/${PLUGIN_COPY_ASSET_DIR}/" DESTINATION "${CMAKE_BINARY_DIR}/etc/${PLUGIN_COPY_ASSET_DIR}")
+    install(
+      DIRECTORY "${CMAKE_BINARY_DIR}/etc/${PLUGIN_COPY_ASSET_DIR}"
+      DESTINATION etc
+  )
+  endif()
+    if( NOT "${PLUGIN_COPY_ASSET_FILE}" STREQUAL "" )
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/${PLUGIN_COPY_ASSET_FILE}/" DESTINATION "${CMAKE_BINARY_DIR}/etc/${PLUGIN_COPY_ASSET_FILE}")
+    install(
+      FILES "${CMAKE_BINARY_DIR}/etc/${PLUGIN_COPY_ASSET_FILE}"
+      DESTINATION etc
+  )
   endif()
 
 endmacro( uda_plugin )
