@@ -14,7 +14,7 @@ endif( LibSSH_LIBRARIES AND LibSSH_INCLUDE_DIRS )
 
 find_path( LibSSH_INCLUDE_DIRS libssh/libssh.h
   HINTS ${LibSSH_ROOT}
-    ENV LibSSH_DIR
+    ENV LIBSSH_DIR
   PATHS
     /usr/local
     /opt/local
@@ -24,7 +24,7 @@ find_path( LibSSH_INCLUDE_DIRS libssh/libssh.h
 
 find_library( LibSSH_LIBRARIES NAMES ssh
   HINTS ${LibSSH_ROOT}
-    ENV LibSSH_DIR
+    ENV LIBSSH_DIR
   PATHS
     /opt/local
     /sw

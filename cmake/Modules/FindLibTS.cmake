@@ -14,7 +14,7 @@ endif( LibTS_LIBRARIES AND LibTS_INCLUDE_DIRS )
 
 find_path( LibTS_INCLUDE_DIRS tsdef.h
   HINTS ${LibTS_ROOT}
-    ENV LibTS_DIR
+    ENV LIBTS_DIR
   PATHS
     /usr/local
     /opt/local
@@ -24,7 +24,7 @@ find_path( LibTS_INCLUDE_DIRS tsdef.h
 
 find_library( LibTS_LIBRARIES NAMES TS
   HINTS ${LibTS_ROOT}
-    ENV LibTS_DIR
+    ENV LIBTS_DIR
   PATHS
     /opt/local
     /sw
