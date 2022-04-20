@@ -12,7 +12,7 @@ module load libssh
 
 module unload uda
 module load itm-boost/1.61.0--gnu--7.3.0
-module load uda/2.5.0/gcc/7.3.0
+module load uda/2.5.0-rc/gcc/7.3.0  
 
 export CC=gcc
 export CXX=g++
