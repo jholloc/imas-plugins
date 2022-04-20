@@ -14,7 +14,7 @@ module load MDSplus/7.7.12-intel-2018a
 
 UDA_HOME=/home/ITER/hollocj/uda-install
 
-export LibSSH_DIR=$HOME/libssh
+export LIBSSH_DIR=$HOME/libssh
 export PKG_CONFIG_PATH=$UDA_HOME/lib/pkgconfig:$HOME/IMAS/access-layer/lib/pkgconfig:$PKG_CONFIG_PATH
 export BOOST_ROOT=/work/imas/opt/boost/1.58
 export OPENSSL_ROOT_DIR=/work/imas/opt/openssl/1.0.2g
