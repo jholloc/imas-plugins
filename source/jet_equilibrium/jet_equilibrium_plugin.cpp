@@ -56,14 +56,14 @@ int jetEquilibriumPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     static short init = 0;
 
     // ----------------------------------------------------------------------------------------
     // Heap Housekeeping
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
         if (!init) {
             // Not previously initialised: Nothing to do!
             return 0;
@@ -77,12 +77,12 @@ int jetEquilibriumPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // ----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_block->function, "init")
-        || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init")
+        || STR_IEQUALS(request_data->function, "initialise")) {
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init")
-            || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init")
+            || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -93,17 +93,17 @@ int jetEquilibriumPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     int err = 0;
 
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         err = do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         err = do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         err = do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         err = do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         err = do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
+    } else if (STR_IEQUALS(request_data->function, "read")) {
         err = do_read(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -170,7 +170,7 @@ void replace(char* out, const char* in, const char* replace, const char* with)
 int call_exp2imas_plugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* signal_name){
     
     char temp[STRING_LENGTH];
-    sprintf(temp, "EXP2IMAS::%s", idam_plugin_interface->request_block->signal);
+    sprintf(temp, "EXP2IMAS::%s", idam_plugin_interface->request_data->signal);
 
     char request[STRING_LENGTH];
     replace(request, temp, "rho_volume_norm", signal_name );
@@ -226,10 +226,10 @@ float* integrate_gradients(float* gradients, float dx, int n){
 int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
 
     if (StringEndsWith(element, "/profiles_1d/rho_volume_norm")) {
         
@@ -258,7 +258,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     }
     else {
 
-        auto request =boost::format("EXP2IMAS::%s") % request_block->signal;
+        auto request =boost::format("EXP2IMAS::%s") % request_data->signal;
         return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
 
     }

@@ -88,11 +88,11 @@ int mastImasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     housekeeping = idam_plugin_interface->housekeeping;
 
-    if (housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (housekeeping || STR_IEQUALS(request_data->function, "reset")) {
 
         if (!init) return 0;        // Not previously initialised: Nothing to do!
 
@@ -103,26 +103,26 @@ int mastImasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         return 0;
     }
 
-    if (!init || STR_IEQUALS(request_block->function, "init")
-        || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init")
+        || STR_IEQUALS(request_data->function, "initialise")) {
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
 
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         err = do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         err = do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         err = do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         err = do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         err = do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
+    } else if (STR_IEQUALS(request_data->function, "read")) {
         err = do_read(idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -223,8 +223,8 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
     char work[MAXMETA];
 
     IDAM_PLUGIN_INTERFACE next_plugin_interface;
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
-    REQUEST_BLOCK next_request_block = {};
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
+    REQUEST_DATA next_request_data = {};
 
     const PLUGINLIST* plugin_list = idam_plugin_interface->pluginList; // List of all data reader plugins (internal and external shared libraries)
 
@@ -236,10 +236,10 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
 
     next_plugin_interface = *idam_plugin_interface; // New plugin interface
 
-    next_plugin_interface.request_block = &next_request_block;
-    strcpy(next_request_block.api_delim, request_block->api_delim);
+    next_plugin_interface.request_data = &next_request_data;
+    strcpy(next_request_data.api_delim, request_data->api_delim);
 
-    sprintf(next_request_block.source, "%d", shot_number); // Re-Use the original source argument
+    sprintf(next_request_data.source, "%d", shot_number); // Re-Use the original source argument
 
     // Create the Request data structure
 
@@ -249,26 +249,26 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
 
     if (env != NULL) {
         sprintf(work, "%s::get(host=%s, port=%d, signal=\"%s\", source=\"%s\")", env,
-                server_host, server_port, signal, next_request_block.source);
+                server_host, server_port, signal, next_request_data.source);
     } else {
         sprintf(work, "UDA::get(host=%s, port=%d, signal=\"%s\", source=\"%s\")",
-                server_host, server_port, signal, next_request_block.source);
+                server_host, server_port, signal, next_request_data.source);
     }
 
-    next_request_block.source[0] = '\0';
-    strcpy(next_request_block.signal, work);
+    next_request_data.source[0] = '\0';
+    strcpy(next_request_data.signal, work);
 
-    make_request_block(&next_request_block, *plugin_list, idam_plugin_interface->environment);
+    make_request_data(&next_request_data, *plugin_list, idam_plugin_interface->environment);
 
     // Call the UDA client via the UDA plugin (ignore the request identified)
 
     if (env != NULL) {
-        next_request_block.request = findPluginRequestByFormat(env, plugin_list);
+        next_request_data.request = findPluginRequestByFormat(env, plugin_list);
     } else {
-        next_request_block.request = findPluginRequestByFormat("UDA", plugin_list);
+        next_request_data.request = findPluginRequestByFormat("UDA", plugin_list);
     }
 
-    if (next_request_block.request < 0) {
+    if (next_request_data.request < 0) {
         UDA_LOG(UDA_LOG_ERROR, "No UDA server plugin found!\n");
         addIdamError(CODEERRORTYPE, __func__, 999, "No UDA server plugin found!");
         return 999;
@@ -277,7 +277,7 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
     // Locate and Execute the UDA plugin
 
     int err = 0;
-    int id = findPluginIdByRequest(next_request_block.request, plugin_list);
+    int id = findPluginIdByRequest(next_request_data.request, plugin_list);
     PLUGIN_DATA* plugin = &plugin_list->plugin[id];
     if (id >= 0 && plugin->idamPlugin != NULL) {
         err = plugin->idamPlugin(&next_plugin_interface);        // Call the data reader
@@ -287,9 +287,9 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
         return 999;
     }
 
-    free_name_value_list(&next_request_block.nameValueList);
+    free_name_value_list(&next_request_data.nameValueList);
 
-    // Return data is automatic since both next_request_block and request_block point to the same DATA_BLOCK etc.
+    // Return data is automatic since both next_request_data and request_data point to the same DATA_BLOCK etc.
 
     return err;
 }
@@ -297,13 +297,13 @@ static int get_signal(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* 
 int do_read_magnetics(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 {
     const char* element;
-    FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_block->nameValueList, element);
+    FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_data->nameValueList, element);
 
     int shot = -1;
-    FIND_REQUIRED_INT_VALUE(idam_plugin_interface->request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(idam_plugin_interface->request_data->nameValueList, shot);
 
     int index = -1;
-    findIntValue(&idam_plugin_interface->request_block->nameValueList, &index, "index");
+    findIntValue(&idam_plugin_interface->request_data->nameValueList, &index, "index");
 
     PGconn* db = startSQL(idam_plugin_interface->environment);
 
@@ -377,7 +377,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     initDataBlock(data_block);
 
     const char* element;
-    FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_block->nameValueList, element);
+    FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_data->nameValueList, element);
 
     if (STR_STARTSWITH(element, "magnetics")) {
         int err = do_read_magnetics(idam_plugin_interface);

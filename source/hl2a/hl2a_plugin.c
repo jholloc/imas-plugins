@@ -49,11 +49,11 @@ int hl2aPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     housekeeping = idam_plugin_interface->housekeeping;
 
-    if (housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (housekeeping || STR_IEQUALS(request_data->function, "reset")) {
 
         if (!init) {
             return 0;
@@ -69,12 +69,12 @@ int hl2aPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // ----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_block->function, "init")
-        || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init")
+        || STR_IEQUALS(request_data->function, "initialise")) {
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init")
-            || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init")
+            || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -83,17 +83,17 @@ int hl2aPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // Standard methods: version, builddate, defaultmethod,
     // maxinterfaceversion
 	
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         err = do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         err = do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         err = do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         err = do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         err = do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
+    } else if (STR_IEQUALS(request_data->function, "read")) {
         err = do_read(idam_plugin_interface);
     } else {
         // ======================================================================================
@@ -255,16 +255,16 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         initDimBlock(&data_block->dims[i]);
     }
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     char* element;    // will contain the IDAM mapping got from the IDAM request
     int shot;
     int* indices;
     size_t nindices;      
 
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices);
 
     char* IDAM_MappingKey = element;
 

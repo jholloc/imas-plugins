@@ -17,9 +17,12 @@ module load uda/2.5.0-rc/gcc/7.3.0
 export CC=gcc
 export CXX=g++
 
-BUILD_DIR ?=build-gcc-7.3.0
+if [[ -z "${BUILD_DIR}" ]]
+then
+  BUILD_DIR=build-gcc-7.3.0
+fi
 
-cmake -B$BUILD_DIR -H. -DCMAKE_BUILD_TYPE=Debug \
-    -DLibSSH_ROOT=$LIBSSH_ROOT \
-    -DCMAKE_INSTALL_PREFIX=$UDA_INSTALL \
+cmake -B"$BUILD_DIR" -H. -DCMAKE_BUILD_TYPE=Debug \
+    -DLibSSH_ROOT="$LIBSSH_ROOT" \
+    -DCMAKE_INSTALL_PREFIX="$UDA_INSTALL" \
     -DBUILD_PLUGINS=exp2imas\;imas_mapping\;imasdd\;imas_uda\;west_tunnel\;imas_partial\;imas_remote

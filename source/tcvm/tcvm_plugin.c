@@ -36,7 +36,7 @@ int tcvmPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = THISPLUGIN_VERSION;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     static short init = 0;
 
@@ -46,7 +46,7 @@ int tcvmPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // ----------------------------------------------------------------------------------------
     // Heap Housekeeping
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
         if (!init) {
             // Not previously initialised: Nothing to do!
             return 0;
@@ -66,8 +66,8 @@ int tcvmPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // ----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_block->function, "init")
-        || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init")
+        || STR_IEQUALS(request_data->function, "initialise")) {
 
         if (!ep) {
             if (!matlabDirName) {
@@ -85,8 +85,8 @@ int tcvmPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         }
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init")
-            || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init")
+            || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -97,19 +97,19 @@ int tcvmPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     int err = 0;
 
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         err = do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         err = do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         err = do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         err = do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         err = do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
+    } else if (STR_IEQUALS(request_data->function, "read")) {
         err = do_read(ep, idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read_s")) {
+    } else if (STR_IEQUALS(request_data->function, "read_s")) {
         err = do_read_s(ep, idam_plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -166,7 +166,7 @@ int do_read(Engine* ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element = NULL;
     int shot;
@@ -174,10 +174,10 @@ int do_read(Engine* ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     size_t nindices;
     int dtype;
 
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices); // Also assigns nindices via Macro
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices); // Also assigns nindices via Macro
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, dtype);
 
     // Check cases
     if (nindices == 1 && indices[0] == -1) {
@@ -223,7 +223,7 @@ int do_read_s(Engine* ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element;        // will contain the modified IDSRequest
     // which will be one key of the IDS
@@ -233,10 +233,10 @@ int do_read_s(Engine* ep, IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     size_t nindices;
     int dtype;
 
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices); // Also assigns nindices via Macro
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices); // Also assigns nindices via Macro
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, dtype);
 
     // Check cases
     if (nindices == 1 && indices[0] == -1) {

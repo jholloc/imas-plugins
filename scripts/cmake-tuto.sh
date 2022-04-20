@@ -10,5 +10,5 @@ export UDA_HOME=$HOME/public/uda
 export PKG_CONFIG_PATH=$UDA_HOME/lib/pkgconfig
 
 cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_INSTALL_PREFIX=$UDA_HOME \
+    -DCMAKE_INSTALL_PREFIX="$UDA_HOME" \
     -DBUILD_PLUGINS=imas_mapping\;hl2a\;tore_supra \

@@ -26,9 +26,9 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& object)
     interface.data_block = (DATA_BLOCK*)malloc(sizeof(DATA_BLOCK));
     initDataBlock(interface.data_block);
 
-    interface.request_block = (REQUEST_BLOCK*)malloc(sizeof(REQUEST_BLOCK));
-    initRequestBlock(interface.request_block);
-    strcpy(interface.request_block->signal, object.c_str());
+    interface.request_data = (REQUEST_DATA*)malloc(sizeof(REQUEST_DATA));
+    initRequestBlock(interface.request_data);
+    strcpy(interface.request_data->signal, object.c_str());
 
     PLUGINLIST plugin_list = {};
 
@@ -40,7 +40,7 @@ IDAM_PLUGIN_INTERFACE generate_plugin_interface(const std::string& object)
     plugin_list.plugin[0].plugin_class = PLUGINFUNCTION;
     strcpy(plugin_list.plugin[0].format, "IMAS_PARTIAL");
 
-    makeServerRequestBlock(interface.request_block, plugin_list);
+    makeServerRequestBlock(interface.request_data, plugin_list);
 
     return interface;
 }

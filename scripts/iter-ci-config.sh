@@ -12,5 +12,5 @@ export PKG_CONFIG_PATH=$UDA_DIR/lib/pkgconfig:$HOME/IMAS/access-layer/lib/pkgcon
 
 CC=gcc CXX=g++ cmake -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_INSTALL_PREFIX=$UDA_HOME \
-    -DBOOST_ROOT=${EBROOTBOOST} \
-    -DPostgreSQL_ROOT=${EBROOTPOSTGRESQL}
+    -DBOOST_ROOT="${EBROOTBOOST}" \
+    -DPostgreSQL_ROOT="${EBROOTPOSTGRESQL}"

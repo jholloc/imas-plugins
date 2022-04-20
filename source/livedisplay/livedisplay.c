@@ -794,7 +794,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     idam_plugin_interface->pluginVersion = 1;
 
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const PLUGINLIST* pluginList = idam_plugin_interface->pluginList;
 
@@ -803,7 +803,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     //----------------------------------------------------------------------------------------
     // Heap Housekeeping
 
-    if (housekeeping || !strcasecmp(request_block->function, "reset")) {
+    if (housekeeping || !strcasecmp(request_data->function, "reset")) {
 
         //idamLog(UDA_LOG_DEBUG, "LiveDisplay: reset function called.\n");
 
@@ -834,8 +834,8 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     //----------------------------------------------------------------------------------------
     // Initialise if requested
 
-    if (!init || !strcasecmp(request_block->function, "init")
-        || !strcasecmp(request_block->function, "initialise")) {
+    if (!init || !strcasecmp(request_data->function, "init")
+        || !strcasecmp(request_data->function, "initialise")) {
 
         flux_loop_cache = NULL;
         flux_loop_cache_count = 0;
@@ -847,7 +847,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         init = 1;
 
-        if (!strcasecmp(request_block->function, "init") || !strcasecmp(request_block->function, "initialise")) {
+        if (!strcasecmp(request_data->function, "init") || !strcasecmp(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -867,48 +867,48 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     double startTime = 0.0;
     double endTime = 0.0;
 
-    exp_number = request_block->exp_number;
+    exp_number = request_data->exp_number;
 
 // Keyword have higher priority
 
     int i;
-    for (i = 0; i < request_block->nameValueList.pairCount; i++) {
+    for (i = 0; i < request_data->nameValueList.pairCount; i++) {
 
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "exp_number") ||
-            !strcasecmp(request_block->nameValueList.nameValue[i].name, "shot") ||
-            !strcasecmp(request_block->nameValueList.nameValue[i].name, "pulno")) {
-            if (IsNumber(request_block->nameValueList.nameValue[i].value)) {
-                exp_number = atoi(request_block->nameValueList.nameValue[i].value);
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "exp_number") ||
+            !strcasecmp(request_data->nameValueList.nameValue[i].name, "shot") ||
+            !strcasecmp(request_data->nameValueList.nameValue[i].name, "pulno")) {
+            if (IsNumber(request_data->nameValueList.nameValue[i].value)) {
+                exp_number = atoi(request_data->nameValueList.nameValue[i].value);
                 continue;
             } else {
                 err = 888;
                 break;
             }
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "pass")) {
-            if (IsNumber(request_block->nameValueList.nameValue[i].value)) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "pass")) {
+            if (IsNumber(request_data->nameValueList.nameValue[i].value)) {
                 continue;
             } else {
                 err = 888;
                 break;
             }
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "device")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "device")) {
             continue;
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "startTime")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "startTime")) {
             isStartTime = 1;
-            startTime = atof(request_block->nameValueList.nameValue[i].value);
+            startTime = atof(request_data->nameValueList.nameValue[i].value);
             continue;
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "endTime")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "endTime")) {
             isEndTime = 1;
-            endTime = atof(request_block->nameValueList.nameValue[i].value);
+            endTime = atof(request_data->nameValueList.nameValue[i].value);
             continue;
         }
 
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "structureVersion")) {
-            if (IsNumber(request_block->nameValueList.nameValue[i].value)) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "structureVersion")) {
+            if (IsNumber(request_data->nameValueList.nameValue[i].value)) {
                 continue;
             } else {
                 err = 888;
@@ -918,32 +918,32 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         // Keywords
 
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "average")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "average")) {
             // Average data within the time window (startTime and endTime must be specified)
             isAverage = 1;
             continue;
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "nearest")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "nearest")) {
             // The data measurement nearest startTime.  endTime is ignored.
             isNearest = 1;
             continue;
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "first")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "first")) {
             // The first data measurement within the time window (startTime and endTime must be specified)
             isFirst = 1;
             continue;
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "last")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "last")) {
             // The last data measurement within the time window (startTime and endTime must be specified)
             isLast = 1;
             continue;
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "cache")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "cache")) {
             // Cache the machine description data
             isCache = 1;
             continue;
         }
-        if (!strcasecmp(request_block->nameValueList.nameValue[i].name, "count")) {
+        if (!strcasecmp(request_data->nameValueList.nameValue[i].name, "count")) {
             // Cache the Count of the coil or probe
             isCount = 1;
             continue;
@@ -963,7 +963,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         // Test Methods
         //----------------------------------------------------------------------------------------
 
-        if (!strcasecmp(request_block->function, "test1")) {    // CODE data structure
+        if (!strcasecmp(request_data->function, "test1")) {    // CODE data structure
 
             // Create the Returned Structure Definitions
 
@@ -986,11 +986,11 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
                       "STRING");    // Scalar String
             sprintf(code->version, "LiveDisplay Plugin Version: %d", THISPLUGIN_VERSION);
 
-            stringLength = strlen(request_block->signal) + strlen(request_block->source) + 7;
+            stringLength = strlen(request_data->signal) + strlen(request_data->source) + 7;
             code->parameters = (char*)malloc(stringLength * sizeof(char));
             addMalloc(idam_plugin_interface->logmalloclist, (void*)code->parameters, 1, stringLength * sizeof(char),
                       "STRING");    // Scalar String
-            sprintf(code->parameters, "\"%s\", \"%s\"", request_block->signal, request_block->source);
+            sprintf(code->parameters, "\"%s\", \"%s\"", request_data->signal, request_data->source);
 
             code->output_flag_count = 3;
 
@@ -1018,7 +1018,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test2")) {
+        } else if (!strcasecmp(request_data->function, "test2")) {
 
             // Create the Returned Structure Definitions
 
@@ -1081,11 +1081,11 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
                       "STRING");    // Scalar String
             sprintf(code.version, "LiveDisplay Plugin Version: %d", THISPLUGIN_VERSION);
 
-            stringLength = strlen(request_block->signal) + strlen(request_block->source) + 7;
+            stringLength = strlen(request_data->signal) + strlen(request_data->source) + 7;
             code.parameters = (char*)malloc(stringLength * sizeof(char));
             addMalloc(idam_plugin_interface->logmalloclist, (void*)code.parameters, 1, stringLength * sizeof(char),
                       "STRING");    // Scalar String
-            sprintf(code.parameters, "\"%s\", \"%s\"", request_block->signal, request_block->source);
+            sprintf(code.parameters, "\"%s\", \"%s\"", request_data->signal, request_data->source);
 
             code.output_flag_count = 3;
             code.output_flag = (int*)malloc(code.output_flag_count * sizeof(int));
@@ -1129,7 +1129,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test3")) {    // FLUX_LOOP data structure
+        } else if (!strcasecmp(request_data->function, "test3")) {    // FLUX_LOOP data structure
 
             // Create the Returned Structure Definitions
 
@@ -1196,7 +1196,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test4")) {    // FLUX_LOOP data structure
+        } else if (!strcasecmp(request_data->function, "test4")) {    // FLUX_LOOP data structure
 
             // Create the Returned Structure Definitions
 
@@ -1269,12 +1269,12 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test5")) {    // FLUX_LOOP data structure
+        } else if (!strcasecmp(request_data->function, "test5")) {    // FLUX_LOOP data structure
 
             char signal[256], source[256];
             int stringLength;
 
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
             // Create the Returned Structure Definitions
 
@@ -1387,7 +1387,7 @@ int livedisplay(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test6")) {    // FLUX_LOOP data structure with MAST data
+        } else if (!strcasecmp(request_data->function, "test6")) {    // FLUX_LOOP data structure with MAST data
 
             char signal[256], source[256];
             int stringLength;
@@ -1600,7 +1600,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test7")) {    // FLUX_LOOP data structure with MAST data
+        } else if (!strcasecmp(request_data->function, "test7")) {    // FLUX_LOOP data structure with MAST data
 
             char signal[256], source[256];
             int stringLength;
@@ -1851,7 +1851,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test8")) {    // FLUX_LOOP data structure with MAST data
+        } else if (!strcasecmp(request_data->function, "test8")) {    // FLUX_LOOP data structure with MAST data
 
             char signal[256], source[256];
             int stringLength;
@@ -2221,7 +2221,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test9")) {    // FLUX_LOOP data structure with MAST data
+        } else if (!strcasecmp(request_data->function, "test9")) {    // FLUX_LOOP data structure with MAST data
 
             char signal[256], source[256];
             int stringLength;
@@ -2237,7 +2237,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
             // Access MAST machine description data: Flux Loops
             // Use the IDAM client API with IMAS name abstraction
 
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
             // Test the cache for Machine Description data - based on the SOURCE identifier
             // Reuse if cached
@@ -2729,7 +2729,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test9x")) {    // FLUX_LOOP Measurement Data Only
+        } else if (!strcasecmp(request_data->function, "test9x")) {    // FLUX_LOOP Measurement Data Only
             char signal[256], source[256];
             int cacheData = 0, cacheRetrieve = 0;
 
@@ -2743,7 +2743,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 // Access MAST machine description data: Flux Loops
 // Use the IDAM client API with IMAS name abstraction
 
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
 // Read Machine Description Data
 
@@ -2967,7 +2967,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test10")) {    // BPOL_PROBE data structure with MAST data
+        } else if (!strcasecmp(request_data->function, "test10")) {    // BPOL_PROBE data structure with MAST data
 
             char signal[256], source[256];
             int stringLength;
@@ -2983,7 +2983,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 // Access MAST machine description data
 // Use the IDAM client API with IMAS name abstraction
 
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
 // Test the cache for Machine Description data - based on the SOURCE identifier
 // Reuse if cached
@@ -3407,7 +3407,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test10x")) {    // BPOL_PROBE data structure with MAST data
+        } else if (!strcasecmp(request_data->function, "test10x")) {    // BPOL_PROBE data structure with MAST data
 
             char signal[256], source[256];
 
@@ -3641,7 +3641,7 @@ MAGNETICS/FLUX_LOOP/1/FLUX/TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "test10y")) {    // BPOL_PROBE data structure with MAST data
+        } else if (!strcasecmp(request_data->function, "test10y")) {    // BPOL_PROBE data structure with MAST data
 
             static BPOL_PROBE_TEST2* bpol_probe_cache = NULL;
             static unsigned short bpol_probe_cache_count = 0;
@@ -3979,14 +3979,14 @@ MAGNETICS/METHOD/%d/IP/TIME
 MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/DATA
 MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
 */
-        if (!strcasecmp(request_block->function, "magnetics") ||
-            !strcasecmp(request_block->function, "test11")) {    // MAGNETICS data structure with MAST data
+        if (!strcasecmp(request_data->function, "magnetics") ||
+            !strcasecmp(request_data->function, "test11")) {    // MAGNETICS data structure with MAST data
             char* p = NULL;
             int size = 0;
             char* type = NULL;
             char signal[256], source[256];
             DATA_BLOCK plugin_data_block;
-            REQUEST_BLOCK plugin_request_block;
+            REQUEST_DATA plugin_request_data;
             IDAM_PLUGIN_INTERFACE idam_plugin_interface2;
 
 // Create the Returned Structure Definitions
@@ -4003,25 +4003,25 @@ MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
 // Access MAST machine description data
 // Use the IDAM client API with IMAS name abstraction
 
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
 // Read Flux Loop Data (Recursive call to this plugin)
 
             initDataBlock(&plugin_data_block);
-            initRequestBlock(&plugin_request_block);
+            initRequestBlock(&plugin_request_data);
 
             idam_plugin_interface2 = *idam_plugin_interface;
             idam_plugin_interface2.data_block = &plugin_data_block;
-            idam_plugin_interface2.request_block = &plugin_request_block;
+            idam_plugin_interface2.request_data = &plugin_request_data;
 
-            strcpy(plugin_request_block.source, source);
+            strcpy(plugin_request_data.source, source);
 
-            strcpy(signal, request_block->signal);
-            p = strchr(request_block->signal, '(');
-            sprintf(idam_plugin_interface2.request_block->signal, "%s%stest9%s", request_block->format,
-                    request_block->api_delim, p);    // Request Flux_Loop Data
+            strcpy(signal, request_data->signal);
+            p = strchr(request_data->signal, '(');
+            sprintf(idam_plugin_interface2.request_data->signal, "%s%stest9%s", request_data->format,
+                    request_data->api_delim, p);    // Request Flux_Loop Data
 
-            makeRequestBlock(&plugin_request_block, *pluginList, idam_plugin_interface->environment);
+            makeRequestBlock(&plugin_request_data, *pluginList, idam_plugin_interface->environment);
 
             livedisplay(&idam_plugin_interface2);
 
@@ -4029,7 +4029,7 @@ MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
 
             plugin_data_block.data = NULL;    // Prevent Double Free
             freeDataBlock(&plugin_data_block);
-            freeNameValueList(&plugin_request_block.nameValueList);
+            freeNameValueList(&plugin_request_data.nameValueList);
 
             size = 0;
             type = NULL;
@@ -4037,49 +4037,49 @@ MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
                        &type);
 
             initDataBlock(&plugin_data_block);
-            initRequestBlock(&plugin_request_block);
+            initRequestBlock(&plugin_request_data);
 
             idam_plugin_interface2 = *idam_plugin_interface;
             idam_plugin_interface2.data_block = &plugin_data_block;
-            idam_plugin_interface2.request_block = &plugin_request_block;
+            idam_plugin_interface2.request_data = &plugin_request_data;
 
-            strcpy(plugin_request_block.source, source);
+            strcpy(plugin_request_data.source, source);
 
-            strcpy(signal, request_block->signal);
+            strcpy(signal, request_data->signal);
             p = strrchr(signal, ')');
             p[0] = '\0';
             strcat(signal, ", /Count)");
             p = strchr(signal, '(');
-            sprintf(idam_plugin_interface2.request_block->signal, "%s%stest9%s", request_block->format,
-                    request_block->api_delim, p);    // Request Flux_Loop Data Count
+            sprintf(idam_plugin_interface2.request_data->signal, "%s%stest9%s", request_data->format,
+                    request_data->api_delim, p);    // Request Flux_Loop Data Count
 
-            makeRequestBlock(&plugin_request_block, *pluginList, idam_plugin_interface->environment);
+            makeRequestBlock(&plugin_request_data, *pluginList, idam_plugin_interface->environment);
 
             livedisplay(&idam_plugin_interface2);
 
             magnetics->flux_loop_count = *((int*)plugin_data_block.data);
 
             freeDataBlock(&plugin_data_block);
-            freeNameValueList(&plugin_request_block.nameValueList);
+            freeNameValueList(&plugin_request_data.nameValueList);
 
 
 // Read Bpol Probe Data (Recursive call to this plugin)
 
             initDataBlock(&plugin_data_block);
-            initRequestBlock(&plugin_request_block);
+            initRequestBlock(&plugin_request_data);
 
             idam_plugin_interface2 = *idam_plugin_interface;
             idam_plugin_interface2.data_block = &plugin_data_block;
-            idam_plugin_interface2.request_block = &plugin_request_block;
+            idam_plugin_interface2.request_data = &plugin_request_data;
 
-            strcpy(plugin_request_block.source, source);
+            strcpy(plugin_request_data.source, source);
 
-            strcpy(signal, request_block->signal);
-            p = strchr(request_block->signal, '(');
-            sprintf(idam_plugin_interface2.request_block->signal, "%s%stest10%s", request_block->format,
-                    request_block->api_delim, p);    // Request Bpol Probe Data
+            strcpy(signal, request_data->signal);
+            p = strchr(request_data->signal, '(');
+            sprintf(idam_plugin_interface2.request_data->signal, "%s%stest10%s", request_data->format,
+                    request_data->api_delim, p);    // Request Bpol Probe Data
 
-            makeRequestBlock(&plugin_request_block, *pluginList, idam_plugin_interface->environment);
+            makeRequestBlock(&plugin_request_data, *pluginList, idam_plugin_interface->environment);
 
             livedisplay(&idam_plugin_interface2);
 
@@ -4087,33 +4087,33 @@ MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
 
             plugin_data_block.data = NULL;    // Prevent Double Free
             freeDataBlock(&plugin_data_block);
-            freeNameValueList(&plugin_request_block.nameValueList);
+            freeNameValueList(&plugin_request_data.nameValueList);
 
             initDataBlock(&plugin_data_block);
-            initRequestBlock(&plugin_request_block);
+            initRequestBlock(&plugin_request_data);
 
             idam_plugin_interface2 = *idam_plugin_interface;
             idam_plugin_interface2.data_block = &plugin_data_block;
-            idam_plugin_interface2.request_block = &plugin_request_block;
+            idam_plugin_interface2.request_data = &plugin_request_data;
 
-            strcpy(plugin_request_block.source, source);
+            strcpy(plugin_request_data.source, source);
 
-            strcpy(signal, request_block->signal);
+            strcpy(signal, request_data->signal);
             p = strrchr(signal, ')');
             p[0] = '\0';
             strcat(signal, ", /Count)");
             p = strchr(signal, '(');
-            sprintf(idam_plugin_interface2.request_block->signal, "%s%stest10%s", request_block->format,
-                    request_block->api_delim, p);    // Request Bpol Probe Data Count
+            sprintf(idam_plugin_interface2.request_data->signal, "%s%stest10%s", request_data->format,
+                    request_data->api_delim, p);    // Request Bpol Probe Data Count
 
-            makeRequestBlock(&plugin_request_block, *pluginList, idam_plugin_interface->environment);
+            makeRequestBlock(&plugin_request_data, *pluginList, idam_plugin_interface->environment);
 
             livedisplay(&idam_plugin_interface2);
 
             magnetics->bpol_probe_count = *((int*)plugin_data_block.data);
 
             freeDataBlock(&plugin_data_block);
-            freeNameValueList(&plugin_request_block.nameValueList);
+            freeNameValueList(&plugin_request_data.nameValueList);
 
 // Build the Returned METHOD Structure
 
@@ -4136,7 +4136,7 @@ MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
 // Access the Plasma Current
 
             strcpy(signal, "amc_plasma current");
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
             int handle = idamGetAPI(signal, source);
 
@@ -4268,7 +4268,7 @@ MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
 // Access the Diamagnetic Flux
 
             strcpy(signal, "amd_dia flux");
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
             handle = idamGetAPI(signal, source);
 
@@ -4414,7 +4414,7 @@ MAGNETICS/METHOD/%d/DIAMAGNETIC_FLUX/TIME
 /*
 */
 
-        if (!strcasecmp(request_block->function, "limiter")) {    // STATIC_LIMITER data structure
+        if (!strcasecmp(request_data->function, "limiter")) {    // STATIC_LIMITER data structure
 
 // Create the Returned Structure Definitions
 
@@ -4492,7 +4492,7 @@ TF/B_TOR_VACUUM_DATA
 TF/B_TOR_VACUUM_TIME
 */
 
-        if (!strcasecmp(request_block->function, "RB")) {
+        if (!strcasecmp(request_data->function, "RB")) {
             char signal[256], source[256];
 
 // Create the Returned Structure Definitions
@@ -4503,7 +4503,7 @@ TF/B_TOR_VACUUM_TIME
 // Access the Data
 
             strcpy(signal, "amc_tf current");
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
             int handle = idamGetAPI(signal, source);
 
@@ -4661,7 +4661,7 @@ TF/B_TOR_VACUUM_TIME
 
             break;
 
-        } else if (!strcasecmp(request_block->function, "RB_EFIT")) {
+        } else if (!strcasecmp(request_data->function, "RB_EFIT")) {
             char signal[256], source[256];
 
 // Create the Returned Structure Definitions
@@ -4672,7 +4672,7 @@ TF/B_TOR_VACUUM_TIME
 // Access the Data
 
             strcpy(signal, "efm_bvac_r");
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
             int handle1 = idamGetAPI(signal, source);
 
@@ -4904,7 +4904,7 @@ PF_ACTIVE/COIL/%d/CURRENT/DATA		# Apply scaling factor to data within data acces
 PF_ACTIVE/COIL/%d/CURRENT/TIME
 */
 
-        if (!strcasecmp(request_block->function, "PFActive")) {    // PF_ACTIVE data structure with MAST data
+        if (!strcasecmp(request_data->function, "PFActive")) {    // PF_ACTIVE data structure with MAST data
 
             char signal[256], source[256];
             int stringLength;
@@ -4920,7 +4920,7 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
 // Access MAST machine description data: PF_Active
 // Use the IDAM client API with IMAS name abstraction
 
-            sprintf(source, "%s%s%d", request_block->device_name, request_block->api_delim, exp_number);
+            sprintf(source, "%s%s%d", request_data->device_name, request_data->api_delim, exp_number);
 
 // Test the cache for Machine Description data - based on the SOURCE identifier
 // Reuse if cached
@@ -5454,7 +5454,7 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
 //----------------------------------------------------------------------------------------
 // GET
 /*
-        if (!strcasecmp(request_block->function, "get")) {
+        if (!strcasecmp(request_data->function, "get")) {
 
             //idamLog(UDA_LOG_DEBUG, "LiveDisplay: GET entered\n");
 
@@ -5548,10 +5548,10 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
             addMalloc(idam_plugin_interface->logmalloclist, (void*)code.version, 1, stringLength*sizeof(char), "STRING");	// Scalar String
 	    sprintf(code.version, "LiveDisplay Plugin Version: %d", THISPLUGIN_VERSION);
 
-	    stringLength = strlen(request_block->signal)+strlen(request_block->source)+7;
+	    stringLength = strlen(request_data->signal)+strlen(request_data->source)+7;
 	    code.parameters = (char *)malloc(stringLength*sizeof(char));
             addMalloc(idam_plugin_interface->logmalloclist, (void*)code.parameters, 1, stringLength*sizeof(char), "STRING");	// Scalar String
-	    sprintf(code.parameters, "\"%s\", \"%s\"", request_block->signal, request_block->source);
+	    sprintf(code.parameters, "\"%s\", \"%s\"", request_data->signal, request_data->source);
 
             code.output_flag_count = 1;
 	    code.output_flag = (int *)malloc(code.output_flag_count*sizeof(int));
@@ -5600,7 +5600,7 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
 // livedisplay::help()
 // Information is returned as a single string containing all required format control characters.
 
-        if (!strcasecmp(request_block->function, "help")) {
+        if (!strcasecmp(request_data->function, "help")) {
             const char* help = "\nLIVEDISPLAY: description and examples\n";
             const char* desc = "LiveDisplay Plugin help";
 
@@ -5612,7 +5612,7 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
 //----------------------------------------------------------------------------------------
 // Standard methods: version, builddate, defaultmethod, maxinterfaceversion
 
-        if (!strcasecmp(request_block->function, "version")) {
+        if (!strcasecmp(request_data->function, "version")) {
             err = setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_VERSION,
                                          "Plugin version number");
 
@@ -5621,7 +5621,7 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
 
 // Plugin Build Date
 
-        if (!strcasecmp(request_block->function, "builddate")) {
+        if (!strcasecmp(request_data->function, "builddate")) {
             err = setReturnDataString(idam_plugin_interface->data_block, __DATE__, "Plugin build date");
 
             break;
@@ -5629,7 +5629,7 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
 
 // Plugin Default Method
 
-        if (!strcasecmp(request_block->function, "defaultmethod")) {
+        if (!strcasecmp(request_data->function, "defaultmethod")) {
             err = setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD,
                                       "Plugin default method");
 
@@ -5638,7 +5638,7 @@ PF_ACTIVE/COIL/%d/CURRENT/TIME
 
 // Plugin Maximum Interface Version
 
-        if (!strcasecmp(request_block->function, "maxinterfaceversion")) {
+        if (!strcasecmp(request_data->function, "maxinterfaceversion")) {
             err = setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION,
                                          "Maximum Interface Version");
 

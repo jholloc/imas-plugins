@@ -19,12 +19,12 @@ namespace {
 int forward_request(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const char* host)
 {
     std::stringstream ss;
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-    ss << request_block->format << "::" << request_block->function << "(";
+    ss << request_data->format << "::" << request_data->function << "(";
     std::string delim;
-    for (int i = 0; i < request_block->nameValueList.listSize; ++i) {
-        ss << delim << request_block->nameValueList.nameValue[i].pair;
+    for (int i = 0; i < request_data->nameValueList.listSize; ++i) {
+        ss << delim << request_data->nameValueList.nameValue[i].pair;
         delim = ",";
     }
     ss << ")";
@@ -44,7 +44,7 @@ public:
     int init(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     {
         const char* host = nullptr;
-        FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_block->nameValueList, host);
+        FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_data->nameValueList, host);
         host_ = host;
         return 0;
     }
@@ -82,9 +82,9 @@ int imasForwardPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-        REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+        REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-        std::string function = request_block->function;
+        std::string function = request_data->function;
 
         if (idam_plugin_interface->housekeeping || function == "reset") {
             plugin.reset();

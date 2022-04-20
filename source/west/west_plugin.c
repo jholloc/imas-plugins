@@ -47,11 +47,11 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     housekeeping = idam_plugin_interface->housekeeping;
 
-    if (housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (housekeeping || STR_IEQUALS(request_data->function, "reset")) {
 
         if (!init) {
             return 0;
@@ -67,12 +67,12 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // ----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_block->function, "init")
-        || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init")
+        || STR_IEQUALS(request_data->function, "initialise")) {
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init")
-            || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init")
+            || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -84,25 +84,25 @@ int westPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // Standard methods: version, builddate, defaultmethod,
     // maxinterfaceversion
 
-    if (STR_IEQUALS(request_block->function, "help")) {
+    if (STR_IEQUALS(request_data->function, "help")) {
         err = do_help(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         err = do_version(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         err = do_builddate(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         err = do_defaultmethod(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         err = do_maxinterfaceversion(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "read")) {
+    } else if (STR_IEQUALS(request_data->function, "read")) {
         err = do_read(idam_plugin_interface);
-    } else if (STR_IEQUALS(request_block->function, "close")) {
+    } else if (STR_IEQUALS(request_data->function, "close")) {
         err = 0;
     }else {
         // ======================================================================================
         // Error ...
         err = 999;
-        UDA_LOG(UDA_LOG_DEBUG, "unknown requested function is: %s\n", request_block->function);
+        UDA_LOG(UDA_LOG_DEBUG, "unknown requested function is: %s\n", request_data->function);
         addIdamError(CODEERRORTYPE, __func__, err, "WEST:ERROR: unknown function requested!");
     }
 
@@ -162,16 +162,16 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         initDimBlock(&data_block->dims[i]);
     }
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element;    // will contain the UDA mapping got from the UDA request
     int shot;
     int* indices;
     size_t nindices;
 
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices);
 
     UDA_LOG(UDA_LOG_INFO, "Calling %s for shot: %d\n", element, shot);
 

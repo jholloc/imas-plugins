@@ -300,7 +300,7 @@ int jetMagneticsPlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
     int err = 0;
 
     try {
@@ -309,30 +309,30 @@ int jetMagneticsPlugin(IDAM_PLUGIN_INTERFACE * idam_plugin_interface)
 
         static bool init = false;
 
-        if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+        if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
             plugin.reset();
             return 0;
         }
 
-        if (!init || STR_IEQUALS(request_block->function, "init") ||
-            STR_IEQUALS(request_block->function, "initialise")) {
+        if (!init || STR_IEQUALS(request_data->function, "init") ||
+            STR_IEQUALS(request_data->function, "initialise")) {
             plugin.init();
-            if (STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise")) {
+            if (STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
                 return 0;
             }
         }
 
-        if (STR_IEQUALS(request_block->function, "help")) {
+        if (STR_IEQUALS(request_data->function, "help")) {
             err = plugin.help(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "version")) {
+        } else if (STR_IEQUALS(request_data->function, "version")) {
             err = plugin.version(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "builddate")) {
+        } else if (STR_IEQUALS(request_data->function, "builddate")) {
             err = plugin.build_date(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+        } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
             err = plugin.default_method(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+        } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
             err = plugin.max_interface_version(idam_plugin_interface);
-        } else if (STR_IEQUALS(request_block->function, "read")) {
+        } else if (STR_IEQUALS(request_data->function, "read")) {
             err = plugin.read(idam_plugin_interface, plugin);
         } else {
             RAISE_PLUGIN_ERROR("Unknown function requested!");
@@ -396,17 +396,17 @@ int JetMagneticsPlugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const
     data_block->rank = 0;
     data_block->dims = nullptr;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
 
     int shot = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, shot);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, shot);
 
     int* indices = nullptr;
     size_t nindices = 0;
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices);
 
     if (nindices == 1 && indices[0] == -1) {
         nindices = 0;
@@ -415,13 +415,13 @@ int JetMagneticsPlugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, const
     }
 
     int dtype = 0;
-    FIND_REQUIRED_INT_VALUE(request_block->nameValueList, dtype);
+    FIND_REQUIRED_INT_VALUE(request_data->nameValueList, dtype);
 
     const char* IDS_version = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, IDS_version);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, IDS_version);
 
     const char* experiment = nullptr;
-    FIND_STRING_VALUE(request_block->nameValueList, experiment);
+    FIND_STRING_VALUE(request_data->nameValueList, experiment);
 
     if (std::string{ experiment } != "JET") {
         RAISE_PLUGIN_ERROR("wrong experiment for plugin JET_MAGNETICS");

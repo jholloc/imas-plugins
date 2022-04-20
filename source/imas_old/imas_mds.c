@@ -149,9 +149,9 @@ extern int imas_mds(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, NULL, 10);
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_block->function, "reset")) {
+    if (idam_plugin_interface->housekeeping || STR_IEQUALS(request_data->function, "reset")) {
 
         if (!init) return 0;        // Not previously initialised: Nothing to do!
 
@@ -171,13 +171,13 @@ extern int imas_mds(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     //----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
         initIdamPluginFileList(&pluginFileList_mds);
         initLocalObj();
         putTimeBasePath("");
 
         init = 1;
-        if (STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -199,96 +199,96 @@ extern int imas_mds(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
     imas_reset_errmsg();     // Clear previous error message
 
-    if (STR_IEQUALS(request_block->function, "putIdsVersion")) {
+    if (STR_IEQUALS(request_data->function, "putIdsVersion")) {
         err = do_putIdsVersion(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "source")) {
+    } else if (STR_IEQUALS(request_data->function, "source")) {
         err = do_source(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "delete")) {
+    } else if (STR_IEQUALS(request_data->function, "delete")) {
         err = do_delete(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "get")) {
+    } else if (STR_IEQUALS(request_data->function, "get")) {
         err = do_get(idam_plugin_interface, plugin_args, idx);
-    } else if (STR_IEQUALS(request_block->function, "put")) {
+    } else if (STR_IEQUALS(request_data->function, "put")) {
         err = do_put(idam_plugin_interface, plugin_args, idx);
-    } else if (STR_IEQUALS(request_block->function, "open")) {
+    } else if (STR_IEQUALS(request_data->function, "open")) {
         err = do_open(idam_plugin_interface, plugin_args, &idx);
-    } else if (STR_IEQUALS(request_block->function, "create")) {
+    } else if (STR_IEQUALS(request_data->function, "create")) {
         err = do_create(idam_plugin_interface, plugin_args, &idx);
-    } else if (STR_IEQUALS(request_block->function, "close")) {
+    } else if (STR_IEQUALS(request_data->function, "close")) {
         err = do_close(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "createModel")) {
+    } else if (STR_IEQUALS(request_data->function, "createModel")) {
         err = do_createModel(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "setTimeBasePath")
-               || STR_IEQUALS(request_block->function, "putTimeBasePath")) {
+    } else if (STR_IEQUALS(request_data->function, "setTimeBasePath")
+               || STR_IEQUALS(request_data->function, "putTimeBasePath")) {
         err = do_setTimeBasePath(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "releaseObject")) {
+    } else if (STR_IEQUALS(request_data->function, "releaseObject")) {
         err = do_releaseObject(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "getObjectObject")) {
+    } else if (STR_IEQUALS(request_data->function, "getObjectObject")) {
         err = do_getObjectObject(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "getObjectSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "getObjectSlice")) {
         err = do_getObjectSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "getObjectGroup")) {
+    } else if (STR_IEQUALS(request_data->function, "getObjectGroup")) {
         err = do_getObjectGroup(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "getObjectDim")) {
+    } else if (STR_IEQUALS(request_data->function, "getObjectDim")) {
         err = do_getObjectDim(idam_plugin_interface, plugin_args, idx);
-    } else if (STR_IEQUALS(request_block->function, "beginObject")) {
+    } else if (STR_IEQUALS(request_data->function, "beginObject")) {
         err = do_beginObject(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "getObject")) {
+    } else if (STR_IEQUALS(request_data->function, "getObject")) {
         err = do_getObject(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "putObject")) {
+    } else if (STR_IEQUALS(request_data->function, "putObject")) {
         err = do_putObject(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "putObjectInObject")) {
+    } else if (STR_IEQUALS(request_data->function, "putObjectInObject")) {
         err = do_putObjectInObject(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "putObjectGroup")) {
+    } else if (STR_IEQUALS(request_data->function, "putObjectGroup")) {
         err = do_putObjectGroup(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "putObjectSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "putObjectSlice")) {
         err = do_putObjectSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "replaceLastObjectSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "replaceLastObjectSlice")) {
         err = do_replaceLastObjectSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "cache")) {
+    } else if (STR_IEQUALS(request_data->function, "cache")) {
         err = do_cache(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "getUniqueRun")) {
+    } else if (STR_IEQUALS(request_data->function, "getUniqueRun")) {
         err = do_getUniqueRun(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "spawnCommand")) {
+    } else if (STR_IEQUALS(request_data->function, "spawnCommand")) {
         err = do_spawnCommand(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "putIDS")) {
+    } else if (STR_IEQUALS(request_data->function, "putIDS")) {
         err = do_putIDS(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "beginIdsPut")) {
+    } else if (STR_IEQUALS(request_data->function, "beginIdsPut")) {
         err = do_beginIdsPut(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "endIdsPut")) {
+    } else if (STR_IEQUALS(request_data->function, "endIdsPut")) {
         err = do_endIdsPut(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "beginIdsGet")) {
+    } else if (STR_IEQUALS(request_data->function, "beginIdsGet")) {
         err = do_beginIdsGet(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "endIdsGet")) {
+    } else if (STR_IEQUALS(request_data->function, "endIdsGet")) {
         err = do_endIdsGet(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "beginIdsGetSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "beginIdsGetSlice")) {
         err = do_beginIdsGetSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "endIdsGetSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "endIdsGetSlice")) {
         err = do_endIdsGetSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "beginIdsPutSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "beginIdsPutSlice")) {
         err = do_beginIdsPutSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "endIdsPutSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "endIdsPutSlice")) {
         err = do_endIdsPutSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "beginIdsPutNonTimed")) {
+    } else if (STR_IEQUALS(request_data->function, "beginIdsPutNonTimed")) {
         err = do_beginIdsPutNonTimed(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "endIdsPutNonTimed")) {
+    } else if (STR_IEQUALS(request_data->function, "endIdsPutNonTimed")) {
         err = do_endIdsPutNonTimed(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "beginIdsReplaceLastSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "beginIdsReplaceLastSlice")) {
         err = do_beginIdsReplaceLastSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "endIdsReplaceLastSlice")) {
+    } else if (STR_IEQUALS(request_data->function, "endIdsReplaceLastSlice")) {
         err = do_endIdsReplaceLastSlice(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "beginIdsPutTimed")) {
+    } else if (STR_IEQUALS(request_data->function, "beginIdsPutTimed")) {
         err = do_beginIdsPutTimed(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "endIdsPutTimed")) {
+    } else if (STR_IEQUALS(request_data->function, "endIdsPutTimed")) {
         err = do_endIdsPutTimed(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "help")) {
+    } else if (STR_IEQUALS(request_data->function, "help")) {
         err = do_help(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "version")) {
+    } else if (STR_IEQUALS(request_data->function, "version")) {
         err = do_version(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "builddate")) {
+    } else if (STR_IEQUALS(request_data->function, "builddate")) {
         err = do_builddate(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "defaultmethod")) {
+    } else if (STR_IEQUALS(request_data->function, "defaultmethod")) {
         err = do_defaultmethod(idam_plugin_interface, plugin_args);
-    } else if (STR_IEQUALS(request_block->function, "maxinterfaceversion")) {
+    } else if (STR_IEQUALS(request_data->function, "maxinterfaceversion")) {
         err = do_maxinterfaceversion(idam_plugin_interface, plugin_args);
     } else {
         err = 999;
@@ -1154,69 +1154,69 @@ static int process_arguments(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
 
     // Arguments and keywords
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-    plugin_args->isCPOPath = findStringValue(&request_block->nameValueList, &plugin_args->CPOPath, "group|cpoPath|cpo");
-    plugin_args->isPath = findStringValue(&request_block->nameValueList, &plugin_args->path, "variable|path");
-    plugin_args->isTypeName = findStringValue(&request_block->nameValueList, &plugin_args->typeName, "type");
-    plugin_args->isClientIdx = findIntValue(&request_block->nameValueList, &plugin_args->clientIdx, "idx");
-    plugin_args->isClientObjectId = findIntValue(&request_block->nameValueList, &plugin_args->clientObjectId,
+    plugin_args->isCPOPath = findStringValue(&request_data->nameValueList, &plugin_args->CPOPath, "group|cpoPath|cpo");
+    plugin_args->isPath = findStringValue(&request_data->nameValueList, &plugin_args->path, "variable|path");
+    plugin_args->isTypeName = findStringValue(&request_data->nameValueList, &plugin_args->typeName, "type");
+    plugin_args->isClientIdx = findIntValue(&request_data->nameValueList, &plugin_args->clientIdx, "idx");
+    plugin_args->isClientObjectId = findIntValue(&request_data->nameValueList, &plugin_args->clientObjectId,
                                                  "clientObjectId|ObjectId");
-    plugin_args->isRank = findIntValue(&request_block->nameValueList, &plugin_args->rank, "rank|ndims");
-    plugin_args->isIndex = findIntValue(&request_block->nameValueList, &plugin_args->index, "index");
-    plugin_args->isCount = findIntValue(&request_block->nameValueList, &plugin_args->count, "count");
-    plugin_args->isShapeString = findStringValue(&request_block->nameValueList, &plugin_args->shapeString,
+    plugin_args->isRank = findIntValue(&request_data->nameValueList, &plugin_args->rank, "rank|ndims");
+    plugin_args->isIndex = findIntValue(&request_data->nameValueList, &plugin_args->index, "index");
+    plugin_args->isCount = findIntValue(&request_data->nameValueList, &plugin_args->count, "count");
+    plugin_args->isShapeString = findStringValue(&request_data->nameValueList, &plugin_args->shapeString,
                                                  "shape|dims");
-    plugin_args->isDataString = findStringValue(&request_block->nameValueList, &plugin_args->dataString, "data");
-    plugin_args->quote = findValue(&request_block->nameValueList, "singlequote") ? (char)'\'' : plugin_args->quote;
-    plugin_args->quote = findValue(&request_block->nameValueList, "doublequote") ? (char)'\"' : plugin_args->quote;
-    plugin_args->delimiter = findValue(&request_block->nameValueList, "delimiter") ? (char)'\'' : plugin_args->delimiter;
-    plugin_args->isFileName = findStringValue(&request_block->nameValueList, &plugin_args->filename,
+    plugin_args->isDataString = findStringValue(&request_data->nameValueList, &plugin_args->dataString, "data");
+    plugin_args->quote = findValue(&request_data->nameValueList, "singlequote") ? (char)'\'' : plugin_args->quote;
+    plugin_args->quote = findValue(&request_data->nameValueList, "doublequote") ? (char)'\"' : plugin_args->quote;
+    plugin_args->delimiter = findValue(&request_data->nameValueList, "delimiter") ? (char)'\'' : plugin_args->delimiter;
+    plugin_args->isFileName = findStringValue(&request_data->nameValueList, &plugin_args->filename,
                                               "filename|file|name");
-    plugin_args->isShotNumber = findIntValue(&request_block->nameValueList, &plugin_args->shotNumber,
+    plugin_args->isShotNumber = findIntValue(&request_data->nameValueList, &plugin_args->shotNumber,
                                              "shotNumber|shot|pulse|exp_number");
-    plugin_args->isRunNumber = findIntValue(&request_block->nameValueList, &plugin_args->runNumber,
+    plugin_args->isRunNumber = findIntValue(&request_data->nameValueList, &plugin_args->runNumber,
                                             "runNumber|run|pass|sequence");
-    plugin_args->isRefShotNumber = findIntValue(&request_block->nameValueList, &plugin_args->refShotNumber,
+    plugin_args->isRefShotNumber = findIntValue(&request_data->nameValueList, &plugin_args->refShotNumber,
                                                 "refShotNumber|refShot");
-    plugin_args->isRefRunNumber = findIntValue(&request_block->nameValueList, &plugin_args->refRunNumber,
+    plugin_args->isRefRunNumber = findIntValue(&request_data->nameValueList, &plugin_args->refRunNumber,
                                                "refRunNumber|refRun");
-    plugin_args->isTimedArg = findIntValue(&request_block->nameValueList, &plugin_args->isTimed, "isTimed");
-    plugin_args->isInterpolMode = findIntValue(&request_block->nameValueList, &plugin_args->interpolMode,
+    plugin_args->isTimedArg = findIntValue(&request_data->nameValueList, &plugin_args->isTimed, "isTimed");
+    plugin_args->isInterpolMode = findIntValue(&request_data->nameValueList, &plugin_args->interpolMode,
                                                "interpolMode");
-    plugin_args->isSignal = findStringValue(&request_block->nameValueList, &plugin_args->signal, "signal");
-    plugin_args->isSource = findStringValue(&request_block->nameValueList, &plugin_args->source, "source");
-    plugin_args->isFormat = findStringValue(&request_block->nameValueList, &plugin_args->format, "format|pattern");
-    plugin_args->isOwner = findStringValue(&request_block->nameValueList, &plugin_args->owner, "owner");
-    plugin_args->isServer = findStringValue(&request_block->nameValueList, &plugin_args->server, "server");
-    plugin_args->isImasIdsVersion = findStringValue(&request_block->nameValueList, &plugin_args->imasIdsVersion,
+    plugin_args->isSignal = findStringValue(&request_data->nameValueList, &plugin_args->signal, "signal");
+    plugin_args->isSource = findStringValue(&request_data->nameValueList, &plugin_args->source, "source");
+    plugin_args->isFormat = findStringValue(&request_data->nameValueList, &plugin_args->format, "format|pattern");
+    plugin_args->isOwner = findStringValue(&request_data->nameValueList, &plugin_args->owner, "owner");
+    plugin_args->isServer = findStringValue(&request_data->nameValueList, &plugin_args->server, "server");
+    plugin_args->isImasIdsVersion = findStringValue(&request_data->nameValueList, &plugin_args->imasIdsVersion,
                                                     "imasIdsVersion|idsVersion");
-    plugin_args->isImasIdsDevice = findStringValue(&request_block->nameValueList, &plugin_args->imasIdsDevice,
+    plugin_args->isImasIdsDevice = findStringValue(&request_data->nameValueList, &plugin_args->imasIdsDevice,
                                                    "imasIdsDevice|idsDevice|device");
-    plugin_args->isSetLevel = findIntValue(&request_block->nameValueList, &plugin_args->setLevel, "setLevel");
-    plugin_args->isCommand = findStringValue(&request_block->nameValueList, &plugin_args->command, "command");
-    plugin_args->isIPAddress = findStringValue(&request_block->nameValueList, &plugin_args->IPAddress, "IPAddress");
-    plugin_args->isTimes = findStringValue(&request_block->nameValueList, &plugin_args->timesString, "times");
-    plugin_args->isPutDataSlice = findValue(&request_block->nameValueList, "putSlice");
-    plugin_args->isReplaceLastDataSlice = findValue(&request_block->nameValueList, "replaceSlice");
-    plugin_args->isGetDataSlice = findValue(&request_block->nameValueList, "getSlice");
-    plugin_args->isGetDimension = findValue(&request_block->nameValueList, "getDimension");
-    plugin_args->isCreateFromModel = findValue(&request_block->nameValueList, "CreateFromModel");
-    plugin_args->isFlush = findValue(&request_block->nameValueList, "flush");
-    plugin_args->isDiscard = findValue(&request_block->nameValueList, "discard");
-    plugin_args->isGetLevel = findValue(&request_block->nameValueList, "getLevel");
-    plugin_args->isFlushCPO = findValue(&request_block->nameValueList, "flushcpo");
-    plugin_args->isDisable = findValue(&request_block->nameValueList, "disable");
-    plugin_args->isEnable = findValue(&request_block->nameValueList, "enable");
-    plugin_args->isBeginIDSSlice = findValue(&request_block->nameValueList, "beginIDSSlice");
-    plugin_args->isEndIDSSlice = findValue(&request_block->nameValueList, "endIDSSlice");
-    plugin_args->isReplaceIDSSlice = findValue(&request_block->nameValueList, "replaceIDSSlice");
-    plugin_args->isBeginIDS = findValue(&request_block->nameValueList, "beginIDS");
-    plugin_args->isEndIDS = findValue(&request_block->nameValueList, "endIDS");
-    plugin_args->isBeginIDSTimed = findValue(&request_block->nameValueList, "beginIDSTimed");
-    plugin_args->isEndIDSTimed = findValue(&request_block->nameValueList, "endIDSTimed");
-    plugin_args->isBeginIDSNonTimed = findValue(&request_block->nameValueList, "beginIDSNonTimed");
-    plugin_args->isEndIDSNonTimed = findValue(&request_block->nameValueList, "endIDSNonTimed");
+    plugin_args->isSetLevel = findIntValue(&request_data->nameValueList, &plugin_args->setLevel, "setLevel");
+    plugin_args->isCommand = findStringValue(&request_data->nameValueList, &plugin_args->command, "command");
+    plugin_args->isIPAddress = findStringValue(&request_data->nameValueList, &plugin_args->IPAddress, "IPAddress");
+    plugin_args->isTimes = findStringValue(&request_data->nameValueList, &plugin_args->timesString, "times");
+    plugin_args->isPutDataSlice = findValue(&request_data->nameValueList, "putSlice");
+    plugin_args->isReplaceLastDataSlice = findValue(&request_data->nameValueList, "replaceSlice");
+    plugin_args->isGetDataSlice = findValue(&request_data->nameValueList, "getSlice");
+    plugin_args->isGetDimension = findValue(&request_data->nameValueList, "getDimension");
+    plugin_args->isCreateFromModel = findValue(&request_data->nameValueList, "CreateFromModel");
+    plugin_args->isFlush = findValue(&request_data->nameValueList, "flush");
+    plugin_args->isDiscard = findValue(&request_data->nameValueList, "discard");
+    plugin_args->isGetLevel = findValue(&request_data->nameValueList, "getLevel");
+    plugin_args->isFlushCPO = findValue(&request_data->nameValueList, "flushcpo");
+    plugin_args->isDisable = findValue(&request_data->nameValueList, "disable");
+    plugin_args->isEnable = findValue(&request_data->nameValueList, "enable");
+    plugin_args->isBeginIDSSlice = findValue(&request_data->nameValueList, "beginIDSSlice");
+    plugin_args->isEndIDSSlice = findValue(&request_data->nameValueList, "endIDSSlice");
+    plugin_args->isReplaceIDSSlice = findValue(&request_data->nameValueList, "replaceIDSSlice");
+    plugin_args->isBeginIDS = findValue(&request_data->nameValueList, "beginIDS");
+    plugin_args->isEndIDS = findValue(&request_data->nameValueList, "endIDS");
+    plugin_args->isBeginIDSTimed = findValue(&request_data->nameValueList, "beginIDSTimed");
+    plugin_args->isEndIDSTimed = findValue(&request_data->nameValueList, "endIDSTimed");
+    plugin_args->isBeginIDSNonTimed = findValue(&request_data->nameValueList, "beginIDSNonTimed");
+    plugin_args->isEndIDSNonTimed = findValue(&request_data->nameValueList, "endIDSNonTimed");
 
     return 0;
 }
@@ -1247,15 +1247,15 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
     }
 
     IDAM_PLUGIN_INTERFACE next_plugin_interface = *idam_plugin_interface;        // New plugin interface
-    REQUEST_BLOCK next_request_block = {};
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA next_request_data = {};
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-    next_plugin_interface.request_block = &next_request_block;
-    strcpy(next_request_block.api_delim, request_block->api_delim);
+    next_plugin_interface.request_data = &next_request_data;
+    strcpy(next_request_data.api_delim, request_data->api_delim);
 
-    strcpy(next_request_block.signal, plugin_args.signal);            // Prepare the API arguments
+    strcpy(next_request_data.signal, plugin_args.signal);            // Prepare the API arguments
     if (!plugin_args.isShotNumber) {
-        plugin_args.shotNumber = request_block->exp_number;
+        plugin_args.shotNumber = request_data->exp_number;
     }
 
     // JET PPF sources: PPF::/$ppfname/$pulseNumber/$sequence/$owner
@@ -1270,27 +1270,27 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
 
         if (!plugin_args.isShotNumber && !plugin_args.isRunNumber && !plugin_args.isOwner) {
             if (env == NULL) {
-                sprintf(next_request_block.source, "JET%sPPF%s/%s/%s", request_block->api_delim,
-                        request_block->api_delim, plugin_args.source, request_block->source);
+                sprintf(next_request_data.source, "JET%sPPF%s/%s/%s", request_data->api_delim,
+                        request_data->api_delim, plugin_args.source, request_data->source);
             } else {
-                sprintf(next_request_block.source, "%s%sPPF%s/%s/%s", env, request_block->api_delim,
-                        request_block->api_delim, plugin_args.source, request_block->source);
+                sprintf(next_request_data.source, "%s%sPPF%s/%s/%s", env, request_data->api_delim,
+                        request_data->api_delim, plugin_args.source, request_data->source);
             }
         } else {
             if (plugin_args.isShotNumber) {
                 if (env == NULL) {
-                    sprintf(next_request_block.source, "JET%sPPF%s/%s/%d", request_block->api_delim,
-                            request_block->api_delim, plugin_args.source, plugin_args.shotNumber);
+                    sprintf(next_request_data.source, "JET%sPPF%s/%s/%d", request_data->api_delim,
+                            request_data->api_delim, plugin_args.source, plugin_args.shotNumber);
                 } else {
-                    sprintf(next_request_block.source, "%s%sPPF%s/%s/%d", env, request_block->api_delim,
-                            request_block->api_delim, plugin_args.source, plugin_args.shotNumber);
+                    sprintf(next_request_data.source, "%s%sPPF%s/%s/%d", env, request_data->api_delim,
+                            request_data->api_delim, plugin_args.source, plugin_args.shotNumber);
                 }
                 if (plugin_args.isRunNumber) {
-                    sprintf(next_request_block.source, "%s/%d", next_request_block.source, plugin_args.runNumber);
+                    sprintf(next_request_data.source, "%s/%d", next_request_data.source, plugin_args.runNumber);
                 }
             }
             if (plugin_args.isOwner) {
-                sprintf(next_request_block.source, "%s/%s", next_request_block.source, plugin_args.owner);
+                sprintf(next_request_data.source, "%s/%s", next_request_data.source, plugin_args.owner);
             }
         }
     } else if (plugin_args.isFormat && STR_IEQUALS(plugin_args.format, "jpf")) {        // JET JPF source naming pattern
@@ -1298,27 +1298,27 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
         env = getenv("UDA_JET_DEVICE_ALIAS");
 
         if (env == NULL) {
-            sprintf(next_request_block.source, "JET%sJPF%s%d", request_block->api_delim,
-                    request_block->api_delim, plugin_args.shotNumber);
+            sprintf(next_request_data.source, "JET%sJPF%s%d", request_data->api_delim,
+                    request_data->api_delim, plugin_args.shotNumber);
         } else {
-            sprintf(next_request_block.source, "%s%sJPF%s%d", env, request_block->api_delim,
-                    request_block->api_delim, plugin_args.shotNumber);
+            sprintf(next_request_data.source, "%s%sJPF%s%d", env, request_data->api_delim,
+                    request_data->api_delim, plugin_args.shotNumber);
         }
     } else if (plugin_args.isFormat && STR_IEQUALS(plugin_args.format, "MAST")) {        // MAST source naming pattern
 
         env = getenv("UDA_MAST_DEVICE_ALIAS");
 
         if (!plugin_args.isShotNumber && !plugin_args.isRunNumber) {
-            strcpy(next_request_block.source, request_block->source);        // Re-Use the original source argument
+            strcpy(next_request_data.source, request_data->source);        // Re-Use the original source argument
         } else {
             if (env == NULL) {
-                sprintf(next_request_block.source, "MAST%s%d", request_block->api_delim, plugin_args.shotNumber);
+                sprintf(next_request_data.source, "MAST%s%d", request_data->api_delim, plugin_args.shotNumber);
             } else {
-                sprintf(next_request_block.source, "%s%s%d", env, request_block->api_delim, plugin_args.shotNumber);
+                sprintf(next_request_data.source, "%s%s%d", env, request_data->api_delim, plugin_args.shotNumber);
             }
         }
         if (plugin_args.isRunNumber) {
-            sprintf(next_request_block.source, "%s/%d", next_request_block.source, plugin_args.runNumber);
+            sprintf(next_request_data.source, "%s/%d", next_request_data.source, plugin_args.runNumber);
         }
 
     } else if (plugin_args.isFormat &&
@@ -1333,20 +1333,20 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
 
         if (plugin_args.isSource) {    // TDI function or tree?
             if (env == NULL) {
-                sprintf(next_request_block.source, "MDSPLUS%s%s/%s/%d", request_block->api_delim, plugin_args.server,
+                sprintf(next_request_data.source, "MDSPLUS%s%s/%s/%d", request_data->api_delim, plugin_args.server,
                         plugin_args.source, plugin_args.shotNumber);
             } else {
-                sprintf(next_request_block.source, "%s%s%s/%s/%d", env, request_block->api_delim, plugin_args.server,
+                sprintf(next_request_data.source, "%s%s%s/%s/%d", env, request_data->api_delim, plugin_args.server,
                         plugin_args.source, plugin_args.shotNumber);
             }
         } else {
             if (env == NULL) {
-                sprintf(next_request_block.source, "MDSPLUS%s%s", request_block->api_delim, plugin_args.server);
+                sprintf(next_request_data.source, "MDSPLUS%s%s", request_data->api_delim, plugin_args.server);
             } else {
-                sprintf(next_request_block.source, "%s%s%s", env, request_block->api_delim, plugin_args.server);
+                sprintf(next_request_data.source, "%s%s%s", env, request_data->api_delim, plugin_args.server);
             }
             char* p = NULL;
-            if ((p = strstr(next_request_block.signal, "$pulseNumber")) != NULL) {
+            if ((p = strstr(next_request_data.signal, "$pulseNumber")) != NULL) {
                 p[0] = '\0';
                 sprintf(p, "%d%s", plugin_args.shotNumber, &p[12]);
             }
@@ -1361,41 +1361,41 @@ static int do_source(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS p
 
     if (env != NULL) {
         sprintf(work, "%s::get(host=%s, port=%d, signal=\"%s\", source=\"%s\")", env, getIdamServerHost(),
-                getIdamServerPort(), next_request_block.signal, next_request_block.source);
+                getIdamServerPort(), next_request_data.signal, next_request_data.source);
     } else {
         sprintf(work, "UDA::get(host=%s, port=%d, signal=\"%s\", source=\"%s\")", getIdamServerHost(),
-                getIdamServerPort(), next_request_block.signal, next_request_block.source);
+                getIdamServerPort(), next_request_data.signal, next_request_data.source);
     }
 
-    next_request_block.source[0] = '\0';
-    strcpy(next_request_block.signal, work);
+    next_request_data.source[0] = '\0';
+    strcpy(next_request_data.signal, work);
 
-    makeRequestBlock(&next_request_block, *plugin_list, idam_plugin_interface->environment);
+    makeRequestBlock(&next_request_data, *plugin_list, idam_plugin_interface->environment);
 
     // Call the UDA client via the UDA plugin (ignore the request identified)
 
     if (env != NULL) {
-        next_request_block.request = findPluginRequestByFormat(env, plugin_list);
+        next_request_data.request = findPluginRequestByFormat(env, plugin_list);
     } else {
-        next_request_block.request = findPluginRequestByFormat("UDA", plugin_list);
+        next_request_data.request = findPluginRequestByFormat("UDA", plugin_list);
     }
 
-    if (next_request_block.request < 0) {
+    if (next_request_data.request < 0) {
         RAISE_PLUGIN_ERROR("No UDA server plugin found!");
     }
 
     // Locate and Execute the UDA plugin
 
-    int id = findPluginIdByRequest(next_request_block.request, plugin_list);
+    int id = findPluginIdByRequest(next_request_data.request, plugin_list);
     if (id >= 0 && plugin_list->plugin[id].idamPlugin != NULL) {
         err = plugin_list->plugin[id].idamPlugin(&next_plugin_interface);        // Call the data reader
     } else {
         RAISE_PLUGIN_ERROR("Data Access is not available for this data request!");
     }
 
-    freeNameValueList(&next_request_block.nameValueList);
+    freeNameValueList(&next_request_data.nameValueList);
 
-    // Return data is automatic since both next_request_block and request_block point to the same DATA_BLOCK etc.
+    // Return data is automatic since both next_request_data and request_data point to the same DATA_BLOCK etc.
 
     return err;
 }
@@ -1499,8 +1499,8 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
         dataOperation = GETDIMENSION_OPERATION;
     }
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
-    PUTDATA_BLOCK_LIST* putDataBlockList = &request_block->putDataBlockList;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -1542,7 +1542,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
             // data not in IDS - go to other plugins to try and get it
 
             const char* expName = NULL;
-            FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_block->nameValueList, expName);
+            FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_data->nameValueList, expName);
 
             if (machine_mapping == NULL) {
                 machine_mapping = new_mapping();
@@ -1568,8 +1568,8 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
 //                    path[len - 5] = '\0';
 //                }
 
-                REQUEST_BLOCK new_request;
-                copyRequestBlock(&new_request, *idam_plugin_interface->request_block);
+                REQUEST_DATA new_request;
+                copyRequestBlock(&new_request, *idam_plugin_interface->request_data);
 
                 const char* fmt = path[0] == '/'
                                   ? "%s%sread(element=%s%s, indices=%s, shot=%d, dtype=%d, IDS_version=3.7.4%s)"
@@ -1589,7 +1589,7 @@ static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
                 makeRequestBlock(&new_request, *idam_plugin_interface->pluginList, idam_plugin_interface->environment);
                 printRequestBlock(new_request);
 
-                idam_plugin_interface->request_block = &new_request;
+                idam_plugin_interface->request_data = &new_request;
 
                 rc = plugin->idamPlugin(idam_plugin_interface);
                 sprintf(data_block->data_desc, (plugin_args.path[0] == '/') ? "%s%s" : "%s/%s",
@@ -1739,8 +1739,8 @@ static int do_put(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plug
 
     PUTDATA_BLOCK localPutDataBlock;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
-    PUTDATA_BLOCK_LIST* putDataBlockList = &request_block->putDataBlockList;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -2268,7 +2268,7 @@ static int do_releaseObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN
         THROW_ERROR(999, "Insufficient data parameters passed - begin not possible!");
     }
 
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -2301,7 +2301,7 @@ static int do_getObjectObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUG
         THROW_ERROR(999, "Insufficient data parameters passed - begin not possible!");
     }
 
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -2336,7 +2336,7 @@ static int do_getObjectObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUG
 
 static int do_getObjectSlice(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args)
 {
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -2420,7 +2420,7 @@ static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_
 {
     static MACHINE_MAPPING* machine_mapping = NULL;
 
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -2445,7 +2445,7 @@ static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_
         // data not in IDS - go to other plugins to try and get it
 
         const char* expName = NULL;
-        FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_block->nameValueList, expName);
+        FIND_REQUIRED_STRING_VALUE(idam_plugin_interface->request_data->nameValueList, expName);
 
         if (machine_mapping == NULL) {
             machine_mapping = new_mapping();
@@ -2466,8 +2466,8 @@ static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_
 
             int get_shape = 0;
 
-            REQUEST_BLOCK new_request;
-            copyRequestBlock(&new_request, *idam_plugin_interface->request_block);
+            REQUEST_DATA new_request;
+            copyRequestBlock(&new_request, *idam_plugin_interface->request_data);
 
             const char* fmt = path[0] == '/'
                               ? "%s%sread(element=%s%s, indices=%s, shot=%d, dtype=%d, IDS_version=3.7.4%s)"
@@ -2487,7 +2487,7 @@ static int do_getObjectDim(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_
             makeRequestBlock(&new_request, *idam_plugin_interface->pluginList, idam_plugin_interface->environment);
             printRequestBlock(new_request);
 
-            idam_plugin_interface->request_block = &new_request;
+            idam_plugin_interface->request_data = &new_request;
 
             int rc = plugin->idamPlugin(idam_plugin_interface);
             sprintf(idam_plugin_interface->data_block->data_desc, (plugin_args.path[0] == '/') ? "%s%s" : "%s/%s",
@@ -2654,7 +2654,7 @@ static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
 {
     int type;
 
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
 
     // Test all required data is available
 
@@ -2723,7 +2723,7 @@ static int do_putObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARG
 
 static int do_putObjectInObject(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args)
 {
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -2821,7 +2821,7 @@ static int do_putObjectGroup(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGI
 
 static int do_putObjectSlice(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLUGIN_ARGS plugin_args)
 {
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -3092,7 +3092,7 @@ static int do_beginIdsGetSlice(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLU
         THROW_ERROR(999, "The function parameters have not been specified!");
     }
 
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {
@@ -3236,7 +3236,7 @@ static int do_beginIdsPutTimed(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, PLU
         THROW_ERROR(999, "The function parameters have not been specified!");
     }
 
-    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_block->putDataBlockList;
+    PUTDATA_BLOCK_LIST* putDataBlockList = &idam_plugin_interface->request_data->putDataBlockList;
     PUTDATA_BLOCK* putDataBlock = NULL;
     plugin_args.isPutData = (putDataBlockList != NULL && putDataBlockList->blockCount > 0);
     if (plugin_args.isPutData) {

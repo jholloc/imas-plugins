@@ -89,9 +89,9 @@ int itermdPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 
         idam_plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
 
-        REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+        REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
-        std::string function = request_block->function;
+        std::string function = request_data->function;
 
         if (idam_plugin_interface->housekeeping || function == "reset") {
             plugin.reset();
@@ -300,14 +300,14 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     data_block->rank = 0;
     data_block->dims = nullptr;
 
-    REQUEST_BLOCK* request_block = idam_plugin_interface->request_block;
+    REQUEST_DATA* request_data = idam_plugin_interface->request_data;
 
     const char* element = nullptr;
-    FIND_REQUIRED_STRING_VALUE(request_block->nameValueList, element);
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
 
     int* indices = nullptr;
     size_t nindices = 0;
-    FIND_REQUIRED_INT_ARRAY(request_block->nameValueList, indices);
+    FIND_REQUIRED_INT_ARRAY(request_data->nameValueList, indices);
 
     if (nindices == 1 && indices[0] == -1) {
         nindices = 0;
@@ -316,13 +316,13 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     }
 
     int shot = 0;
-    bool is_shot = FIND_INT_VALUE(request_block->nameValueList, shot);
+    bool is_shot = FIND_INT_VALUE(request_data->nameValueList, shot);
 
     const char* config_name = nullptr;
-    bool is_config_name = FIND_STRING_VALUE(request_block->nameValueList, config_name);
+    bool is_config_name = FIND_STRING_VALUE(request_data->nameValueList, config_name);
 
     const char* machine_version = nullptr;
-    bool is_machine_version = FIND_STRING_VALUE(request_block->nameValueList, machine_version);
+    bool is_machine_version = FIND_STRING_VALUE(request_data->nameValueList, machine_version);
 
     if (!is_shot && !(config_name && machine_version)) {
         RAISE_PLUGIN_ERROR("either shot or config_name and machine_version must be provided");
