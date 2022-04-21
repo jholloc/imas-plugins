@@ -232,7 +232,6 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, element);
 
     if (StringEndsWith(element, "/profiles_1d/rho_volume_norm")) {
-        
         int err;
         float lcfs_vol = get_exp2imas_scalar(idam_plugin_interface, "lcfs_vol", &err);
         if (err != 0) return err;
@@ -255,12 +254,9 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
         free((void*)vjac);
         free((void*)volumes);
         data_block->data = (char*)data;
-    }
-    else {
-
-        auto request =boost::format("EXP2IMAS::%s") % request_data->signal;
+    } else {
+        auto request = boost::format("EXP2IMAS::%s") % request_data->signal;
         return callPlugin(idam_plugin_interface->pluginList, request.str().c_str(), idam_plugin_interface);
-
     }
 
     return 0;

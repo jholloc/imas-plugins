@@ -6,7 +6,7 @@ uda_plugin(
   NAME SOURCE
   VERSION ${PROJECT_VERSION}
   ENTRY_FUNC source_plugin
-  DESCRIPTION "Local data dource argument Generator for UDA Data requests"
+  DESCRIPTION "Local data source argument Generator for UDA Data requests"
   EXAMPLE "SOURCE::get()"
   LIBNAME source_plugin
   CONFIG_FILE source.cfg

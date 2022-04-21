@@ -324,7 +324,7 @@ int iter::md::Plugin::read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     const char* machine_version = nullptr;
     bool is_machine_version = FIND_STRING_VALUE(request_data->nameValueList, machine_version);
 
-    if (!is_shot && !(config_name && machine_version)) {
+    if (!is_shot && !(is_config_name && is_machine_version)) {
         RAISE_PLUGIN_ERROR("either shot or config_name and machine_version must be provided");
     }
 

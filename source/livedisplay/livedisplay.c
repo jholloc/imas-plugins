@@ -1,10 +1,10 @@
 /*---------------------------------------------------------------
-* IDAM Plugin data Reader to Create a proxy MAGENTICS IDS 
+* UDA Plugin data Reader to Create a proxy MAGNETICS IDS
 *
 * Input Arguments:	IDAM_PLUGIN_INTERFACE *idam_plugin_interface
 *
 * Returns:		livedisplay	0 if read was successful
-*					otherwise a Error Code is returned
+*					otherwise an Error Code is returned
 *			DATA_BLOCK	Structure with Data from the File
 *
 * Calls		freeDataBlock	to free Heap memory if an Error Occurs
@@ -30,11 +30,11 @@ limiter			EQUILIBRIUM_PROXY
 pfactive		PF_ACTIVE_PROXY		
 
 Options: test11 for all data or
-         test11 for first pass, then test9x for Flux Loop measurment data only followed by test10x for Bpol Probe data only
+         test11 for first pass, then test9x for Flux Loop measurement data only followed by test10x for Bpol Probe data only
 
 test11 is timed at 5.5 seconds on initialisation and machine description caching (46 flux loops and 78 bpol probes = 124 signals)
 Subsequent calls for cached data and subset measurement data are 2.2 seconds
-=> 18ms per signal (this could be speeded up by using faster database lookup and memcache on the server's IDAM client (not available with live data!) )
+=> 18ms per signal (this could be sped up by using faster database lookup and memcache on the server's UDA client (not available with live data!))
 
 The option to have multiple calls is slower: 7.5s to initialise and 3.6s for the measurement data only.
 => 29ms per signal!

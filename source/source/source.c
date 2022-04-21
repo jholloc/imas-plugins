@@ -179,9 +179,9 @@ static int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 // keywords:	/data	return the data only
 //		/time	return the time only
 //		/NoCacheTime	Don't cache the time coordinate data after a request for the "data" using the /data keyword.
-//                      Cacheing is the default with the cache cleared after time data are returned.
+//                      Caching is the default with the cache cleared after time data are returned.
 //		/NoCacheData	Don't cache the measurement data after a request for the "data" using the /data keyword.
-//                      Cacheing is the default with the cache cleared after time data are returned.
+//                      Caching is the default with the cache cleared after time data are returned.
 static int do_get(IDAM_PLUGIN_INTERFACE* idam_plugin_interface, int* timeCountCache, char** timeCache, char** dataCache)
 {
     static char time_units_cache[STRING_LENGTH];
