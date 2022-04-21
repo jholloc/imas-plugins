@@ -119,7 +119,7 @@ int west_tunnel(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 		nanosleep(&sleep_for, NULL);
 
 		init = 1;
-                if (STR_IEQUALS(request_block->function, "init") || STR_IEQUALS(request_block->function, "initialise")){
+                if (STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")){
                     return 0;
                 }
 	}
