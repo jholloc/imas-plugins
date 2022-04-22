@@ -11,7 +11,7 @@ plugins. This makes use of the "plugin" macro imported from the cmake/plugins.cm
 ### Configuring with CMake
 
 By default, it will attempt to build every plugin it can -- every plugin for which the dependencies can be located. If
-a plugin is not being build then a warning will be printed to the terminal when CMake is run specifying which dependency
+a plugin is not being built then a warning will be printed to the terminal when CMake is run specifying which dependency
 cannot be found.
 
 In order to run CMake to configure the build you need to run:
@@ -20,7 +20,7 @@ In order to run CMake to configure the build you need to run:
 cmake3 -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$UDA_HOME
 ```
 
-This will create a directory called "build" that contain all the GNU makefiles required to build the plugins.
+This will create a directory called "build" that containis all the GNU makefiles required to build the plugins.
 
 If you wish to only build specific plugins you can use the "-DBUILD_PLUGINS" CMake option to specify the plugins you'd
 like to build as a semicolon separated list, for example the following will only attempt to configure the exp2imas and 
