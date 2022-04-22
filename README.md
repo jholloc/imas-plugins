@@ -20,7 +20,7 @@ In order to run CMake to configure the build you need to run:
 cmake3 -Bbuild -H. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$UDA_HOME
 ```
 
-This will create a directory called "build" that containis all the GNU makefiles required to build the plugins.
+This will create a directory called "build" that contains all the GNU makefiles required to build the plugins.
 
 If you wish to only build specific plugins you can use the "-DBUILD_PLUGINS" CMake option to specify the plugins you'd
 like to build as a semicolon separated list, for example the following will only attempt to configure the exp2imas and 
