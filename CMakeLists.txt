@@ -62,3 +62,24 @@ use_cxx11()
 include_directories( /usr/local/include )
 
 add_subdirectory( source )
+
+########################################################################################################################
+# Create module
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/source/etc/module.in
+  ${CMAKE_BINARY_DIR}/etc/uda-plugins/${PROJECT_VERSION}
+  @ONLY
+)
+
+set( MODULE_PATH "modulefiles/uda-plugins" CACHE PATH "location to install module files to" )
+set( MODULE_NAME "${PROJECT_VERSION}" CACHE STRING "name of the module file" )
+string( CONFIGURE "${MODULE_PATH}" MODULE_PATH_EXPANDED @ONLY )
+
+get_filename_component( MODULE_PATH_EXPANDED ${MODULE_PATH_EXPANDED} REALPATH BASE_DIR "${CMAKE_INSTALL_PREFIX}" )
+
+install(
+  FILES ${CMAKE_BINARY_DIR}/etc/uda-plugins/${PROJECT_VERSION}
+  DESTINATION ${MODULE_PATH_EXPANDED}
+  RENAME ${MODULE_NAME}
+)
