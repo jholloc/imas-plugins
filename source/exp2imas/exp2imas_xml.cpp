@@ -27,7 +27,7 @@ int convert_type_string_to_uda_type(const std::string& value)
         i = UDA_TYPE_INT;
     } else {
         err = 999;
-        addIdamError(CODEERRORTYPE, __func__, err, "Unsupported data type");
+        addIdamError(UDA_CODE_ERROR_TYPE, __func__, err, "Unsupported data type");
     }
     return i;
 }
@@ -336,7 +336,7 @@ char* get_download(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, double
         int idx = 0;
         while (value_strings[idx] != nullptr) {
             if (repeat_strings[idx] == nullptr) {
-                addIdamError(CODEERRORTYPE, __func__, 999, "mis-matching number of values in fixed download");
+                addIdamError(UDA_CODE_ERROR_TYPE, __func__, 999, "mis-matching number of values in fixed download");
                 return nullptr;
             }
 

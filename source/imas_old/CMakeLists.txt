@@ -4,16 +4,16 @@ find_package( HDF5 COMPONENTS C HL QUIET )
 find_package( OpenSSL QUIET )
 
 if( NOT MDSplus_FOUND )
-  message( WARNING "mdsplus not found - skipping IMAS plugin" )
+  message( WARNING "mdsplus not found - skipping IMAS_OLD plugin" )
   return()
 elseif( NOT LIBXML2_FOUND )
-  message( WARNING "Libxml2 not found - skipping IMAS plugin" )
+  message( WARNING "Libxml2 not found - skipping IMAS_OLD plugin" )
   return()
 elseif( NOT HDF5_FOUND )
-  message( WARNING "HDF5 not found - skipping IMAS plugin" )
+  message( WARNING "HDF5 not found - skipping IMAS_OLD plugin" )
   return()
 elseif( NOT OPENSSL_FOUND )
-  message( WARNING "OpenSSL not found - skipping IMAS plugin" )
+  message( WARNING "OpenSSL not found - skipping IMAS_OLD plugin" )
   return()
 endif()
 
@@ -31,12 +31,12 @@ set( IMAS_SOURCES
 )
 
 uda_plugin(
-  NAME IMAS
+  NAME IMAS_OLD
   VERSION ${PROJECT_VERSION}
   ENTRY_FUNC imas_mds
   DESCRIPTION "ITER IMAS put & get plugin"
   EXAMPLE "IMAS::put()"
-  LIBNAME imas_plugin
+  LIBNAME imas_old_plugin
   SOURCES
     common.c
     extract_indices.c

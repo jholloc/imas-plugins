@@ -1106,7 +1106,7 @@ xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, co
     xmlXPathObjectPtr xpath_obj = xmlXPathEvalExpression(xpath_expr, xpath_ctx);
 
     if (xpath_obj == nullptr) {
-        addIdamError(CODEERRORTYPE, __func__, 999, "unable to evaluate xpath expression");
+        addIdamError(UDA_CODE_ERROR_TYPE, __func__, 999, "unable to evaluate xpath expression");
         UDA_LOG(UDA_LOG_ERROR, "unable to evaluate xpath expression \"%s\"\n", xpath_expr);
         free(xpath_expr);
         return nullptr;
@@ -1158,7 +1158,7 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
          */
         doc = xmlParseFile(mapping_filename.c_str());
         if (doc == nullptr) {
-            addIdamError(CODEERRORTYPE, __func__, 999, "unable to parse file");
+            addIdamError(UDA_CODE_ERROR_TYPE, __func__, 999, "unable to parse file");
             UDA_LOG(UDA_LOG_ERROR, "unable to parse file \"%s\"\n", mapping_filename.c_str());
             return nullptr;
         }
@@ -1170,7 +1170,7 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
          */
         xpath_ctx = xmlXPathNewContext(doc);
         if (xpath_ctx == nullptr) {
-            addIdamError(CODEERRORTYPE, __func__, 999, "unable to create new XPath context");
+            addIdamError(UDA_CODE_ERROR_TYPE, __func__, 999, "unable to create new XPath context");
             UDA_LOG(UDA_LOG_ERROR, "unable to create new XPath context\n", mapping_filename.c_str());
             return nullptr;
         }
@@ -1183,7 +1183,7 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
     if (value != nullptr) {
         mapping->value = value;
     } else {
-        addIdamError(CODEERRORTYPE, __func__, 999, "no result on XPath request, no key attribute defined?");
+        addIdamError(UDA_CODE_ERROR_TYPE, __func__, 999, "no result on XPath request, no key attribute defined?");
         return nullptr;
     }
 
@@ -1200,7 +1200,7 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
     } else if (STR_IEQUALS(type_str, "error")) {
         mapping->request_type = ERROR;
     } else {
-        addIdamError(CODEERRORTYPE, __func__, 999, "unknown mapping type");
+        addIdamError(UDA_CODE_ERROR_TYPE, __func__, 999, "unknown mapping type");
         UDA_LOG(UDA_LOG_ERROR, "unknown mapping type \"%s\"\n", type_str);
         free(mapping);
         return nullptr;
