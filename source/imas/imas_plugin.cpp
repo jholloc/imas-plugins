@@ -10,6 +10,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
 #include <libgen.h>
+#include <complex.h>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
@@ -33,27 +34,14 @@ void define_usertypes(USERDEFINEDTYPELIST* user_defined_type_list)
     data_usertype.size = sizeof(Data); // Structure size
     data_usertype.idamclass = UDA_TYPE_COMPOUND;
 
-    COMPOUNDFIELD name_field;
-    initCompoundField(&name_field);
-    strcpy(name_field.name, "name");
-    name_field.atomictype = UDA_TYPE_STRING;
-    strcpy(name_field.type, "STRING");
-    strcpy(name_field.desc, "data name");
-    name_field.pointer = 1;
-    name_field.count = 1;
-    name_field.rank = 0;
-    name_field.shape = nullptr;
-    name_field.size = name_field.count * sizeof(char*);
-    name_field.offset = offsetof(Data, name);
-    name_field.offpad = padding(offsetof(Data, name), name_field.type);
-    name_field.alignment = getalignmentof(name_field.type);
-    addCompoundField(&data_usertype, name_field);
-
-    ::addStructureField(&data_usertype, "data", "data pointer", UDA_TYPE_UNSIGNED_CHAR, true, 0, nullptr,
+    int name_shape[] = {PATH_LEN};
+    ::addStructureField(&data_usertype, "name", "name", UDA_TYPE_STRING, false, 1, name_shape, offsetof(Data, name));
+    ::addStructureField(&data_usertype, "value", "data pointer", UDA_TYPE_UNSIGNED_CHAR, true, 0, nullptr,
                         offsetof(Data, data));
     ::addStructureField(&data_usertype, "rank", "data rank", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, rank));
-    int shape[] = {64};
-    ::addStructureField(&data_usertype, "dims", "data dimensions", UDA_TYPE_INT, false, 1, shape, offsetof(Data, dims));
+    int dims_shape[] = {64};
+    ::addStructureField(&data_usertype, "dims", "data dimensions", UDA_TYPE_INT, false, 1, dims_shape,
+                        offsetof(Data, dims));
     ::addStructureField(&data_usertype, "datatype", "data type", UDA_TYPE_INT, false, 0, nullptr,
                         offsetof(Data, datatype));
 
@@ -87,12 +75,15 @@ void define_usertypes(USERDEFINEDTYPELIST* user_defined_type_list)
     list_field.alignment = getalignmentof(list_field.type);
     addCompoundField(&data_list_usertype, list_field);
 
-    COMPOUNDFIELD size_field;
-    initCompoundField(&size_field);
+//    ::addStructureField(&data_list_usertype, "list", "list of data", UDA_TYPE_UNKNOWN, true, 0, nullptr, offsetof(DataList, list));
+    ::addStructureField(&data_list_usertype, "size", "number of data", UDA_TYPE_INT, false, 0, nullptr, offsetof(DataList, size));
 
-    int offset = (int)offsetof(DataList, size);
-    defineField(&size_field, "size", "number of data", &offset, SCALARINT);
-    addCompoundField(&data_list_usertype, size_field);
+//    COMPOUNDFIELD size_field;
+//    initCompoundField(&size_field);
+//
+//    int offset = (int)offsetof(DataList, size);
+//    defineField(&size_field, "size", "number of data", &offset, SCALARINT);
+//    addCompoundField(&data_list_usertype, size_field);
 
     addUserDefinedType(user_defined_type_list, data_list_usertype);
 }
@@ -118,11 +109,19 @@ struct Entry
     }
 };
 
-struct ArraystructCache
+struct ArraystructContextCache
 {
     std::string node;
     int ctx;
     int size;
+};
+
+struct OperationContextCache
+{
+    std::string ids;
+    int access;
+    int ctx;
+    std::vector<ArraystructContextCache> arraystruct_cache;
 };
 
 struct IDSData
@@ -130,7 +129,8 @@ struct IDSData
     std::string path;
     bool found = false;
     void* data = nullptr;
-    char buffer[8];
+    char buffer[8] = {};
+    bool using_buffer = false;
     int rank = 0;
     int shape[64] = {0};
     int datatype = 0;
@@ -167,7 +167,6 @@ public:
         if (_init) {
             return 0;
         }
-        define_usertypes(plugin_interface->userdefinedtypelist);
         _init = true;
         return 0;
     }
@@ -191,66 +190,73 @@ public:
 
     int open(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
+    int close(IDAM_PLUGIN_INTERFACE* plugin_interface);
+
 private:
     bool _init = false;
     std::unordered_map<Entry, int> _open_entries = {};
-    ArraystructCache _arraystruct_cache = {"", -1, 0};
+    OperationContextCache _operation_cache = { "", -1, -1, {} };
 
     std::vector<IDSData>
-    read_data(int ctx, const std::string& timebase, std::deque<std::string>& tokens, int datatype, int rank,
-              const std::string& ids);
+    read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank, const std::string& ids,
+              int is_homogeneous, const std::vector<int>& dynamic_flags);
 
-    void read_data_r(int ctx, const std::string& timebase, std::deque<std::string>& tokens, int datatype, int rank,
-                     std::vector<IDSData>& return_data, const std::string& path);
+    void read_data_r(int ctx, std::deque<std::string>& tokens, int datatype, int rank,
+                     std::vector<IDSData>& return_data, const std::string& path, int is_homogeneous,
+                     const std::vector<int>& dynamic_flags, int flag_depth);
 };
 
 }
 }
 }
 
+int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    if (plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
+        RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
+    }
+
+    plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
+
+    REQUEST_DATA* request_data = plugin_interface->request_data;
+
+    std::string function = request_data->function;
+
+    if (plugin_interface->housekeeping || function == "reset") {
+        plugin.reset();
+        return 0;
+    }
+
+    plugin.init(plugin_interface);
+
+    if (function == "help") {
+        return plugin.help(plugin_interface);
+    } else if (function == "version") {
+        return plugin.version(plugin_interface);
+    } else if (function == "builddate") {
+        return plugin.build_date(plugin_interface);
+    } else if (function == "defaultmethod") {
+        return plugin.default_method(plugin_interface);
+    } else if (function == "maxinterfaceversion") {
+        return plugin.max_interface_version(plugin_interface);
+    } else if (function == "get") {
+        return plugin.get(plugin_interface);
+    } else if (function == "open") {
+        return plugin.open(plugin_interface);
+    } else {
+        RAISE_PLUGIN_ERROR("Unknown function requested!");
+    }
+}
+
 int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     try {
         static uda::plugins::imas::Plugin plugin{};
-
-        if (plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
-            RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
-        }
-
-        plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
-
-        REQUEST_DATA* request_data = plugin_interface->request_data;
-
-        std::string function = request_data->function;
-
-        if (plugin_interface->housekeeping || function == "reset") {
-            plugin.reset();
-            return 0;
-        }
-
-        if (function == "init" || function == "initialise") {
-            return plugin.init(plugin_interface);
-        }
-
-        if (function == "help") {
-            return plugin.help(plugin_interface);
-        } else if (function == "version") {
-            return plugin.version(plugin_interface);
-        } else if (function == "builddate") {
-            return plugin.build_date(plugin_interface);
-        } else if (function == "defaultmethod") {
-            return plugin.default_method(plugin_interface);
-        } else if (function == "maxinterfaceversion") {
-            return plugin.max_interface_version(plugin_interface);
-        } else if (function == "get") {
-            return plugin.get(plugin_interface);
-        } else if (function == "open") {
-            return plugin.open(plugin_interface);
-        } else {
-            RAISE_PLUGIN_ERROR("Unknown function requested!");
-        }
+        int rc = handle_request(plugin, plugin_interface);
+        concatUdaError(&plugin_interface->error_stack);
+        return rc;
     } catch (std::exception& ex) {
-        RAISE_PLUGIN_ERROR(ex.what());
+        RAISE_PLUGIN_ERROR_EX(ex.what(), { concatUdaError(&plugin_interface->error_stack); });
     }
 }
 
@@ -316,9 +322,22 @@ int uda::plugins::imas::Plugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plu
                                   "Maximum Interface Version");
 }
 
+bool is_null_value(void* data, int datatype)
+{
+    switch (datatype) {
+        case CHAR_DATA: return data == nullptr || *(char*)data == '\0';
+        case INTEGER_DATA: return data == nullptr || *(int*)data == -999999999;
+        case DOUBLE_DATA: return data == nullptr || *(double*)data == -9e+40;
+        case COMPLEX_DATA: return data == nullptr || *(double _Complex*)data == -9e+40;
+        default: throw std::runtime_error{"unknown datatype"};
+    }
+}
+
 void
-uda::plugins::imas::Plugin::read_data_r(int ctx, const std::string& timebase, std::deque<std::string>& tokens,
-                                        int datatype, int rank, std::vector<IDSData>& return_data, const std::string& path)
+uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens,
+                                        int datatype, int rank, std::vector<IDSData>& return_data,
+                                        const std::string& path, int is_homogeneous,
+                                        const std::vector<int>& dynamic_flags, int depth)
 {
     if (tokens.empty()) {
         return;
@@ -346,15 +365,17 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, const std::string& timebase, st
         }
 
         if (rank == 0) {
-            data.data = &data.buffer;
+            data.using_buffer = true;
+            data.data = (void*)data.buffer;
         }
 
-        al_status_t status = ual_read_data(ctx, node.c_str(), timebase.c_str(), &data.data, datatype, rank, data.shape);
+        const char* time = "";
+        al_status_t status = ual_read_data(ctx, node.c_str(), time, &data.data, datatype, rank, data.shape);
         if (status.code != 0) {
             throw std::runtime_error{status.message};
         }
 
-        data.found = true;
+        data.found = !is_null_value(data.data, datatype);
         return_data.push_back(data);
     } else if (!tokens.empty()) {
         // handle arraystruct case
@@ -369,19 +390,32 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, const std::string& timebase, st
         int arr_ctx;
         int size;
 
-        if (_arraystruct_cache.node == node) {
-            arr_ctx = _arraystruct_cache.ctx;
-            size = _arraystruct_cache.size;
+        auto& arraystruct_cache = _operation_cache.arraystruct_cache;
+        if (arraystruct_cache.size() > depth && arraystruct_cache[depth].node == node) {
+            arr_ctx = arraystruct_cache[depth].ctx;
+            size = arraystruct_cache[depth].size;
+            ual_iterate_over_arraystruct(arr_ctx, -size);
         } else {
-            if (!_arraystruct_cache.node.empty()) {
-                al_status_t status = ual_end_action(_arraystruct_cache.ctx);
-                _arraystruct_cache = {"", -1, 0,};
+            while (arraystruct_cache.size() > depth) {
+                al_status_t status = ual_end_action(arraystruct_cache.back().ctx);
+                arraystruct_cache.pop_back();
                 if (status.code != 0) {
                     throw std::runtime_error{status.message};
                 }
             }
 
+            auto is_dynamic = dynamic_flags.at(depth);
+            std::string timebase;
+            if (is_dynamic) {
+                if (is_homogeneous) {
+                    timebase = "/time";
+                } else {
+                    timebase = node + "/time";
+                }
+            }
+
             al_status_t status = ual_begin_arraystruct_action(ctx, node.c_str(), timebase.c_str(), &size, &arr_ctx);
+            arraystruct_cache.emplace_back(ArraystructContextCache{ node, arr_ctx, size });
             if (status.code != 0) {
                 throw std::runtime_error{status.message};
             }
@@ -392,7 +426,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, const std::string& timebase, st
             std::string new_path = path;
             new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
             std::deque<std::string> copy = tokens;
-            read_data_r(arr_ctx, timebase, copy, datatype, rank, return_data, new_path);
+            read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, depth + 1);
             ual_iterate_over_arraystruct(arr_ctx, 1);
             ++i;
         }
@@ -400,11 +434,11 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, const std::string& timebase, st
 }
 
 std::vector<uda::plugins::imas::IDSData>
-uda::plugins::imas::Plugin::read_data(int ctx, const std::string& timebase, std::deque<std::string>& tokens,
-                                      int datatype, int rank, const std::string& ids)
+uda::plugins::imas::Plugin::read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank,
+                                      const std::string& ids, int is_homogeneous, const std::vector<int>& dynamic_flags)
 {
     std::vector<IDSData> return_data;
-    read_data_r(ctx, timebase, tokens, datatype, rank, return_data, ids);
+    read_data_r(ctx, tokens, datatype, rank, return_data, ids, is_homogeneous, dynamic_flags, 0);
 
     return return_data;
 }
@@ -491,17 +525,20 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     const char* path = nullptr;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, path);
 
-    const char* timebase = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, timebase);
-
     const char* datatype = nullptr;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, datatype);
 
     int rank = -1;
     FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, rank);
 
-    int ctxId = -1;
-    FIND_INT_VALUE(plugin_interface->request_data->nameValueList, ctxId);
+    int is_homogeneous = -1;
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, is_homogeneous);
+
+    int* dynamic_flags = nullptr;
+    size_t ndynamic_flags = -1;
+    FIND_REQUIRED_INT_ARRAY(plugin_interface->request_data->nameValueList, dynamic_flags);
+
+    std::vector<int> dynamic_flags_vec = { dynamic_flags, dynamic_flags + ndynamic_flags };
 
     Entry entry = {shot, run, user, tokamak, version};
     if (!_open_entries.count(entry)) {
@@ -510,7 +547,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
             return rc;
         }
     }
-    ctxId = _open_entries[entry];
+    int ctxId = _open_entries[entry];
 
     std::deque<std::string> tokens;
     boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
@@ -520,15 +557,37 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::string s_access = access;
 
-    int op_ctx;
-    al_status_t status = ual_begin_global_action(ctxId, ids.c_str(), convert_access_mode(access), &op_ctx);
-    if (status.code != 0) {
-        RAISE_PLUGIN_ERROR(status.message);
+    int iaccess = convert_access_mode(access);
+
+    int op_ctx = -1;
+    if (_operation_cache.ids == ids && _operation_cache.access == iaccess) {
+        op_ctx = _operation_cache.ctx;
+    } else {
+        if (_operation_cache.ctx != -1) {
+            while (!_operation_cache.arraystruct_cache.empty()) {
+                al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+                if (status.code != 0) {
+                    RAISE_PLUGIN_ERROR(status.message);
+                }
+                _operation_cache.arraystruct_cache.pop_back();
+            }
+
+            al_status_t status = ual_end_action(_operation_cache.ctx);
+            if (status.code != 0) {
+                RAISE_PLUGIN_ERROR(status.message);
+            }
+        }
+
+        al_status_t status = ual_begin_global_action(ctxId, ids.c_str(), iaccess, &op_ctx);
+        if (status.code != 0) {
+            RAISE_PLUGIN_ERROR(status.message);
+        }
+        _operation_cache = { ids, iaccess, op_ctx, {} };
     }
 
     std::vector<IDSData> results = {};
     try {
-        results = read_data(op_ctx, timebase, tokens, convert_datatype(datatype), rank, ids);
+        results = read_data(op_ctx, tokens, convert_datatype(datatype), rank, ids, is_homogeneous, dynamic_flags_vec);
         if (results.empty()) {
             initDataBlock(plugin_interface->data_block);
             return 0;
@@ -537,10 +596,11 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         RAISE_PLUGIN_ERROR(ex.what());
     }
 
-    status = ual_end_action(ctxId);
-    if (status.code != 0) {
-        RAISE_PLUGIN_ERROR(status.message);
-    }
+//    status = ual_end_action(ctxId);
+//    if (status.code != 0) {
+//        RAISE_PLUGIN_ERROR(status.message);
+//    }
+    define_usertypes(plugin_interface->userdefinedtypelist);
 
     Data* data = (Data*)calloc(results.size(), sizeof(Data));
     addMalloc(plugin_interface->logmalloclist, (void*)data, (int)results.size(), sizeof(Data), "Data");
@@ -561,11 +621,18 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         for (int i = 0; i < data_ptr->rank; ++i) {
             count *= result.shape[i];
         }
-        data_ptr->data = (unsigned char*)malloc(count * sizeof_datatype(result.datatype));
-        addMalloc(plugin_interface->logmalloclist, (void*)data_ptr->data, count, sizeof_datatype(result.datatype),
-                  datatype);
+        size_t mem_size = count * sizeof_datatype(result.datatype);
+        data_ptr->data = (unsigned char*)malloc(mem_size);
+        addMalloc(plugin_interface->logmalloclist, (void*)data_ptr->data, mem_size, sizeof(unsigned char), "unsigned char");
 
-        memcpy((void*)data_ptr->data, result.data, count * sizeof_datatype(result.datatype));
+        if (result.using_buffer) {
+            if (count > 1) {
+                RAISE_PLUGIN_ERROR("too much data to read from result buffer");
+            }
+            memcpy((void*)data_ptr->data, result.buffer, mem_size);
+        } else {
+            memcpy((void*)data_ptr->data, result.data, mem_size);
+        }
 
         ++n;
     }
@@ -626,4 +693,59 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     _open_entries[entry] = ctx;
 
     return setReturnDataIntScalar(plugin_interface->data_block, ctx, "pulse context");
+}
+
+int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    int shot;
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, shot);
+
+    int run;
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, run);
+
+    const char* user;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, user);
+
+    const char* tokamak;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, tokamak);
+
+    const char* version;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, version);
+
+    initDataBlock(plugin_interface->data_block);
+
+    Entry entry = {shot, run, user, tokamak, version};
+    if (_open_entries.count(entry) == 0) {
+        RAISE_PLUGIN_ERROR("pulse is not currently open");
+    }
+    int ctx = _open_entries[entry];
+
+    if (_operation_cache.ctx != -1) {
+        while (!_operation_cache.arraystruct_cache.empty()) {
+            al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+            if (status.code != 0) {
+                RAISE_PLUGIN_ERROR(status.message);
+            }
+            _operation_cache.arraystruct_cache.pop_back();
+        }
+
+        al_status_t status = ual_end_action(_operation_cache.ctx);
+        if (status.code != 0) {
+            RAISE_PLUGIN_ERROR(status.message);
+        }
+        _operation_cache = { "", -1, -1, {} };
+    }
+
+    al_status_t status = ual_close_pulse(ctx, CLOSE_PULSE, "");
+    if (status.code != 0) {
+        RAISE_PLUGIN_ERROR(status.message);
+    }
+
+    status = ual_end_action(ctx);
+    if (status.code != 0) {
+        RAISE_PLUGIN_ERROR(status.message);
+    }
+    _open_entries.erase(entry);
+
+    return setReturnDataIntScalar(plugin_interface->data_block, -1, "pulse context");
 }
