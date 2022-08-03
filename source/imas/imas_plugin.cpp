@@ -128,6 +128,8 @@ struct IDSData
 {
     std::string path;
     bool found = false;
+    int size = 0;
+    bool is_size = false;
     void* data = nullptr;
     char buffer[8] = {};
     bool using_buffer = false;
@@ -388,13 +390,18 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
         node = head.substr(0, head.size() - 3);
 
         int arr_ctx;
-        int size;
+        IDSData data = {};
+        data.found = true;
+        data.path = path + "/" + node;
+        data.is_size = true;
+        data.rank = 0;
+        data.datatype = INTEGER_DATA;
 
         auto& arraystruct_cache = _operation_cache.arraystruct_cache;
         if (arraystruct_cache.size() > depth && arraystruct_cache[depth].node == node) {
             arr_ctx = arraystruct_cache[depth].ctx;
-            size = arraystruct_cache[depth].size;
-            ual_iterate_over_arraystruct(arr_ctx, -size);
+            data.size = arraystruct_cache[depth].size;
+            ual_iterate_over_arraystruct(arr_ctx, -data.size);
         } else {
             while (arraystruct_cache.size() > depth) {
                 al_status_t status = ual_end_action(arraystruct_cache.back().ctx);
@@ -414,15 +421,17 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
                 }
             }
 
-            al_status_t status = ual_begin_arraystruct_action(ctx, node.c_str(), timebase.c_str(), &size, &arr_ctx);
-            arraystruct_cache.emplace_back(ArraystructContextCache{ node, arr_ctx, size });
+            al_status_t status = ual_begin_arraystruct_action(ctx, node.c_str(), timebase.c_str(), &data.size, &arr_ctx);
+            arraystruct_cache.emplace_back(ArraystructContextCache{ node, arr_ctx, data.size });
             if (status.code != 0) {
                 throw std::runtime_error{status.message};
             }
         }
 
+        return_data.push_back(data);
+
         int i = 0;
-        while (i < size) {
+        while (i < data.size) {
             std::string new_path = path;
             new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
             std::deque<std::string> copy = tokens;
@@ -487,8 +496,27 @@ size_t sizeof_datatype(int type)
 }
 
 /**
- * Returns the IMAS data for the IDS leaf node.
- * @return 0 if successful, !0 on error
+ * Returns the IMAS data for the given IDS path. If the database entry is not currently open then it will be opened.
+ *
+ * Arguments:
+ *      shot            (required, int)     - shot number
+ *      run             (required, int)     - run number
+ *      user            (required, string)  - user or path
+ *      tokamak         (required, string)  - tokamak name
+ *      version         (required, string)  - IMAS version
+ *      dataObject      (required, string)  - IDS name, i.e. magnetics, equilibrium, etc.
+ *      access          (required, string)  - read access mode [read|write|replace]
+ *      range           (required, string)  - range mode [global|slice]
+ *      time            (required, float)   - slice time (ignored for global range mode)
+ *      interp          (required, string)  - interpolation mode (ignored for global range mode)
+ *      path            (required, string)  - IDS path, i.e. flux_loop[3]/flux/data
+ *      datatype        (required, string)  - IDS data type [char|integer|double|complex]
+ *      rank            (required, int)     - rank of data to return
+ *      is_homogeneous  (required, int)     - flag specifying whether data has been stored homogeneously
+ *      dynamic_flags   (required, int array) - flags specifying dynamic status for each level of the path
+ *
+ * @param plugin_interface the UDA plugin interface structure
+ * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
@@ -621,11 +649,14 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         for (int i = 0; i < data_ptr->rank; ++i) {
             count *= result.shape[i];
         }
+
         size_t mem_size = count * sizeof_datatype(result.datatype);
         data_ptr->data = (unsigned char*)malloc(mem_size);
         addMalloc(plugin_interface->logmalloclist, (void*)data_ptr->data, mem_size, sizeof(unsigned char), "unsigned char");
 
-        if (result.using_buffer) {
+        if (result.is_size) {
+            memcpy((void*)data_ptr->data, &result.size, mem_size);
+        } else if (result.using_buffer) {
             if (count > 1) {
                 RAISE_PLUGIN_ERROR("too much data to read from result buffer");
             }
@@ -659,8 +690,31 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     return 0;
 }
 
+/**
+ * Open an IDS database entry, caching the pulse context handle.
+ *
+ * Arguments:
+ *      backend (optional, string)  - IMAS backend used to read the IDS [ascii|mdsplus|hdf5] - defaults to mdsplus
+ *      shot    (required, int)     - shot number
+ *      run     (required, int)     - run number
+ *      user    (required, string)  - user or path
+ *      tokamak (required, string)  - tokamak name
+ *      version (required, string)  - IMAS version
+ *
+ * Returns:
+ *      Integer scalar containing the pulse context handle.
+ *
+ * Example:
+ *      IMAS::open(shot=1000, run=1, user='test', tokamak='iter', version='3')
+ *
+ * @param plugin_interface the UDA plugin interface structure
+ * @return 0 on success, !=0 on error
+ */
 int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
+    const char* backend = "mdsplus";
+    bool is_backend = FIND_STRING_VALUE(plugin_interface->request_data->nameValueList, backend);
+
     int shot;
     FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, shot);
 
@@ -675,6 +729,8 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     const char* version;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, version);
+
+
 
     int ctx;
     al_status_t status = ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, &ctx);
@@ -695,6 +751,26 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     return setReturnDataIntScalar(plugin_interface->data_block, ctx, "pulse context");
 }
 
+/**
+ * Closes the IMAS database entry corresponding to the given arguments. The entry must have been opened by calling the
+ * open(...) or get(...) functions.
+ *
+ * Arguments:
+ *      shot    (required, int)     - shot number
+ *      run     (required, int)     - run number
+ *      user    (required, string)  - user or path
+ *      tokamak (required, string)  - tokamak name
+ *      version (required, string)  - IMAS version
+ *
+ * Returns:
+ *      Integer scalar -1
+ *
+ * Example:
+ *      IMAS::close(shot=1000, run=1, user='test', tokamak='iter', version='3')
+ *
+ * @param plugin_interface the UDA plugin interface structure
+ * @return 0 on success, !=0 on error
+ */
 int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
     int shot;
