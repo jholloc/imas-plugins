@@ -12,8 +12,8 @@
 # in the FIND_PATH() and FIND_LIBRARY() calls
 find_package( PkgConfig )
 
-pkg_check_modules( IMAS_LOW_LEVEL imas-lowlevel )
-pkg_check_modules( IMAS_CPP imas-cpp )
+pkg_check_modules( IMAS_LOW_LEVEL al-lowlevel )
+pkg_check_modules( IMAS_CPP al-cpp )
 
 set( IMAS_DEFINITIONS  ${IMAS_LOW_LEVEL_CFLAGS_OTHER} )
 set( IMAS_INCLUDE_DIRS ${IMAS_LOW_LEVEL_INCLUDE_DIRS} )

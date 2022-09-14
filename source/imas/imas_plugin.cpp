@@ -230,6 +230,9 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
     }
 
     plugin.init(plugin_interface);
+    if (function == "init") {
+        return 0;
+    }
 
     if (function == "help") {
         return plugin.help(plugin_interface);
@@ -245,6 +248,8 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
         return plugin.get(plugin_interface);
     } else if (function == "open") {
         return plugin.open(plugin_interface);
+    } else if (function == "close") {
+        return plugin.close(plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
@@ -452,36 +457,60 @@ uda::plugins::imas::Plugin::read_data(int ctx, std::deque<std::string>& tokens, 
     return return_data;
 }
 
+int convert_backend(const std::string& backend)
+{
+    if (backend == "mdsplus") {
+        return MDSPLUS_BACKEND;
+    } else if (backend == "hdf5") {
+        return HDF5_BACKEND;
+    } else if (backend == "ascii") {
+        return ASCII_BACKEND;
+    } else {
+        RAISE_PLUGIN_ERROR("unknown backend");
+    }
+}
+
+int convert_open_mode(const std::string& mode)
+{
+    if (mode == "open") {
+        return OPEN_PULSE;
+    } else if (mode == "create") {
+        return CREATE_PULSE;
+    } else if (mode == "force_open") {
+        return FORCE_OPEN_PULSE;
+    } else if (mode == "force_create") {
+        return FORCE_CREATE_PULSE;
+    } else {
+        RAISE_PLUGIN_ERROR("unknown open mode");
+    }
+}
+
 int convert_access_mode(const std::string& access)
 {
-    int n = -1;
     if (access == "read") {
-        n = READ_OP;
+        return READ_OP;
     } else if (access == "write") {
-        n = WRITE_OP;
+        return WRITE_OP;
     } else if (access == "replace") {
-        n = REPLACE_OP;
+        return REPLACE_OP;
     } else {
         RAISE_PLUGIN_ERROR("unknown access mode");
     }
-    return n;
 }
 
 int convert_datatype(const std::string& datatype)
 {
-    int n = -1;
     if (datatype == "char") {
-        n = CHAR_DATA;
+        return CHAR_DATA;
     } else if (datatype == "integer") {
-        n = INTEGER_DATA;
+        return INTEGER_DATA;
     } else if (datatype == "double") {
-        n = DOUBLE_DATA;
+        return DOUBLE_DATA;
     } else if (datatype == "complex") {
-        n = COMPLEX_DATA;
+        return COMPLEX_DATA;
     } else {
         RAISE_PLUGIN_ERROR("unknown datatype");
     }
-    return n;
 }
 
 size_t sizeof_datatype(int type)
@@ -694,12 +723,13 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
  * Open an IDS database entry, caching the pulse context handle.
  *
  * Arguments:
- *      backend (optional, string)  - IMAS backend used to read the IDS [ascii|mdsplus|hdf5] - defaults to mdsplus
+ *      backend (required, string)  - IMAS backend used to read the IDS [ascii|mdsplus|hdf5]
  *      shot    (required, int)     - shot number
  *      run     (required, int)     - run number
  *      user    (required, string)  - user or path
  *      tokamak (required, string)  - tokamak name
  *      version (required, string)  - IMAS version
+ *      mode    (required, string)  - open mode [open|create|force_open|force_create]
  *
  * Returns:
  *      Integer scalar containing the pulse context handle.
@@ -712,8 +742,8 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
  */
 int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    const char* backend = "mdsplus";
-    bool is_backend = FIND_STRING_VALUE(plugin_interface->request_data->nameValueList, backend);
+    const char* backend;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, backend);
 
     int shot;
     FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, shot);
@@ -730,15 +760,20 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     const char* version;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, version);
 
+    const char* mode;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
 
+    int backend_id = convert_backend(backend);
 
     int ctx;
-    al_status_t status = ual_begin_pulse_action(MDSPLUS_BACKEND, shot, run, user, tokamak, version, &ctx);
+    al_status_t status = ual_begin_pulse_action(backend_id, shot, run, user, tokamak, version, &ctx);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR("failed to begin pulse action");
     }
 
-    status = ual_open_pulse(ctx, OPEN_PULSE, "");
+    int mode_int = convert_open_mode(mode);
+
+    status = ual_open_pulse(ctx, mode_int, "");
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR("failed to open pulse");
     }
