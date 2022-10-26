@@ -94,21 +94,6 @@ namespace uda {
 namespace plugins {
 namespace imas {
 
-struct Entry
-{
-    int shot;
-    int run;
-    std::string user;
-    std::string tokamak;
-    std::string version;
-
-    bool operator==(const Entry& other) const
-    {
-        return shot == other.shot && run == other.run && user == other.user && tokamak == other.tokamak &&
-               version == other.version;
-    }
-};
-
 struct ArraystructContextCache
 {
     std::string node;
@@ -142,24 +127,11 @@ struct IDSData
 }
 }
 
-template<>
-struct std::hash<uda::plugins::imas::Entry>
-{
-    std::size_t operator()(uda::plugins::imas::Entry const& entry) const noexcept
-    {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, entry.shot);
-        boost::hash_combine(seed, entry.run);
-        boost::hash_combine(seed, entry.user);
-        boost::hash_combine(seed, entry.tokamak);
-        boost::hash_combine(seed, entry.version);
-        return seed;
-    }
-};
-
 namespace uda {
 namespace plugins {
 namespace imas {
+
+using uri_t = std::string;
 
 class Plugin
 {
@@ -196,7 +168,7 @@ public:
 
 private:
     bool _init = false;
-    std::unordered_map<Entry, int> _open_entries = {};
+    std::unordered_map<uri_t, int> _open_entries = {};
     OperationContextCache _operation_cache = { "", -1, -1, {} };
 
     std::vector<IDSData>
@@ -549,20 +521,11 @@ size_t sizeof_datatype(int type)
  */
 int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    int shot;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, shot);
+    const char* backend;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, backend);
 
-    int run;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, run);
-
-    const char* user;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, user);
-
-    const char* tokamak;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, tokamak);
-
-    const char* version;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, version);
+    const char* uri;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
     const char* dataObject = nullptr;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, dataObject);
@@ -597,14 +560,13 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::vector<int> dynamic_flags_vec = { dynamic_flags, dynamic_flags + ndynamic_flags };
 
-    Entry entry = {shot, run, user, tokamak, version};
-    if (!_open_entries.count(entry)) {
+    if (!_open_entries.count(uri)) {
         int rc = open(plugin_interface);
         if (rc != 0) {
             return rc;
         }
     }
-    int ctxId = _open_entries[entry];
+    int ctxId = _open_entries[uri];
 
     std::deque<std::string> tokens;
     boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
@@ -745,43 +707,24 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     const char* backend;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, backend);
 
-    int shot;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, shot);
-
-    int run;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, run);
-
-    const char* user;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, user);
-
-    const char* tokamak;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, tokamak);
-
-    const char* version;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, version);
+    const char* uri;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
     const char* mode;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
 
     int backend_id = convert_backend(backend);
-
-    int ctx;
-    al_status_t status = ual_begin_pulse_action(backend_id, shot, run, user, tokamak, version, &ctx);
-    if (status.code != 0) {
-        RAISE_PLUGIN_ERROR("failed to begin pulse action");
-    }
-
     int mode_int = convert_open_mode(mode);
 
-    status = ual_open_pulse(ctx, mode_int, "");
+    int ctx;
+    al_status_t status = ual_begin_dataentry_action(uri, mode_int, &ctx);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR("failed to open pulse");
     }
 
     initDataBlock(plugin_interface->data_block);
 
-    Entry entry = {shot, run, user, tokamak, version};
-    _open_entries[entry] = ctx;
+    _open_entries[uri] = ctx;
 
     return setReturnDataIntScalar(plugin_interface->data_block, ctx, "pulse context");
 }
@@ -791,11 +734,8 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
  * open(...) or get(...) functions.
  *
  * Arguments:
- *      shot    (required, int)     - shot number
- *      run     (required, int)     - run number
- *      user    (required, string)  - user or path
- *      tokamak (required, string)  - tokamak name
- *      version (required, string)  - IMAS version
+ *      uri     (required, string)  - uri for data
+ *      mode    (required, int)     - close mode
  *
  * Returns:
  *      Integer scalar -1
@@ -808,28 +748,18 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
  */
 int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    int shot;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, shot);
+    const char* uri;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
-    int run;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, run);
-
-    const char* user;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, user);
-
-    const char* tokamak;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, tokamak);
-
-    const char* version;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, version);
+    int mode;
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, mode);
 
     initDataBlock(plugin_interface->data_block);
 
-    Entry entry = {shot, run, user, tokamak, version};
-    if (_open_entries.count(entry) == 0) {
+    if (_open_entries.count(uri) == 0) {
         RAISE_PLUGIN_ERROR("pulse is not currently open");
     }
-    int ctx = _open_entries[entry];
+    int ctx = _open_entries[uri];
 
     if (_operation_cache.ctx != -1) {
         while (!_operation_cache.arraystruct_cache.empty()) {
@@ -847,7 +777,7 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
         _operation_cache = { "", -1, -1, {} };
     }
 
-    al_status_t status = ual_close_pulse(ctx, CLOSE_PULSE, "");
+    al_status_t status = ual_close_pulse(ctx, mode, "");
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }
@@ -856,7 +786,7 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }
-    _open_entries.erase(entry);
+    _open_entries.erase(uri);
 
     return setReturnDataIntScalar(plugin_interface->data_block, -1, "pulse context");
 }
