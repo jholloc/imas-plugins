@@ -18,6 +18,7 @@
 #include <ual_lowlevel.h>
 #include <structures/struct.h>
 #include <structures/accessors.h>
+#include <serialisation/capnp_serialisation.h>
 
 namespace {
 
@@ -500,11 +501,7 @@ size_t sizeof_datatype(int type)
  * Returns the IMAS data for the given IDS path. If the database entry is not currently open then it will be opened.
  *
  * Arguments:
- *      shot            (required, int)     - shot number
- *      run             (required, int)     - run number
- *      user            (required, string)  - user or path
- *      tokamak         (required, string)  - tokamak name
- *      version         (required, string)  - IMAS version
+ *      uri             (required, string)  - uri for data
  *      dataObject      (required, string)  - IDS name, i.e. magnetics, equilibrium, etc.
  *      access          (required, string)  - read access mode [read|write|replace]
  *      range           (required, string)  - range mode [global|slice]
@@ -615,68 +612,75 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         RAISE_PLUGIN_ERROR(ex.what());
     }
 
-//    status = ual_end_action(ctxId);
-//    if (status.code != 0) {
-//        RAISE_PLUGIN_ERROR(status.message);
-//    }
-    define_usertypes(plugin_interface->userdefinedtypelist);
-
-    Data* data = (Data*)calloc(results.size(), sizeof(Data));
-    addMalloc(plugin_interface->logmalloclist, (void*)data, (int)results.size(), sizeof(Data), "Data");
-
-    size_t n = 0;
+    std::vector<const IDSData*> found_results = {};
     for (const auto& result: results) {
         if (!result.found) {
             continue;
         }
-
-        auto data_ptr = &data[n];
-        strcpy(data_ptr->name, result.path.c_str());
-        data_ptr->datatype = result.datatype;
-        data_ptr->rank = result.rank;
-        memcpy(data_ptr->dims, result.shape, 64 * sizeof(int));
-
-        int count = 1;
-        for (int i = 0; i < data_ptr->rank; ++i) {
-            count *= result.shape[i];
-        }
-
-        size_t mem_size = count * sizeof_datatype(result.datatype);
-        data_ptr->data = (unsigned char*)malloc(mem_size);
-        addMalloc(plugin_interface->logmalloclist, (void*)data_ptr->data, mem_size, sizeof(unsigned char), "unsigned char");
-
-        if (result.is_size) {
-            memcpy((void*)data_ptr->data, &result.size, mem_size);
-        } else if (result.using_buffer) {
-            if (count > 1) {
-                RAISE_PLUGIN_ERROR("too much data to read from result buffer");
-            }
-            memcpy((void*)data_ptr->data, result.buffer, mem_size);
-        } else {
-            memcpy((void*)data_ptr->data, result.data, mem_size);
-        }
-
-        ++n;
+        found_results.push_back(&result);
     }
 
-    auto data_list = (DataList*)malloc(sizeof(DataList));
-    addMalloc(plugin_interface->logmalloclist, (void*)data_list, 1, sizeof(DataList), "DataList");
+    auto tree = uda_capnp_new_tree();
+    auto root = uda_capnp_get_root(tree);
+    uda_capnp_set_node_name(root, "root");
+    uda_capnp_add_children(root, found_results.size());
 
-    data_list->list = data;
-    data_list->size = static_cast<int>(results.size());
+    size_t index = 0;
+    for (const auto result: found_results) {
+        auto child = uda_capnp_get_child(tree, root, index);
+
+        uda_capnp_set_node_name(child, result->path.c_str());
+        if (result->is_size) {
+            uda_capnp_add_i32(child, result->size);
+        } else {
+            size_t count = 1;
+            for (int i = 0; i < result->rank; ++i) {
+                count *= result->shape[i];
+            }
+
+            if (result->using_buffer && count > 1) {
+                RAISE_PLUGIN_ERROR("too much data to read from result buffer");
+            }
+
+            switch (result->datatype) {
+                case INTEGER_DATA:
+                    if (result->using_buffer) {
+                        uda_capnp_add_i32(child, *reinterpret_cast<const int32_t*>(result->buffer));
+                    } else {
+                        uda_capnp_add_array_i32(child, reinterpret_cast<int32_t*>(result->data), count);
+                    }
+                    break;
+                case DOUBLE_DATA:
+                    if (result->using_buffer) {
+                        uda_capnp_add_f64(child, *reinterpret_cast<const double*>(result->buffer));
+                    } else {
+                        uda_capnp_add_array_f64(child, reinterpret_cast<double*>(result->data), count);
+                    }
+                    break;
+                case CHAR_DATA:
+                    if (result->using_buffer) {
+                        uda_capnp_add_char(child, *reinterpret_cast<const char*>(result->buffer));
+                    } else {
+                        uda_capnp_add_array_char(child, reinterpret_cast<char*>(result->data), count);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        ++index;
+    }
+
+    auto buffer = uda_capnp_serialise(tree);
 
     DATA_BLOCK* data_block = plugin_interface->data_block;
     initDataBlock(data_block);
 
-    data_block->data_type = UDA_TYPE_COMPOUND;
-    data_block->rank = 0;
-    data_block->data_n = 1;
+    data_block->data_n = static_cast<int>(buffer.size);
+    data_block->data = buffer.data;
     data_block->dims = nullptr;
-    data_block->data = (char*)data_list;
-
-    data_block->opaque_type = UDA_OPAQUE_TYPE_STRUCTURES;
-    data_block->opaque_count = 1;
-    data_block->opaque_block = (void*)findUserDefinedType(plugin_interface->userdefinedtypelist, "DataList", 0);
+    data_block->data_type = UDA_TYPE_CAPNP;
 
     return 0;
 }
@@ -686,11 +690,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
  *
  * Arguments:
  *      backend (required, string)  - IMAS backend used to read the IDS [ascii|mdsplus|hdf5]
- *      shot    (required, int)     - shot number
- *      run     (required, int)     - run number
- *      user    (required, string)  - user or path
- *      tokamak (required, string)  - tokamak name
- *      version (required, string)  - IMAS version
+ *      uri     (required, string)  - uri for data
  *      mode    (required, string)  - open mode [open|create|force_open|force_create]
  *
  * Returns:
