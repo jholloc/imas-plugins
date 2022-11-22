@@ -430,19 +430,6 @@ uda::plugins::imas::Plugin::read_data(int ctx, std::deque<std::string>& tokens, 
     return return_data;
 }
 
-int convert_backend(const std::string& backend)
-{
-    if (backend == "mdsplus") {
-        return MDSPLUS_BACKEND;
-    } else if (backend == "hdf5") {
-        return HDF5_BACKEND;
-    } else if (backend == "ascii") {
-        return ASCII_BACKEND;
-    } else {
-        RAISE_PLUGIN_ERROR("unknown backend");
-    }
-}
-
 int convert_open_mode(const std::string& mode)
 {
     if (mode == "open") {
@@ -502,7 +489,6 @@ size_t sizeof_datatype(int type)
  *
  * Arguments:
  *      uri             (required, string)  - uri for data
- *      dataObject      (required, string)  - IDS name, i.e. magnetics, equilibrium, etc.
  *      access          (required, string)  - read access mode [read|write|replace]
  *      range           (required, string)  - range mode [global|slice]
  *      time            (required, float)   - slice time (ignored for global range mode)
@@ -518,14 +504,8 @@ size_t sizeof_datatype(int type)
  */
 int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    const char* backend;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, backend);
-
     const char* uri;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
-
-    const char* dataObject = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, dataObject);
 
     const char* access = nullptr;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access);
@@ -689,7 +669,6 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
  * Open an IDS database entry, caching the pulse context handle.
  *
  * Arguments:
- *      backend (required, string)  - IMAS backend used to read the IDS [ascii|mdsplus|hdf5]
  *      uri     (required, string)  - uri for data
  *      mode    (required, string)  - open mode [open|create|force_open|force_create]
  *
@@ -704,22 +683,19 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
  */
 int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-    const char* backend;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, backend);
-
     const char* uri;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
     const char* mode;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
 
-    int backend_id = convert_backend(backend);
     int mode_int = convert_open_mode(mode);
 
     int ctx;
     al_status_t status = ual_begin_dataentry_action(uri, mode_int, &ctx);
     if (status.code != 0) {
-        RAISE_PLUGIN_ERROR("failed to open pulse");
+        std::string msg = std::string{ "failed to open pulse: " } + status.message;
+        RAISE_PLUGIN_ERROR(msg.c_str());
     }
 
     initDataBlock(plugin_interface->data_block);
