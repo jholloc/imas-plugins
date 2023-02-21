@@ -1,3 +1,12 @@
+/**
+ * Name: IMAS
+ *
+ * The IMAS plugin is responsible for responding to requests from the IMAS UDA backend.
+ * The low level IMAS calls are mapped to plugin functions which are then used
+ * to read the data using either a local version of the IMAS backend or another UDA plugin
+ * to map non-IMAS data into the IMAS structure.
+ */
+
 #include "imas_plugin.h"
 
 #include <memory>
@@ -20,74 +29,22 @@
 #include <structures/accessors.h>
 #include <serialisation/capnp_serialisation.h>
 
+#define PATH_LEN 2048
+
 namespace {
 
-void define_usertypes(USERDEFINEDTYPELIST* user_defined_type_list)
-{
-    USERDEFINEDTYPE data_usertype;
-    initUserDefinedType(&data_usertype);
+struct Data {
+    char name[PATH_LEN];
+    const unsigned char* data = nullptr;
+    int rank = 0;
+    int dims[64] = {0};
+    int datatype = 0;
+};
 
-    strcpy(data_usertype.name, "Data");
-    strcpy(data_usertype.source, "IMAS");
-    data_usertype.ref_id = 0;
-    data_usertype.imagecount = 0; // No Structure Image data
-    data_usertype.image = nullptr;
-    data_usertype.size = sizeof(Data); // Structure size
-    data_usertype.idamclass = UDA_TYPE_COMPOUND;
-
-    int name_shape[] = {PATH_LEN};
-    ::addStructureField(&data_usertype, "name", "name", UDA_TYPE_STRING, false, 1, name_shape, offsetof(Data, name));
-    ::addStructureField(&data_usertype, "value", "data pointer", UDA_TYPE_UNSIGNED_CHAR, true, 0, nullptr,
-                        offsetof(Data, data));
-    ::addStructureField(&data_usertype, "rank", "data rank", UDA_TYPE_INT, false, 0, nullptr, offsetof(Data, rank));
-    int dims_shape[] = {64};
-    ::addStructureField(&data_usertype, "dims", "data dimensions", UDA_TYPE_INT, false, 1, dims_shape,
-                        offsetof(Data, dims));
-    ::addStructureField(&data_usertype, "datatype", "data type", UDA_TYPE_INT, false, 0, nullptr,
-                        offsetof(Data, datatype));
-
-    addUserDefinedType(user_defined_type_list, data_usertype);
-
-    USERDEFINEDTYPE data_list_usertype;
-    initUserDefinedType(&data_list_usertype);
-
-    strcpy(data_list_usertype.name, "DataList");
-    strcpy(data_list_usertype.source, "IMAS");
-    data_list_usertype.ref_id = 0;
-    data_list_usertype.imagecount = 0; // No Structure Image data
-    data_list_usertype.image = nullptr;
-    data_list_usertype.size = sizeof(DataList);  // Structure size
-    data_list_usertype.idamclass = UDA_TYPE_COMPOUND;
-
-    COMPOUNDFIELD list_field;
-    initCompoundField(&list_field);
-
-    strcpy(list_field.name, "list");
-    list_field.atomictype = UDA_TYPE_UNKNOWN;
-    strcpy(list_field.type, "Data");
-    strcpy(list_field.desc, "list of data");
-    list_field.pointer = 1;
-    list_field.count = 1;
-    list_field.rank = 0;
-    list_field.shape = nullptr;
-    list_field.size = sizeof(Data*);
-    list_field.offset = (int)offsetof(DataList, list);
-    list_field.offpad = (int)padding(offsetof(DataList, list), list_field.type);
-    list_field.alignment = getalignmentof(list_field.type);
-    addCompoundField(&data_list_usertype, list_field);
-
-//    ::addStructureField(&data_list_usertype, "list", "list of data", UDA_TYPE_UNKNOWN, true, 0, nullptr, offsetof(DataList, list));
-    ::addStructureField(&data_list_usertype, "size", "number of data", UDA_TYPE_INT, false, 0, nullptr, offsetof(DataList, size));
-
-//    COMPOUNDFIELD size_field;
-//    initCompoundField(&size_field);
-//
-//    int offset = (int)offsetof(DataList, size);
-//    defineField(&size_field, "size", "number of data", &offset, SCALARINT);
-//    addCompoundField(&data_list_usertype, size_field);
-
-    addUserDefinedType(user_defined_type_list, data_list_usertype);
-}
+struct DataList {
+    Data* list;
+    int size;
+};
 
 }
 
@@ -241,7 +198,13 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface)
 }
 
 /**
- * Help: A Description of library functionality
+ * Function: help
+ *
+ * The `help` function returns the help documentation for this plugin.
+ *
+ * Returns:
+ *      Signal[datatype=STRING, rank=0]
+ *
  * @param plugin_interface
  * @return
  */
@@ -262,7 +225,13 @@ int uda::plugins::imas::Plugin::help(IDAM_PLUGIN_INTERFACE* plugin_interface)
 }
 
 /**
- * Plugin version
+ * Function: version
+ *
+ * The `version` function returns the version of the plugin being called.
+ *
+ * Returns:
+ *      Signal[datatype=int, rank=0]
+ *
  * @param plugin_interface
  * @return
  */
@@ -272,7 +241,13 @@ int uda::plugins::imas::Plugin::version(IDAM_PLUGIN_INTERFACE* plugin_interface)
 }
 
 /**
- * Plugin Build Date
+ * Function: buildDate
+ *
+ * The `buildDate` function returns the date this plugin was built.
+ *
+ * Returns:
+ *      Signal[datatype=STRING, rank=0]
+ *
  * @param plugin_interface
  * @return
  */
@@ -282,7 +257,13 @@ int uda::plugins::imas::Plugin::build_date(IDAM_PLUGIN_INTERFACE* plugin_interfa
 }
 
 /**
- * Plugin Default Method
+ * Function: defaultMethod
+ *
+ * The `defaultMethod` function returns the method that will be called if no function name is provided.
+ *
+ * Returns:
+ *      Signal[datatype=STRING, rank=0]
+ *
  * @param plugin_interface
  * @return
  */
@@ -292,7 +273,13 @@ int uda::plugins::imas::Plugin::default_method(IDAM_PLUGIN_INTERFACE* plugin_int
 }
 
 /**
- * Plugin Maximum Interface Version
+ * Function: maxInterfaceVersion
+ *
+ * The `maxInterfaceVersion` function returns the highest UDA plugin interface version that this plugin will respond to.
+ *
+ * Returns:
+ *      Signal[datatype=int, rank=0]
+ *
  * @param plugin_interface
  * @return
  */
@@ -302,16 +289,75 @@ int uda::plugins::imas::Plugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plu
                                   "Maximum Interface Version");
 }
 
+namespace {
+
 bool is_null_value(void* data, int datatype)
 {
     switch (datatype) {
-        case CHAR_DATA: return data == nullptr || *(char*)data == '\0';
-        case INTEGER_DATA: return data == nullptr || *(int*)data == -999999999;
-        case DOUBLE_DATA: return data == nullptr || *(double*)data == -9e+40;
-        case COMPLEX_DATA: return data == nullptr || *(double _Complex*)data == -9e+40;
-        default: throw std::runtime_error{"unknown datatype"};
+        case CHAR_DATA:
+            return data == nullptr || *(char*)data == '\0';
+        case INTEGER_DATA:
+            return data == nullptr || *(int*)data == -999999999;
+        case DOUBLE_DATA:
+            return data == nullptr || *(double*)data == -9e+40;
+        case COMPLEX_DATA:
+            return data == nullptr || *(double _Complex*)data == -9e+40;
+        default:
+            throw std::runtime_error{"unknown datatype"};
     }
 }
+
+bool is_index(const std::string& string)
+{
+    if (string.back() != ']') {
+        return false;
+    }
+
+    auto pos = string.find('[');
+
+    if (pos == std::string::npos || pos == 0) {
+        return false;
+    }
+
+    std::string rem = std::string{string.begin() + pos + 1, string.end() - 1};
+    if (rem.empty()) {
+        return false;
+    }
+
+    size_t len = 0;
+    std::stol(rem, &pos, 10);
+
+    return rem == ":" || pos == rem.size();
+}
+
+std::pair<std::string, long> parse_index(const std::string& string)
+{
+    if (string.back() != ']') {
+        throw std::runtime_error{"invalid string " + string};
+    }
+
+    auto pos = string.find('[');
+
+    if (pos == std::string::npos || pos == 0) {
+        throw std::runtime_error{"invalid string " + string};
+    }
+
+    std::string name = std::string{string.begin(), string.begin() + pos};
+    std::string rem = std::string{string.begin() + pos + 1, string.end() - 1};
+
+    if (rem == ":") {
+        return { name, -1 };
+    } else {
+        size_t len = 0;
+        long num = stol(rem, &len, 10);
+        if (len != rem.size()) {
+            throw std::runtime_error{"invalid string " + string};
+        }
+        return { name, num };
+    }
+}
+
+} // anon namespace
 
 void
 uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens,
@@ -326,7 +372,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
     std::string node;
     std::string delim;
 
-    while (!tokens.empty() && !boost::ends_with(tokens.front(), "[:]")) {
+    while (!tokens.empty() && !is_index(tokens.front())) {
         node += delim + tokens.front();
         tokens.pop_front();
 
@@ -360,12 +406,14 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
     } else if (!tokens.empty()) {
         // handle arraystruct case
 
-        assert(boost::ends_with(tokens.front(), "[:]"));
+        assert(is_index(tokens.front()));
 
         auto head = tokens.front();
         tokens.pop_front();
 
-        node = head.substr(0, head.size() - 3);
+        auto res = parse_index(head);
+        node = res.first;
+        long index = res.second;
 
         int arr_ctx;
         IDSData data = {};
@@ -379,7 +427,6 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
         if (arraystruct_cache.size() > depth && arraystruct_cache[depth].node == node) {
             arr_ctx = arraystruct_cache[depth].ctx;
             data.size = arraystruct_cache[depth].size;
-            ual_iterate_over_arraystruct(arr_ctx, -data.size);
         } else {
             while (arraystruct_cache.size() > depth) {
                 al_status_t status = ual_end_action(arraystruct_cache.back().ctx);
@@ -408,14 +455,24 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
 
         return_data.push_back(data);
 
-        int i = 0;
-        while (i < data.size) {
+        if (index == -1) {
+            int i = 0;
+            while (i < data.size) {
+                std::string new_path = path;
+                new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
+                std::deque<std::string> copy = tokens;
+                read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, depth + 1);
+                ual_iterate_over_arraystruct(arr_ctx, 1);
+                ++i;
+            }
+            ual_iterate_over_arraystruct(arr_ctx, -data.size); // reset ctx index back to 0
+        } else {
+            ual_iterate_over_arraystruct(arr_ctx, index);
             std::string new_path = path;
-            new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
+            new_path.append("/").append(node).append("[").append(std::to_string(index)).append("]");
             std::deque<std::string> copy = tokens;
             read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, depth + 1);
-            ual_iterate_over_arraystruct(arr_ctx, 1);
-            ++i;
+            ual_iterate_over_arraystruct(arr_ctx, -index);
         }
     }
 }
@@ -485,19 +542,24 @@ size_t sizeof_datatype(int type)
 }
 
 /**
+ * Function: get
+ *
  * Returns the IMAS data for the given IDS path. If the database entry is not currently open then it will be opened.
  *
  * Arguments:
  *      uri             (required, string)  - uri for data
- *      access          (required, string)  - read access mode [read|write|replace]
- *      range           (required, string)  - range mode [global|slice]
+ *      access          (required, string)  - read access mode `[read|write|replace]`
+ *      range           (required, string)  - range mode `[global|slice]`
  *      time            (required, float)   - slice time (ignored for global range mode)
  *      interp          (required, string)  - interpolation mode (ignored for global range mode)
- *      path            (required, string)  - IDS path, i.e. flux_loop[3]/flux/data
- *      datatype        (required, string)  - IDS data type [char|integer|double|complex]
+ *      path            (required, string)  - IDS path, i.e. `flux_loop[3]/flux/data`
+ *      datatype        (required, string)  - IDS data type `[char|integer|double|complex]`
  *      rank            (required, int)     - rank of data to return
  *      is_homogeneous  (required, int)     - flag specifying whether data has been stored homogeneously
  *      dynamic_flags   (required, int array) - flags specifying dynamic status for each level of the path
+ *
+ * Returns:
+ *      CapNp serialised tree of depth 1, where each leaf node contains the name and data of a returned IMAS data node
  *
  * @param plugin_interface the UDA plugin interface structure
  * @return 0 on success, !=0 on error
@@ -666,11 +728,13 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 }
 
 /**
+ * Function: open
+ *
  * Open an IDS database entry, caching the pulse context handle.
  *
  * Arguments:
  *      uri     (required, string)  - uri for data
- *      mode    (required, string)  - open mode [open|create|force_open|force_create]
+ *      mode    (required, string)  - open mode `[open|create|force_open|force_create]`
  *
  * Returns:
  *      Integer scalar containing the pulse context handle.
@@ -706,6 +770,8 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 }
 
 /**
+ * Function: close
+ *
  * Closes the IMAS database entry corresponding to the given arguments. The entry must have been opened by calling the
  * open(...) or get(...) functions.
  *
