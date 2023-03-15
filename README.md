@@ -64,27 +64,27 @@ Where `$PLUGINS_HOME` is the location the plugins where installed to and `$PLUGI
 
 A description of the plugins included in this repository is given below:
 
-| Name                        | Description                                                                                                          | Dependencies       |
-|-----------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------|
-| exp2imas                    | Uses the EXP2ITM mappings to return data from experimental data sources.                                             | MDSplus, LibSSH    |
-| hl2a                        | Uses the WEST HL2A data access library to return data to IMAS.                                                       | MDSplus, LibHL2A   |
-| [imas](source/imas/help.md) | Handles requests from UDA backend for IMAS AL5 for either remote data or mapped experimental data.                   | IMAS               |
-| imas_forward                | Forwards IMAS related requests to another UDA server.                                                                | IMAS               |
-| imas_mapping                | Forwards IMAS low-level data requests to plugin determined by machine name.                                          | IMAS               |
-| imas_old                    | Deprecated plugin for handling IMAS data requests.                                                                   | MDSplus, HDF5      |
-| imas_partial                | Uses data dictionary to expand partial IMAS data request and return data for expanded tree.                          | MDSplus, IMAS      |
-| imas_remote                 | Handles IMAS low-level data requests using IMAS low-level library to allow for IMAS remote data access.              | IMAS               |
-| imas_uda                    | Converts IMAS data access request to call to signal/source requests from another UDA server.                         |                    |
-| imasdd                      | Uses data dictionary to expand IMAS data request and forward each sub-request to IMAS_MAPPING plugin.                |                    |
-| iter_md                     | Uses the ITER machine description database to handle IMAS data requests.                                             | ITERMD, PostgreSQL |
-| jet_equilibrium             | Has a special case handling for JET equilibrium profiles_1d mapping, otherwise forwards requests to EXP2IMAS plugin. |                    |
-| jet_magnetics               | Proof of concept plugin for returning JET magnetics machine description from JET sensors file.                       |                    |
-| jet_summary                 | Plugin for populating the summary IDS for JET.                                                                       | MDSplus            |
-| livedisplay                 | Deprecated plugin for returning predefined IDS structures to CODAC live-display system.                              |                    |
-| mast_imas                   | Deprecated plugin for returning MAST data for IMAS magnetics IDS data access requests.                               | PostgreSQL         |
-| tcv                         | Plugin for forwarding signal requests to TCV MDS+ server.                                                            | MDSplus            |
-| tcvm                        | Plugin which uses Matlab scripts to map TCV data for response to IMAS data access requests.                          | Matlab             |
-| tore_supra                  | Maps IDS data requests to MDS+ signal requests for Tore Supra experiment.                                            | MDSplus            |
-| west                        | Maps IDS data requests to MDS+ signal requests for WEST experiment.                                                  | MDSplus, LibTS     |
-| west_tunnel                 | Plugin for opening an SSH tunnel through to the WEST UDA server.                                                     | LibSSH             |
+| Name                        | Description                                                                                                          | Dependencies       | Notes        |
+|-----------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------|--------------|
+| exp2imas                    | Uses the EXP2ITM mappings to return data from experimental data sources.                                             | MDSplus, LibSSH    |              |
+| hl2a                        | Uses the WEST HL2A data access library to return data to IMAS.                                                       | MDSplus, LibHL2A   |              |
+| [imas](source/imas/help.md) | Handles requests from UDA backend for IMAS AL5 for either remote data or mapped experimental data.                   | IMAS               | New for AL 5 |
+| imas_forward                | Forwards IMAS related requests to another UDA server.                                                                | IMAS               | For AL 4     |
+| imas_mapping                | Forwards IMAS low-level data requests to plugin determined by machine name.                                          | IMAS               | For AL 4     |
+| imas_old                    | Deprecated plugin for handling IMAS data requests.                                                                   | MDSplus, HDF5      | Deprecated   |
+| imas_partial                | Uses data dictionary to expand partial IMAS data request and return data for expanded tree.                          | MDSplus, IMAS      | For AL 4     |
+| imas_remote                 | Handles IMAS low-level data requests using IMAS low-level library to allow for IMAS remote data access.              | IMAS               | For AL 4     |
+| imas_uda                    | Converts IMAS data access request to call to signal/source requests from another UDA server.                         |                    | For AL 4     |
+| imasdd                      | Uses data dictionary to expand IMAS data request and forward each sub-request to IMAS_MAPPING plugin.                |                    | For AL 4     |
+| iter_md                     | Uses the ITER machine description database to handle IMAS data requests.                                             | ITERMD, PostgreSQL |              |
+| jet_equilibrium             | Has a special case handling for JET equilibrium profiles_1d mapping, otherwise forwards requests to EXP2IMAS plugin. |                    |              |
+| jet_magnetics               | Proof of concept plugin for returning JET magnetics machine description from JET sensors file.                       |                    |              |
+| jet_summary                 | Plugin for populating the summary IDS for JET.                                                                       | MDSplus            |              |
+| livedisplay                 | Deprecated plugin for returning predefined IDS structures to CODAC live-display system.                              |                    | Deprecated   |
+| mast_imas                   | Deprecated plugin for returning MAST data for IMAS magnetics IDS data access requests.                               | PostgreSQL         |              |
+| tcv                         | Plugin for forwarding signal requests to TCV MDS+ server.                                                            | MDSplus            |              |
+| tcvm                        | Plugin which uses Matlab scripts to map TCV data for response to IMAS data access requests.                          | Matlab             |              |
+| tore_supra                  | Maps IDS data requests to MDS+ signal requests for Tore Supra experiment.                                            | MDSplus            |              |
+| west                        | Maps IDS data requests to MDS+ signal requests for WEST experiment.                                                  | MDSplus, LibTS     |              |
+| west_tunnel                 | Plugin for opening an SSH tunnel through to the WEST UDA server.                                                     | LibSSH             |              |
 
