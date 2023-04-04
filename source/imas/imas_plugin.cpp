@@ -672,8 +672,17 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         auto child = uda_capnp_get_child(tree, root, index);
 
         uda_capnp_set_node_name(child, result->path.c_str());
+
+        uda_capnp_add_children(child, 2);
+        auto shape_node = uda_capnp_get_child(tree, child, 0);
+        uda_capnp_set_node_name(shape_node, "shape");
+        auto data_node = uda_capnp_get_child(tree, child, 1);
+        uda_capnp_set_node_name(data_node, "data");
+
+        uda_capnp_add_array_i32(shape_node, result->shape, result->rank);
+
         if (result->is_size) {
-            uda_capnp_add_i32(child, result->size);
+            uda_capnp_add_i32(data_node, result->size);
         } else {
             size_t count = 1;
             for (int i = 0; i < result->rank; ++i) {
@@ -687,23 +696,23 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
             switch (result->datatype) {
                 case INTEGER_DATA:
                     if (result->using_buffer) {
-                        uda_capnp_add_i32(child, *reinterpret_cast<const int32_t*>(result->buffer));
+                        uda_capnp_add_i32(data_node, *reinterpret_cast<const int32_t*>(result->buffer));
                     } else {
-                        uda_capnp_add_array_i32(child, reinterpret_cast<int32_t*>(result->data), count);
+                        uda_capnp_add_array_i32(data_node, reinterpret_cast<int32_t*>(result->data), count);
                     }
                     break;
                 case DOUBLE_DATA:
                     if (result->using_buffer) {
-                        uda_capnp_add_f64(child, *reinterpret_cast<const double*>(result->buffer));
+                        uda_capnp_add_f64(data_node, *reinterpret_cast<const double*>(result->buffer));
                     } else {
-                        uda_capnp_add_array_f64(child, reinterpret_cast<double*>(result->data), count);
+                        uda_capnp_add_array_f64(data_node, reinterpret_cast<double*>(result->data), count);
                     }
                     break;
                 case CHAR_DATA:
                     if (result->using_buffer) {
-                        uda_capnp_add_char(child, *reinterpret_cast<const char*>(result->buffer));
+                        uda_capnp_add_char(data_node, *reinterpret_cast<const char*>(result->buffer));
                     } else {
-                        uda_capnp_add_array_char(child, reinterpret_cast<char*>(result->data), count);
+                        uda_capnp_add_array_char(data_node, reinterpret_cast<char*>(result->data), count);
                     }
                     break;
                 default:
