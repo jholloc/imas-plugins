@@ -324,10 +324,16 @@ bool is_index(const std::string& string)
         return false;
     }
 
-    size_t len = 0;
-    std::stol(rem, &pos, 10);
+    char* end = nullptr;
+    std::strtol(rem.c_str(), &end, 10);
 
-    return rem == ":" || pos == rem.size();
+    return rem == ":" || *end == '\0';
+}
+
+bool is_integer(const std::string& string) {
+    char* end = nullptr;
+    std::strtol(string.c_str(), &end, 10);
+    return *end == '\0';
 }
 
 std::pair<std::string, long> parse_index(const std::string& string)
@@ -348,9 +354,9 @@ std::pair<std::string, long> parse_index(const std::string& string)
     if (rem == ":") {
         return { name, -1 };
     } else {
-        size_t len = 0;
-        long num = stol(rem, &len, 10);
-        if (len != rem.size()) {
+        char* end = nullptr;
+        long num = std::strtol(rem.c_str(), &end, 10);
+        if (*end != '\0') {
             throw std::runtime_error{"invalid string " + string};
         }
         return { name, num };
@@ -379,7 +385,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
         delim = "/";
     }
 
-    if (!node.empty()) {
+    if (tokens.empty()) {
         // handle non-arraystruct case
 
         IDSData data = {};
@@ -403,7 +409,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
 
         data.found = !is_null_value(data.data, datatype);
         return_data.push_back(data);
-    } else if (!tokens.empty()) {
+    } else {
         // handle arraystruct case
 
         assert(is_index(tokens.front()));
@@ -411,9 +417,13 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
         auto head = tokens.front();
         tokens.pop_front();
 
-        auto res = parse_index(head);
-        node = res.first;
-        long index = res.second;
+        auto pair = parse_index(head);
+        if (!node.empty()) {
+            node = node + "/" + pair.first;
+        } else {
+            node = pair.first;
+        }
+        long index = pair.second;
 
         int arr_ctx;
         IDSData data = {};
@@ -472,7 +482,15 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             new_path.append("/").append(node).append("[").append(std::to_string(index)).append("]");
             std::deque<std::string> copy = tokens;
             read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, depth + 1);
-            ual_iterate_over_arraystruct(arr_ctx, -index);
+            ual_iterate_over_arraystruct(arr_ctx, -index); // reset ctx index back to 0
+        }
+
+        while (arraystruct_cache.size() > depth) {
+            al_status_t status = ual_end_action(arraystruct_cache.back().ctx);
+            arraystruct_cache.pop_back();
+            if (status.code != 0) {
+                throw std::runtime_error{status.message};
+            }
         }
     }
 }
@@ -612,6 +630,10 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     auto ids = tokens.front();
     tokens.pop_front();
+    if (is_integer(tokens.front())) {
+        ids += "/" + tokens.front();
+        tokens.pop_front();
+    }
 
     std::string s_access = access;
 
@@ -636,7 +658,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
             }
         }
 
-        al_status_t status = ual_begin_global_action(ctxId, ids.c_str(), iaccess, &op_ctx);
+        al_status_t status = ual_begin_global_action(ctxId, ids.c_str(), "", iaccess, &op_ctx);
         if (status.code != 0) {
             RAISE_PLUGIN_ERROR(status.message);
         }
