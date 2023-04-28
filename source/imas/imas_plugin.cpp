@@ -291,17 +291,17 @@ int uda::plugins::imas::Plugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plu
 
 namespace {
 
-bool is_null_value(void* data, int datatype)
+bool is_null_value(void* data, int datatype, int rank)
 {
     switch (datatype) {
         case CHAR_DATA:
-            return data == nullptr || *(char*)data == '\0';
+            return data == nullptr || (rank == 0 && *(char*)data == '\0');
         case INTEGER_DATA:
-            return data == nullptr || *(int*)data == -999999999;
+            return data == nullptr || (rank == 0 && *(int*)data == -999999999);
         case DOUBLE_DATA:
-            return data == nullptr || *(double*)data == -9e+40;
+            return data == nullptr || (rank == 0 && *(double*)data == -9e+40);
         case COMPLEX_DATA:
-            return data == nullptr || *(double _Complex*)data == -9e+40;
+            return data == nullptr || (rank == 0 && *(double _Complex*)data == -9e+40);
         default:
             throw std::runtime_error{"unknown datatype"};
     }
@@ -407,7 +407,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             throw std::runtime_error{status.message};
         }
 
-        data.found = !is_null_value(data.data, datatype);
+        data.found = !is_null_value(data.data, datatype, rank);
         return_data.push_back(data);
     } else {
         // handle arraystruct case
