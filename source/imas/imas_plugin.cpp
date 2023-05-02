@@ -132,11 +132,11 @@ private:
 
     std::vector<IDSData>
     read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank, const std::string& ids,
-              int is_homogeneous, const std::vector<int>& dynamic_flags);
+              int is_homogeneous, const std::vector<int>& dynamic_flags, const std::string& timebase);
 
     void read_data_r(int ctx, std::deque<std::string>& tokens, int datatype, int rank,
                      std::vector<IDSData>& return_data, const std::string& path, int is_homogeneous,
-                     const std::vector<int>& dynamic_flags, int flag_depth);
+                     const std::vector<int>& dynamic_flags, const std::string& timebase, int flag_depth);
 };
 
 }
@@ -370,7 +370,7 @@ void
 uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens,
                                         int datatype, int rank, std::vector<IDSData>& return_data,
                                         const std::string& path, int is_homogeneous,
-                                        const std::vector<int>& dynamic_flags, int depth)
+                                        const std::vector<int>& dynamic_flags, const std::string& timebase, int depth)
 {
     if (tokens.empty()) {
         return;
@@ -402,8 +402,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             data.data = (void*)data.buffer;
         }
 
-        const char* time = "";
-        al_status_t status = ual_read_data(ctx, node.c_str(), time, &data.data, datatype, rank, data.shape);
+        al_status_t status = ual_read_data(ctx, node.c_str(), timebase.c_str(), &data.data, datatype, rank, data.shape);
         if (status.code != 0) {
             throw std::runtime_error{status.message};
         }
@@ -448,16 +447,16 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             }
 
             auto is_dynamic = dynamic_flags.at(depth);
-            std::string timebase;
+            std::string struct_timebase;
             if (is_dynamic) {
                 if (is_homogeneous) {
-                    timebase = "/time";
+                    struct_timebase = "/time";
                 } else {
-                    timebase = node + "/time";
+                    struct_timebase = node + "/time";
                 }
             }
 
-            al_status_t status = ual_begin_arraystruct_action(ctx, node.c_str(), timebase.c_str(), &data.size, &arr_ctx);
+            al_status_t status = ual_begin_arraystruct_action(ctx, node.c_str(), struct_timebase.c_str(), &data.size, &arr_ctx);
             arraystruct_cache.emplace_back(ArraystructContextCache{ node, arr_ctx, data.size });
             if (status.code != 0) {
                 throw std::runtime_error{status.message};
@@ -472,7 +471,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
                 std::string new_path = path;
                 new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
                 std::deque<std::string> copy = tokens;
-                read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, depth + 1);
+                read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
                 ual_iterate_over_arraystruct(arr_ctx, 1);
                 ++i;
             }
@@ -482,7 +481,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             std::string new_path = path;
             new_path.append("/").append(node).append("[").append(std::to_string(index)).append("]");
             std::deque<std::string> copy = tokens;
-            read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, depth + 1);
+            read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
             ual_iterate_over_arraystruct(arr_ctx, -index); // reset ctx index back to 0
         }
 
@@ -498,10 +497,11 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
 
 std::vector<uda::plugins::imas::IDSData>
 uda::plugins::imas::Plugin::read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank,
-                                      const std::string& ids, int is_homogeneous, const std::vector<int>& dynamic_flags)
+                                      const std::string& ids, int is_homogeneous, const std::vector<int>& dynamic_flags,
+                                      const std::string& timebase)
 {
     std::vector<IDSData> return_data;
-    read_data_r(ctx, tokens, datatype, rank, return_data, ids, is_homogeneous, dynamic_flags, 0);
+    read_data_r(ctx, tokens, datatype, rank, return_data, ids, is_homogeneous, dynamic_flags, timebase, 0);
 
     return return_data;
 }
@@ -644,6 +644,12 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::vector<int> dynamic_flags_vec = { dynamic_flags, dynamic_flags + ndynamic_flags };
 
+    const char* timebase = nullptr;
+    bool is_timebase = FIND_STRING_VALUE(plugin_interface->request_data->nameValueList, timebase);
+    if (!is_timebase) {
+        timebase = "";
+    }
+
     if (!_open_entries.count(uri)) {
         int rc = open(plugin_interface);
         if (rc != 0) {
@@ -699,7 +705,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::vector<IDSData> results = {};
     try {
-        results = read_data(op_ctx, tokens, convert_datatype(datatype), rank, ids, is_homogeneous, dynamic_flags_vec);
+        results = read_data(op_ctx, tokens, convert_datatype(datatype), rank, ids, is_homogeneous, dynamic_flags_vec, timebase);
         if (results.empty()) {
             initDataBlock(plugin_interface->data_block);
             return 0;
