@@ -533,6 +533,32 @@ int convert_access_mode(const std::string& access)
     }
 }
 
+int convert_range_mode(const std::string& range)
+{
+    if (range == "global") {
+        return GLOBAL_OP;
+    } else if (range == "slice") {
+        return SLICE_OP;
+    } else {
+        RAISE_PLUGIN_ERROR("unknown range mode");
+    }
+}
+
+int convert_interp_mode(const std::string& interp)
+{
+    if (interp == "undefined") {
+        return UNDEFINED_INTERP;
+    } else if (interp == "closest") {
+        return CLOSEST_INTERP;
+    } else if (interp == "previous") {
+        return PREVIOUS_INTERP;
+    } else if (interp == "linear") {
+        return LINEAR_INTERP;
+    } else {
+        RAISE_PLUGIN_ERROR("unknown range mode");
+    }
+}
+
 int convert_datatype(const std::string& datatype)
 {
     if (datatype == "char") {
@@ -635,12 +661,12 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         tokens.pop_front();
     }
 
-    std::string s_access = access;
-
-    int iaccess = convert_access_mode(access);
+    int access_mode = convert_access_mode(access);
+    int range_mode = convert_range_mode(range);
+    int interp_mode = convert_interp_mode(interp);
 
     int op_ctx = -1;
-    if (_operation_cache.ids == ids && _operation_cache.access == iaccess) {
+    if (_operation_cache.ids == ids && _operation_cache.access == access_mode) {
         op_ctx = _operation_cache.ctx;
     } else {
         if (_operation_cache.ctx != -1) {
@@ -658,11 +684,16 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
             }
         }
 
-        al_status_t status = ual_begin_global_action(ctxId, ids.c_str(), "", iaccess, &op_ctx);
+        al_status_t status = {};
+        if (range_mode == GLOBAL_OP) {
+            status = ual_begin_global_action(ctxId, ids.c_str(), "", access_mode, &op_ctx);
+        } else {
+            status = ual_begin_slice_action(ctxId, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+        }
         if (status.code != 0) {
             RAISE_PLUGIN_ERROR(status.message);
         }
-        _operation_cache = { ids, iaccess, op_ctx, {} };
+        _operation_cache = { ids, access_mode, op_ctx, {} };
     }
 
     std::vector<IDSData> results = {};
