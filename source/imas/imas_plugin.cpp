@@ -63,6 +63,7 @@ struct OperationContextCache
 {
     std::string ids;
     int access;
+    int range;
     int ctx;
     std::vector<ArraystructContextCache> arraystruct_cache;
 };
@@ -127,7 +128,7 @@ public:
 private:
     bool _init = false;
     std::unordered_map<uri_t, int> _open_entries = {};
-    OperationContextCache _operation_cache = { "", -1, -1, {} };
+    OperationContextCache _operation_cache = { "", -1, -1, -1, {} };
 
     std::vector<IDSData>
     read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank, const std::string& ids,
@@ -666,7 +667,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     int interp_mode = convert_interp_mode(interp);
 
     int op_ctx = -1;
-    if (_operation_cache.ids == ids && _operation_cache.access == access_mode) {
+    if (_operation_cache.ids == ids && _operation_cache.access == access_mode && _operation_cache.range == range_mode) {
         op_ctx = _operation_cache.ctx;
     } else {
         if (_operation_cache.ctx != -1) {
@@ -693,7 +694,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         if (status.code != 0) {
             RAISE_PLUGIN_ERROR(status.message);
         }
-        _operation_cache = { ids, access_mode, op_ctx, {} };
+        _operation_cache = { ids, access_mode, range_mode, op_ctx, {} };
     }
 
     std::vector<IDSData> results = {};
