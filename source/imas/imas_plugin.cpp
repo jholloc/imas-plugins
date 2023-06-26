@@ -451,6 +451,8 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             if (is_dynamic) {
                 if (is_homogeneous) {
                     struct_timebase = "/time";
+                } else if (node == "time") {
+                    struct_timebase = "time";
                 } else {
                     struct_timebase = node + "/time";
                 }
@@ -888,7 +890,7 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
         _operation_cache = { "", -1, -1, {} };
     }
 
-    al_status_t status = ual_close_pulse(ctx, mode, "");
+    al_status_t status = ual_close_pulse(ctx, mode);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }
