@@ -15,19 +15,22 @@
 #include <cstring>
 #include <fstream>
 #include <unordered_map>
-#include <unordered_set>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
 #include <libgen.h>
-#include <complex.h>
+#include <complex>
+#include <unistd.h>
 
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
 #include <clientserver/udaTypes.h>
-#include <ual_lowlevel.h>
-#include <structures/struct.h>
-#include <structures/accessors.h>
 #include <serialisation/capnp_serialisation.h>
+
+#include <ual_lowlevel.h>
+#include <client/udaGetAPI.h>
+#include <client/accAPI.h>
+
+#include "machine_mapping.h"
 
 #define PATH_LEN 2048
 
@@ -130,6 +133,11 @@ private:
     std::unordered_map<uri_t, int> _open_entries = {};
     OperationContextCache _operation_cache = { "", -1, -1, -1, {} };
 
+    bool is_mapped_ = false;
+    std::string mapped_machine_;
+    uri::QueryDict mapped_arguments_ = {};
+    MachineMapping machine_mapping_ = {};
+
     std::vector<IDSData>
     read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank, const std::string& ids,
               int is_homogeneous, const std::vector<int>& dynamic_flags, const std::string& timebase);
@@ -137,6 +145,17 @@ private:
     void read_data_r(int ctx, std::deque<std::string>& tokens, int datatype, int rank,
                      std::vector<IDSData>& return_data, const std::string& path, int is_homogeneous,
                      const std::vector<int>& dynamic_flags, const std::string& timebase, int flag_depth);
+
+    std::vector<IDSData>
+    read_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, std::deque<std::string>& tokens,
+                     int datatype, int rank, int is_homogeneous, const std::vector<int>& dynamic_flags,
+                     const std::string& timebase);
+
+    void read_mapped_data_r(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
+                            std::deque<std::string>& tokens, int datatype, int rank, std::vector<IDSData>& return_data,
+                            const std::string& path, int flag_depth);
+
+    int get_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data);
 };
 
 }
@@ -508,6 +527,214 @@ uda::plugins::imas::Plugin::read_data(int ctx, std::deque<std::string>& tokens, 
     return return_data;
 }
 
+#ifdef _MSC_VER
+#define UNREACHABLE() __assume(0)
+#else
+#define UNREACHABLE() __builtin_unreachable()
+#endif
+
+namespace {
+
+UDA_TYPE imas2uda_type(int imas_type)
+{
+    switch (imas_type) {
+        case CHAR_DATA:
+            return UDA_TYPE_CHAR;
+        case INTEGER_DATA:
+            return UDA_TYPE_INT;
+        case DOUBLE_DATA:
+            return UDA_TYPE_DOUBLE;
+        case COMPLEX_DATA:
+            return UDA_TYPE_COMPLEX;
+        default:
+            UNREACHABLE();
+    }
+}
+
+#ifndef MAX_HOST_NAME
+#  define MAX_HOST_NAME 255
+#endif
+
+std::string get_host_name()
+{
+    char host[MAX_HOST_NAME] = {};
+#ifdef _WIN32
+    DWORD size = MAX_HOST_NAME - 1;
+    GetComputerName(host, &size);
+#else
+    if ((gethostname(host, MAX_HOST_NAME - 1)) != 0) {
+        char* env = getenv("HOSTNAME");
+        if (env != nullptr) copyString(env, host, MAX_HOST_NAME - 1);
+    }
+#endif
+    return host;
+}
+
+} // anon namespace
+
+int uda::plugins::imas::Plugin::get_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data)
+{
+    auto plugin = machine_mapping_.plugin(mapped_machine_, ids);
+    auto host = machine_mapping_.host(mapped_machine_, ids);
+    auto port = machine_mapping_.port(mapped_machine_, ids);
+
+    // Ignore host for now
+
+    std::string shape_string;
+    const char* delim = ",";
+    for (int i = 0; i < data.rank; ++i) {
+        shape_string += (delim + std::to_string(data.shape[i]));
+    }
+
+    std::stringstream ss;
+    ss << plugin << "::get("
+    << "machine='" << mapped_machine_ << "'"
+    << ", path='" << data.path << "'"
+    << ", rank=" << data.rank
+    << ", shape=" << shape_string
+    << ", datatype=" << imas2uda_type(data.datatype);
+
+    delim = ", ";
+    for (const auto& name : mapped_arguments_.names()) {
+        auto value = mapped_arguments_.get(name);
+        ss << delim << name << "=" << value.value();
+    }
+    ss << ")";
+
+    std::string host_name = get_host_name();
+
+    std::string request = ss.str();
+    DATA_BLOCK* data_block;
+
+    if (host == "localhost" || host == host_name) {
+        int rc = callPlugin(plugin_interface->pluginList, request.c_str(), plugin_interface);
+        if (rc != 0) {
+            return rc;
+        }
+        data_block = plugin_interface->data_block;
+    } else {
+        putIdamServerHost(host.c_str());
+        if (port != 0) {
+            putIdamServerPort(port);
+        }
+        int handle = idamGetAPI(request.c_str(), "");
+        if (handle < 0) {
+            return handle;
+        }
+        data_block = getIdamDataBlock(handle);
+    }
+
+    if (data.rank == 0) {
+        data.using_buffer = true;
+        data.data = (void*)data.buffer;
+
+    }
+    size_t size_of = getSizeOf((UDA_TYPE)data_block->data_type);
+    memcpy(data.data, data_block->data, data_block->data_n * size_of);
+    data.size = data_block->data_n;
+
+    freeDataBlock(data_block);
+
+    return 0;
+}
+
+void
+uda::plugins::imas::Plugin::read_mapped_data_r(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
+                                               std::deque<std::string>& tokens, int datatype, int rank,
+                                               std::vector<IDSData>& return_data, const std::string& path, int depth)
+{
+    if (tokens.empty()) {
+        return;
+    }
+
+    std::string node;
+    std::string delim;
+
+    while (!tokens.empty() && !is_index(tokens.front())) {
+        node += delim + tokens.front();
+        tokens.pop_front();
+
+        delim = "/";
+    }
+
+    if (tokens.empty()) {
+        // handle non-arraystruct case
+
+        IDSData data = {};
+        data.path = path + "/" + node;
+        data.rank = rank;
+        data.datatype = datatype;
+        for (int i = 0; i < rank; ++i) {
+            data.shape[i] = 0;
+        }
+
+        int rc = get_mapped_data(ids, plugin_interface, data);
+        if (rc != 0) {
+            throw std::runtime_error{"failed to map data"};
+        }
+
+        data.found = !is_null_value(data.data, datatype, rank);
+        return_data.push_back(data);
+    } else {
+        // handle arraystruct case
+
+        assert(is_index(tokens.front()));
+
+        auto head = tokens.front();
+        tokens.pop_front();
+
+        auto pair = parse_index(head);
+        if (!node.empty()) {
+            node = node + "/" + pair.first;
+        } else {
+            node = pair.first;
+        }
+        long index = pair.second;
+
+        IDSData data = {};
+        data.found = true;
+        data.path = path + "/" + node;
+        data.is_size = true;
+        data.rank = 0;
+        data.datatype = INTEGER_DATA;
+
+        int rc = get_mapped_data(ids, plugin_interface, data);
+        if (rc != 0) {
+            throw std::runtime_error{ "failed to get mapped data" };
+        }
+
+        return_data.push_back(data);
+
+        if (index == -1) {
+            int i = 0;
+            while (i < data.size) {
+                std::string new_path = path;
+                new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
+                std::deque<std::string> copy = tokens;
+                read_mapped_data_r(ids, plugin_interface, copy, datatype, rank, return_data, new_path, depth + 1);
+                ++i;
+            }
+        } else {
+            std::string new_path = path;
+            new_path.append("/").append(node).append("[").append(std::to_string(index)).append("]");
+            std::deque<std::string> copy = tokens;
+            read_mapped_data_r(ids, plugin_interface, copy, datatype, rank, return_data, new_path, depth + 1);
+        }
+    }
+}
+
+std::vector<uda::plugins::imas::IDSData>
+uda::plugins::imas::Plugin::read_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
+                                             std::deque<std::string>& tokens, int datatype, int rank,
+                                             int is_homogeneous, const std::vector<int>& dynamic_flags,
+                                             const std::string& timebase)
+{
+    std::vector<IDSData> return_data;
+    read_mapped_data_r(ids, plugin_interface, tokens, datatype, rank, return_data, ids, 0);
+
+    return return_data;
+}
+
 int convert_open_mode(const std::string& mode)
 {
     if (mode == "open") {
@@ -644,7 +871,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     size_t ndynamic_flags = -1;
     FIND_REQUIRED_INT_ARRAY(plugin_interface->request_data->nameValueList, dynamic_flags);
 
-    std::vector<int> dynamic_flags_vec = { dynamic_flags, dynamic_flags + ndynamic_flags };
+    std::vector<int> dynamic_flags_vec = {dynamic_flags, dynamic_flags + ndynamic_flags};
 
     const char* timebase = nullptr;
     bool is_timebase = FIND_STRING_VALUE(plugin_interface->request_data->nameValueList, timebase);
@@ -658,6 +885,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
             return rc;
         }
     }
+
     int ctxId = _open_entries[uri];
 
     std::deque<std::string> tokens;
@@ -670,50 +898,61 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         tokens.pop_front();
     }
 
-    int access_mode = convert_access_mode(access);
-    int range_mode = convert_range_mode(range);
-    int interp_mode = convert_interp_mode(interp);
+    std::vector<IDSData> results = {};
 
-    int op_ctx = -1;
-    if (_operation_cache.ids == ids && _operation_cache.access == access_mode && _operation_cache.range == range_mode) {
-        op_ctx = _operation_cache.ctx;
+    if (is_mapped_) {
+        try {
+            results = read_mapped_data(ids, plugin_interface, tokens, convert_datatype(datatype), rank, is_homogeneous, dynamic_flags_vec, timebase);
+        } catch (std::runtime_error& ex) {
+            RAISE_PLUGIN_ERROR(ex.what());
+        }
     } else {
-        if (_operation_cache.ctx != -1) {
-            while (!_operation_cache.arraystruct_cache.empty()) {
-                al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+        int access_mode = convert_access_mode(access);
+        int range_mode = convert_range_mode(range);
+        int interp_mode = convert_interp_mode(interp);
+
+        int op_ctx = -1;
+        if (_operation_cache.ids == ids && _operation_cache.access == access_mode &&
+            _operation_cache.range == range_mode) {
+            op_ctx = _operation_cache.ctx;
+        } else {
+            if (_operation_cache.ctx != -1) {
+                while (!_operation_cache.arraystruct_cache.empty()) {
+                    al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+                    if (status.code != 0) {
+                        RAISE_PLUGIN_ERROR(status.message);
+                    }
+                    _operation_cache.arraystruct_cache.pop_back();
+                }
+
+                al_status_t status = ual_end_action(_operation_cache.ctx);
                 if (status.code != 0) {
                     RAISE_PLUGIN_ERROR(status.message);
                 }
-                _operation_cache.arraystruct_cache.pop_back();
             }
 
-            al_status_t status = ual_end_action(_operation_cache.ctx);
+            al_status_t status = {};
+            if (range_mode == GLOBAL_OP) {
+                status = ual_begin_global_action(ctxId, ids.c_str(), "", access_mode, &op_ctx);
+            } else {
+                status = ual_begin_slice_action(ctxId, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+            }
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
             }
+            _operation_cache = {ids, access_mode, range_mode, op_ctx, {}};
         }
 
-        al_status_t status = {};
-        if (range_mode == GLOBAL_OP) {
-            status = ual_begin_global_action(ctxId, ids.c_str(), "", access_mode, &op_ctx);
-        } else {
-            status = ual_begin_slice_action(ctxId, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+        try {
+            results = read_data(op_ctx, tokens, convert_datatype(datatype), rank, ids, is_homogeneous, dynamic_flags_vec, timebase);
+        } catch (std::runtime_error& ex) {
+            RAISE_PLUGIN_ERROR(ex.what());
         }
-        if (status.code != 0) {
-            RAISE_PLUGIN_ERROR(status.message);
-        }
-        _operation_cache = { ids, access_mode, range_mode, op_ctx, {} };
     }
 
-    std::vector<IDSData> results = {};
-    try {
-        results = read_data(op_ctx, tokens, convert_datatype(datatype), rank, ids, is_homogeneous, dynamic_flags_vec, timebase);
-        if (results.empty()) {
-            initDataBlock(plugin_interface->data_block);
-            return 0;
-        }
-    } catch (std::runtime_error& ex) {
-        RAISE_PLUGIN_ERROR(ex.what());
+    if (results.empty()) {
+        initDataBlock(plugin_interface->data_block);
+        return 0;
     }
 
     std::vector<const IDSData*> found_results = {};
@@ -826,6 +1065,18 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     int mode_int = convert_open_mode(mode);
 
+    auto parsed_uri = uri::parse_uri(uri);
+    auto maybe_machine = parsed_uri.query.get("machine");
+    if (maybe_machine) {
+        is_mapped_ = true;
+        mapped_machine_ = maybe_machine.value();
+        mapped_arguments_ = parsed_uri.query;
+
+        return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapping return");
+    }
+
+    is_mapped_ = false;
+
     int ctx;
     al_status_t status = ual_begin_dataentry_action(uri, mode_int, &ctx);
     if (status.code != 0) {
@@ -868,6 +1119,12 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
     FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, mode);
 
     initDataBlock(plugin_interface->data_block);
+
+    if (is_mapped_) {
+        is_mapped_ = false;
+        mapped_machine_ = "";
+        return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapped return");
+    }
 
     if (_open_entries.count(uri) == 0) {
         RAISE_PLUGIN_ERROR("pulse is not currently open");
