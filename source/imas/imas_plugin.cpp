@@ -24,7 +24,7 @@
 #include <clientserver/stringUtils.h>
 #include <clientserver/initStructs.h>
 #include <clientserver/udaTypes.h>
-#include <ual_lowlevel.h>
+#include <al_lowlevel.h>
 #include <structures/struct.h>
 #include <structures/accessors.h>
 #include <serialisation/capnp_serialisation.h>
@@ -402,7 +402,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             data.data = (void*)data.buffer;
         }
 
-        al_status_t status = ual_read_data(ctx, node.c_str(), timebase.c_str(), &data.data, datatype, rank, data.shape);
+        al_status_t status = al_read_data(ctx, node.c_str(), timebase.c_str(), &data.data, datatype, rank, data.shape);
         if (status.code != 0) {
             throw std::runtime_error{status.message};
         }
@@ -439,7 +439,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             data.size = arraystruct_cache[depth].size;
         } else {
             while (arraystruct_cache.size() > depth) {
-                al_status_t status = ual_end_action(arraystruct_cache.back().ctx);
+                al_status_t status = al_end_action(arraystruct_cache.back().ctx);
                 arraystruct_cache.pop_back();
                 if (status.code != 0) {
                     throw std::runtime_error{status.message};
@@ -458,7 +458,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
                 }
             }
 
-            al_status_t status = ual_begin_arraystruct_action(ctx, node.c_str(), struct_timebase.c_str(), &data.size, &arr_ctx);
+            al_status_t status = al_begin_arraystruct_action(ctx, node.c_str(), struct_timebase.c_str(), &data.size, &arr_ctx);
             arraystruct_cache.emplace_back(ArraystructContextCache{ node, arr_ctx, data.size });
             if (status.code != 0) {
                 throw std::runtime_error{status.message};
@@ -474,21 +474,21 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
                 new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
                 std::deque<std::string> copy = tokens;
                 read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
-                ual_iterate_over_arraystruct(arr_ctx, 1);
+                al_iterate_over_arraystruct(arr_ctx, 1);
                 ++i;
             }
-            ual_iterate_over_arraystruct(arr_ctx, -data.size); // reset ctx index back to 0
+            al_iterate_over_arraystruct(arr_ctx, -data.size); // reset ctx index back to 0
         } else {
-            ual_iterate_over_arraystruct(arr_ctx, index);
+            al_iterate_over_arraystruct(arr_ctx, index);
             std::string new_path = path;
             new_path.append("/").append(node).append("[").append(std::to_string(index)).append("]");
             std::deque<std::string> copy = tokens;
             read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
-            ual_iterate_over_arraystruct(arr_ctx, -index); // reset ctx index back to 0
+            al_iterate_over_arraystruct(arr_ctx, -index); // reset ctx index back to 0
         }
 
         while (arraystruct_cache.size() > depth) {
-            al_status_t status = ual_end_action(arraystruct_cache.back().ctx);
+            al_status_t status = al_end_action(arraystruct_cache.back().ctx);
             arraystruct_cache.pop_back();
             if (status.code != 0) {
                 throw std::runtime_error{status.message};
@@ -680,14 +680,14 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
     } else {
         if (_operation_cache.ctx != -1) {
             while (!_operation_cache.arraystruct_cache.empty()) {
-                al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+                al_status_t status = al_end_action(_operation_cache.arraystruct_cache.back().ctx);
                 if (status.code != 0) {
                     RAISE_PLUGIN_ERROR(status.message);
                 }
                 _operation_cache.arraystruct_cache.pop_back();
             }
 
-            al_status_t status = ual_end_action(_operation_cache.ctx);
+            al_status_t status = al_end_action(_operation_cache.ctx);
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
             }
@@ -695,9 +695,9 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
         al_status_t status = {};
         if (range_mode == GLOBAL_OP) {
-            status = ual_begin_global_action(ctxId, ids.c_str(), "", access_mode, &op_ctx);
+            status = al_begin_global_action(ctxId, ids.c_str(), "", access_mode, &op_ctx);
         } else {
-            status = ual_begin_slice_action(ctxId, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+            status = al_begin_slice_action(ctxId, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
         }
         if (status.code != 0) {
             RAISE_PLUGIN_ERROR(status.message);
@@ -827,7 +827,7 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     int mode_int = convert_open_mode(mode);
 
     int ctx;
-    al_status_t status = ual_begin_dataentry_action(uri, mode_int, &ctx);
+    al_status_t status = al_begin_dataentry_action(uri, mode_int, &ctx);
     if (status.code != 0) {
         std::string msg = std::string{ "failed to open pulse: " } + status.message;
         RAISE_PLUGIN_ERROR(msg.c_str());
@@ -876,26 +876,26 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     if (_operation_cache.ctx != -1) {
         while (!_operation_cache.arraystruct_cache.empty()) {
-            al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+            al_status_t status = al_end_action(_operation_cache.arraystruct_cache.back().ctx);
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
             }
             _operation_cache.arraystruct_cache.pop_back();
         }
 
-        al_status_t status = ual_end_action(_operation_cache.ctx);
+        al_status_t status = al_end_action(_operation_cache.ctx);
         if (status.code != 0) {
             RAISE_PLUGIN_ERROR(status.message);
         }
         _operation_cache = { "", -1, -1, {} };
     }
 
-    al_status_t status = ual_close_pulse(ctx, mode);
+    al_status_t status = al_close_pulse(ctx, mode);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }
 
-    status = ual_end_action(ctx);
+    status = al_end_action(ctx);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }
