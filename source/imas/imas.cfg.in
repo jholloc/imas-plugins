@@ -1,0 +1,1 @@
+export UDA_IMAS_MACHINE_MAP=@CMAKE_CURRENT_SOURCE_DIR@/machines.txt

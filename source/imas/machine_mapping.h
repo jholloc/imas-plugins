@@ -42,7 +42,7 @@ public:
 
             auto machine = words[0];
             auto ids = words[1];
-            auto host = words[2];
+            auto host = words[2] == "-" ? "localhost" : words[2];
             auto port = words[3] == "-" ? 0 : std::stoi(words[3]);
             auto plugin = words[4];
 

@@ -10,5 +10,8 @@ function( add_clang_format_target )
                        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                        COMMAND_EXPAND_LISTS )
     message( STATUS "Format the project using the `clang-format` target (i.e: cmake --build build --target clang-format).\n" )
+  else()
+    add_custom_target( clang-format
+                       COMMAND echo "clang-format not avialable" )
   endif()
 endfunction()
