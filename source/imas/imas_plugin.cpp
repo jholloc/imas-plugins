@@ -85,6 +85,32 @@ struct IDSData
     int datatype = 0;
 };
 
+struct Entry
+{
+    bool is_mapped;
+    int ctx;
+    std::string mapped_machine;
+    uri::QueryDict mapped_arguments = {};
+    OperationContextCache operation_cache = { "", -1, -1, -1, {} };
+
+    static Entry MappedEntry(std::string mapped_machine, uri::QueryDict mapped_arguments) {
+        return { true, -1, std::move(mapped_machine), std::move(mapped_arguments), {} };
+    }
+
+    static Entry LocalEntry(int ctx) {
+        return { false, ctx, "", {}, { "", -1, -1, -1, {} } };
+    }
+
+private:
+    Entry(bool is_mapped, int ctx, std::string&& mapped_machine, uri::QueryDict&& mapped_arguments, OperationContextCache&& operation_cache)
+    : is_mapped{is_mapped}
+    , ctx(ctx)
+    , mapped_machine{mapped_machine}
+    , mapped_arguments{mapped_arguments}
+    , operation_cache{operation_cache}
+    {}
+};
+
 }
 }
 }
@@ -130,32 +156,27 @@ public:
 
 private:
     bool _init = false;
-    std::unordered_map<uri_t, int> _open_entries = {};
-    OperationContextCache _operation_cache = { "", -1, -1, -1, {} };
+    std::unordered_map<uri_t, Entry> _open_entries = {};
 
-    bool is_mapped_ = false;
-    std::string mapped_machine_;
-    uri::QueryDict mapped_arguments_ = {};
     MachineMapping machine_mapping_ = {};
 
     std::vector<IDSData>
-    read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank, const std::string& ids,
+    read_data(Entry& entry, int ctx, std::deque<std::string>& tokens, int datatype, int rank, const std::string& ids,
               int is_homogeneous, const std::vector<int>& dynamic_flags, const std::string& timebase);
 
-    void read_data_r(int ctx, std::deque<std::string>& tokens, int datatype, int rank,
+    void read_data_r(Entry& entry, int ctx, std::deque<std::string>& tokens, int datatype, int rank,
                      std::vector<IDSData>& return_data, const std::string& path, int is_homogeneous,
                      const std::vector<int>& dynamic_flags, const std::string& timebase, int flag_depth);
 
     std::vector<IDSData>
-    read_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, std::deque<std::string>& tokens,
-                     int datatype, int rank, int is_homogeneous, const std::vector<int>& dynamic_flags,
-                     const std::string& timebase);
+    read_mapped_data(const Entry& entry, const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, std::deque<std::string>& tokens,
+                     int datatype, int rank);
 
-    void read_mapped_data_r(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
+    void read_mapped_data_r(const Entry& entry, const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
                             std::deque<std::string>& tokens, int datatype, int rank, std::vector<IDSData>& return_data,
                             const std::string& path, int flag_depth);
 
-    int get_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data);
+    int get_mapped_data(const Entry& entry, const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data);
 };
 
 }
@@ -386,7 +407,7 @@ std::pair<std::string, long> parse_index(const std::string& string)
 } // anon namespace
 
 void
-uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens,
+uda::plugins::imas::Plugin::read_data_r(Entry& entry, int ctx, std::deque<std::string>& tokens,
                                         int datatype, int rank, std::vector<IDSData>& return_data,
                                         const std::string& path, int is_homogeneous,
                                         const std::vector<int>& dynamic_flags, const std::string& timebase, int depth)
@@ -452,7 +473,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
         data.rank = 0;
         data.datatype = INTEGER_DATA;
 
-        auto& arraystruct_cache = _operation_cache.arraystruct_cache;
+        auto& arraystruct_cache = entry.operation_cache.arraystruct_cache;
         if (arraystruct_cache.size() > depth && arraystruct_cache[depth].node == node) {
             arr_ctx = arraystruct_cache[depth].ctx;
             data.size = arraystruct_cache[depth].size;
@@ -492,7 +513,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
                 std::string new_path = path;
                 new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
                 std::deque<std::string> copy = tokens;
-                read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
+                read_data_r(entry, arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
                 ual_iterate_over_arraystruct(arr_ctx, 1);
                 ++i;
             }
@@ -502,7 +523,7 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
             std::string new_path = path;
             new_path.append("/").append(node).append("[").append(std::to_string(index)).append("]");
             std::deque<std::string> copy = tokens;
-            read_data_r(arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
+            read_data_r(entry, arr_ctx, copy, datatype, rank, return_data, new_path, is_homogeneous, dynamic_flags, timebase, depth + 1);
             ual_iterate_over_arraystruct(arr_ctx, -index); // reset ctx index back to 0
         }
 
@@ -517,12 +538,12 @@ uda::plugins::imas::Plugin::read_data_r(int ctx, std::deque<std::string>& tokens
 }
 
 std::vector<uda::plugins::imas::IDSData>
-uda::plugins::imas::Plugin::read_data(int ctx, std::deque<std::string>& tokens, int datatype, int rank,
+uda::plugins::imas::Plugin::read_data(Entry& entry, int ctx, std::deque<std::string>& tokens, int datatype, int rank,
                                       const std::string& ids, int is_homogeneous, const std::vector<int>& dynamic_flags,
                                       const std::string& timebase)
 {
     std::vector<IDSData> return_data;
-    read_data_r(ctx, tokens, datatype, rank, return_data, ids, is_homogeneous, dynamic_flags, timebase, 0);
+    read_data_r(entry, ctx, tokens, datatype, rank, return_data, ids, is_homogeneous, dynamic_flags, timebase, 0);
 
     return return_data;
 }
@@ -572,11 +593,11 @@ std::string get_host_name()
 
 } // anon namespace
 
-int uda::plugins::imas::Plugin::get_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data)
+int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data)
 {
-    auto plugin = machine_mapping_.plugin(mapped_machine_, ids);
-    auto host = machine_mapping_.host(mapped_machine_, ids);
-    auto port = machine_mapping_.port(mapped_machine_, ids);
+    auto plugin = machine_mapping_.plugin(entry.mapped_machine, ids);
+    auto host = machine_mapping_.host(entry.mapped_machine, ids);
+    auto port = machine_mapping_.port(entry.mapped_machine, ids);
 
     // Ignore host for now
 
@@ -588,15 +609,15 @@ int uda::plugins::imas::Plugin::get_mapped_data(const std::string& ids, IDAM_PLU
 
     std::stringstream ss;
     ss << plugin << "::get("
-    << "machine='" << mapped_machine_ << "'"
+    << "machine='" << entry.mapped_machine << "'"
     << ", path='" << data.path << "'"
     << ", rank=" << data.rank
     << ", shape=" << shape_string
     << ", datatype=" << imas2uda_type(data.datatype);
 
     delim = ", ";
-    for (const auto& name : mapped_arguments_.names()) {
-        auto value = mapped_arguments_.get(name);
+    for (const auto& name : entry.mapped_arguments.names()) {
+        auto value = entry.mapped_arguments.get(name);
         ss << delim << name << "=" << value.value();
     }
     ss << ")";
@@ -639,7 +660,7 @@ int uda::plugins::imas::Plugin::get_mapped_data(const std::string& ids, IDAM_PLU
 }
 
 void
-uda::plugins::imas::Plugin::read_mapped_data_r(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
+uda::plugins::imas::Plugin::read_mapped_data_r(const Entry& entry, const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
                                                std::deque<std::string>& tokens, int datatype, int rank,
                                                std::vector<IDSData>& return_data, const std::string& path, int depth)
 {
@@ -668,7 +689,7 @@ uda::plugins::imas::Plugin::read_mapped_data_r(const std::string& ids, IDAM_PLUG
             data.shape[i] = 0;
         }
 
-        int rc = get_mapped_data(ids, plugin_interface, data);
+        int rc = get_mapped_data(entry, ids, plugin_interface, data);
         if (rc != 0) {
             throw std::runtime_error{"failed to map data"};
         }
@@ -698,7 +719,7 @@ uda::plugins::imas::Plugin::read_mapped_data_r(const std::string& ids, IDAM_PLUG
         data.rank = 0;
         data.datatype = INTEGER_DATA;
 
-        int rc = get_mapped_data(ids, plugin_interface, data);
+        int rc = get_mapped_data(entry, ids, plugin_interface, data);
         if (rc != 0) {
             throw std::runtime_error{ "failed to get mapped data" };
         }
@@ -711,26 +732,24 @@ uda::plugins::imas::Plugin::read_mapped_data_r(const std::string& ids, IDAM_PLUG
                 std::string new_path = path;
                 new_path.append("/").append(node).append("[").append(std::to_string(i)).append("]");
                 std::deque<std::string> copy = tokens;
-                read_mapped_data_r(ids, plugin_interface, copy, datatype, rank, return_data, new_path, depth + 1);
+                read_mapped_data_r(entry, ids, plugin_interface, copy, datatype, rank, return_data, new_path, depth + 1);
                 ++i;
             }
         } else {
             std::string new_path = path;
             new_path.append("/").append(node).append("[").append(std::to_string(index)).append("]");
             std::deque<std::string> copy = tokens;
-            read_mapped_data_r(ids, plugin_interface, copy, datatype, rank, return_data, new_path, depth + 1);
+            read_mapped_data_r(entry, ids, plugin_interface, copy, datatype, rank, return_data, new_path, depth + 1);
         }
     }
 }
 
 std::vector<uda::plugins::imas::IDSData>
-uda::plugins::imas::Plugin::read_mapped_data(const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
-                                             std::deque<std::string>& tokens, int datatype, int rank,
-                                             int is_homogeneous, const std::vector<int>& dynamic_flags,
-                                             const std::string& timebase)
+uda::plugins::imas::Plugin::read_mapped_data(const Entry& entry, const std::string& ids, IDAM_PLUGIN_INTERFACE* plugin_interface,
+                                             std::deque<std::string>& tokens, int datatype, int rank)
 {
     std::vector<IDSData> return_data;
-    read_mapped_data_r(ids, plugin_interface, tokens, datatype, rank, return_data, ids, 0);
+    read_mapped_data_r(entry, ids, plugin_interface, tokens, datatype, rank, return_data, ids, 0);
 
     return return_data;
 }
@@ -886,7 +905,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         }
     }
 
-    int ctxId = _open_entries[uri];
+    auto& entry = _open_entries[uri];
 
     std::deque<std::string> tokens;
     boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
@@ -900,9 +919,9 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     std::vector<IDSData> results = {};
 
-    if (is_mapped_) {
+    if (entry.is_mapped) {
         try {
-            results = read_mapped_data(ids, plugin_interface, tokens, convert_datatype(datatype), rank, is_homogeneous, dynamic_flags_vec, timebase);
+            results = read_mapped_data(entry, ids, plugin_interface, tokens, convert_datatype(datatype), rank);
         } catch (std::runtime_error& ex) {
             RAISE_PLUGIN_ERROR(ex.what());
         }
@@ -912,20 +931,20 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
         int interp_mode = convert_interp_mode(interp);
 
         int op_ctx = -1;
-        if (_operation_cache.ids == ids && _operation_cache.access == access_mode &&
-            _operation_cache.range == range_mode) {
-            op_ctx = _operation_cache.ctx;
+        if (entry.operation_cache.ids == ids && entry.operation_cache.access == access_mode &&
+                entry.operation_cache.range == range_mode) {
+            op_ctx = entry.operation_cache.ctx;
         } else {
-            if (_operation_cache.ctx != -1) {
-                while (!_operation_cache.arraystruct_cache.empty()) {
-                    al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+            if (entry.operation_cache.ctx != -1) {
+                while (!entry.operation_cache.arraystruct_cache.empty()) {
+                    al_status_t status = ual_end_action(entry.operation_cache.arraystruct_cache.back().ctx);
                     if (status.code != 0) {
                         RAISE_PLUGIN_ERROR(status.message);
                     }
-                    _operation_cache.arraystruct_cache.pop_back();
+                    entry.operation_cache.arraystruct_cache.pop_back();
                 }
 
-                al_status_t status = ual_end_action(_operation_cache.ctx);
+                al_status_t status = ual_end_action(entry.operation_cache.ctx);
                 if (status.code != 0) {
                     RAISE_PLUGIN_ERROR(status.message);
                 }
@@ -933,20 +952,20 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
             al_status_t status = {};
             if (range_mode == GLOBAL_OP) {
-                status = ual_begin_global_action(ctxId, ids.c_str(), "", access_mode, &op_ctx);
+                status = ual_begin_global_action(entry.ctx, ids.c_str(), "", access_mode, &op_ctx);
             } else {
-                status = ual_begin_slice_action(ctxId, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+                status = ual_begin_slice_action(entry.ctx, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
             }
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
             }
-            _operation_cache = {ids, access_mode, range_mode, op_ctx, {}};
+            entry.operation_cache = {ids, access_mode, range_mode, op_ctx, {}};
         }
 
         try {
-            results = read_data(op_ctx, tokens, convert_datatype(datatype), rank, ids, is_homogeneous, dynamic_flags_vec, timebase);
+            results = read_data(entry, op_ctx, tokens, convert_datatype(datatype), rank, ids, is_homogeneous, dynamic_flags_vec, timebase);
         } catch (std::runtime_error& ex) {
-            RAISE_PLUGIN_ERROR(ex.what());
+            RAISE_PLUGIN_ERROR(ex.what())
         }
     }
 
@@ -1068,14 +1087,15 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
     auto parsed_uri = uri::parse_uri(uri);
     auto maybe_machine = parsed_uri.query.get("machine");
     if (maybe_machine) {
-        is_mapped_ = true;
-        mapped_machine_ = maybe_machine.value();
-        mapped_arguments_ = parsed_uri.query;
+        auto mapped_machine = maybe_machine.value();
 
+        if (!machine_mapping_.contains(mapped_machine)) {
+            RAISE_PLUGIN_ERROR("machine not found")
+        }
+
+        _open_entries[uri] = Entry::MappedEntry(mapped_machine, parsed_uri.query);
         return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapping return");
     }
-
-    is_mapped_ = false;
 
     int ctx;
     al_status_t status = ual_begin_dataentry_action(uri, mode_int, &ctx);
@@ -1086,7 +1106,7 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     initDataBlock(plugin_interface->data_block);
 
-    _open_entries[uri] = ctx;
+    _open_entries[uri] = Entry::LocalEntry(ctx);
 
     return setReturnDataIntScalar(plugin_interface->data_block, ctx, "pulse context");
 }
@@ -1120,39 +1140,38 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface)
 
     initDataBlock(plugin_interface->data_block);
 
-    if (is_mapped_) {
-        is_mapped_ = false;
-        mapped_machine_ = "";
-        return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapped return");
-    }
-
     if (_open_entries.count(uri) == 0) {
         RAISE_PLUGIN_ERROR("pulse is not currently open");
     }
-    int ctx = _open_entries[uri];
+    auto& entry = _open_entries[uri];
 
-    if (_operation_cache.ctx != -1) {
-        while (!_operation_cache.arraystruct_cache.empty()) {
-            al_status_t status = ual_end_action(_operation_cache.arraystruct_cache.back().ctx);
+    if (entry.is_mapped) {
+        _open_entries.erase(uri);
+        return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapped return");
+    }
+
+    if (entry.operation_cache.ctx != -1) {
+        while (!entry.operation_cache.arraystruct_cache.empty()) {
+            al_status_t status = ual_end_action(entry.operation_cache.arraystruct_cache.back().ctx);
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
             }
-            _operation_cache.arraystruct_cache.pop_back();
+            entry.operation_cache.arraystruct_cache.pop_back();
         }
 
-        al_status_t status = ual_end_action(_operation_cache.ctx);
+        al_status_t status = ual_end_action(entry.operation_cache.ctx);
         if (status.code != 0) {
             RAISE_PLUGIN_ERROR(status.message);
         }
-        _operation_cache = { "", -1, -1, {} };
+        entry.operation_cache = { "", -1, -1, {} };
     }
 
-    al_status_t status = ual_close_pulse(ctx, mode);
+    al_status_t status = ual_close_pulse(entry.ctx, mode);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }
 
-    status = ual_end_action(ctx);
+    status = ual_end_action(entry.ctx);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }

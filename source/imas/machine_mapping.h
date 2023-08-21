@@ -50,6 +50,12 @@ public:
         }
     }
 
+    bool contains(std::string machine)
+    {
+        boost::to_upper(machine);
+        return mappings_.count(machine) != 0;
+    }
+
     std::string host(std::string machine, std::string ids)
     {
         boost::to_upper(machine);
