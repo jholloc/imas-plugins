@@ -2,11 +2,11 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <regex.h>
 #include <mdsobjects.h>
+#include <regex.h>
 
-#include <logging/logging.h>
 #include <clientserver/stringUtils.h>
+#include <logging/logging.h>
 #include <plugins/udaPlugin.h>
 
 #include "exp2imas_ramCache.h"
@@ -17,8 +17,7 @@ namespace {
 
 MDSplus::Connection* conn = nullptr;
 
-int get_signal_length(MDSplus::Connection& connection, std::string signal)
-{
+int get_signal_length(MDSplus::Connection& connection, std::string signal) {
     signal += "; SIZE(_sig);";
 
     try {
@@ -41,15 +40,13 @@ typedef struct ServerThreadData {
     const char* mds_host;
 } SERVER_THREAD_DATA;
 
-void* server_task(void* ptr)
-{
+void* server_task(void* ptr) {
     auto data = (SERVER_THREAD_DATA*)ptr;
     ssh_run_server(data->experiment, data->ssh_hosts, data->num_hosts, data->mds_host);
     return nullptr;
 }
 
-void replace(char* out, char* in, const char* replace, const char* with)
-{
+void replace(char* out, char* in, const char* replace, const char* with) {
     char* pos = strstr(in, replace);
     if (pos != nullptr) {
         char* tmp = StringReplaceAll(in, replace, with);
@@ -59,39 +56,39 @@ void replace(char* out, char* in, const char* replace, const char* with)
         sprintf(out, "%s", in);
     }
 }
-char* replace_dda(char* old_signal, const char* new_dda){
+char* replace_dda(char* old_signal, const char* new_dda) {
     char* temp = strdup(old_signal);
     char* substr;
-    substr = strtok(temp,"/");
-    substr = strtok(NULL,"/");
+    substr = strtok(temp, "/");
+    substr = strtok(NULL, "/");
     char* new_signal = StringReplace(old_signal, substr, new_dda);
     free(temp);
 
-    return(new_signal);
+    return (new_signal);
 }
 
-char* add_pff_sequence(char* string_in, int ppf_sequence){
+char* add_pff_sequence(char* string_in, int ppf_sequence) {
     char* temp = string_in;
     size_t new_len = strlen(temp) + 5;
-    char* string_out = (char*)calloc(new_len,sizeof(char));
-    sprintf(string_out,"%s/%d",temp, ppf_sequence);
+    char* string_out = (char*)calloc(new_len, sizeof(char));
+    sprintf(string_out, "%s/%d", temp, ppf_sequence);
     free(temp);
     return string_out;
 }
 
-char* add_ppf_user(char* string_in, const char* ppf_user){
+char* add_ppf_user(char* string_in, const char* ppf_user) {
     char* temp = string_in;
     size_t new_len = strlen(temp) + strlen(ppf_user) + 1;
-    char* string_out = (char*)calloc(new_len,sizeof(char));
-    sprintf(string_out,"%s?%s",temp, ppf_user);
+    char* string_out = (char*)calloc(new_len, sizeof(char));
+    sprintf(string_out, "%s?%s", temp, ppf_user);
     free(temp);
     temp = string_out;
-    string_out = StringReplace(temp,"PPF","PPFGUD");
+    string_out = StringReplace(temp, "PPF", "PPFGUD");
     free(temp);
     return string_out;
 }
 
-char** get_tdi_signal_calls(int* n, const char* tdi_string){
+char** get_tdi_signal_calls(int* n, const char* tdi_string) {
     char* first;
     char* second;
     char* tmp = strdup(tdi_string);
@@ -99,10 +96,10 @@ char** get_tdi_signal_calls(int* n, const char* tdi_string){
 
     int n_signals = 0;
     char** old_signals = (char**)calloc(10, sizeof(char*));
-    while( strstr(sig,"\"") != NULL){
-        first = strstr(sig,"\"");
+    while (strstr(sig, "\"") != NULL) {
+        first = strstr(sig, "\"");
         first++;
-        second = strstr(first,"\"");
+        second = strstr(first, "\"");
         *second = '\0';
         sig = second + 1;
 
@@ -112,41 +109,40 @@ char** get_tdi_signal_calls(int* n, const char* tdi_string){
     free((void*)tmp);
 
     *n = n_signals;
-    return(old_signals);
+    return (old_signals);
 }
 
-char* edit_signal(char* signal_in, const char* ppf_user, int ppf_sequence, const char* new_dda){
-    
+char* edit_signal(char* signal_in, const char* ppf_user, int ppf_sequence, const char* new_dda) {
+
     char* working_string = strdup(signal_in);
 
-    if(new_dda != NULL){
-        char* temp = replace_dda(working_string,new_dda);
-        
+    if (new_dda != NULL) {
+        char* temp = replace_dda(working_string, new_dda);
+
         free(working_string);
         working_string = temp;
     }
-    if (ppf_sequence != -1){
+    if (ppf_sequence != -1) {
 
         working_string = add_pff_sequence(working_string, ppf_sequence);
     }
-    if (ppf_user != NULL){
+    if (ppf_user != NULL) {
 
         working_string = add_ppf_user(working_string, ppf_user);
-
     }
     return working_string;
 }
 
-char* edit_tdi(const char* tdi_string, const char* ppf_user, int ppf_sequence, const char* new_dda){
+char* edit_tdi(const char* tdi_string, const char* ppf_user, int ppf_sequence, const char* new_dda) {
     int n_signals;
-    char **signals = get_tdi_signal_calls(&n_signals, tdi_string);
+    char** signals = get_tdi_signal_calls(&n_signals, tdi_string);
 
     char* prev_string = strdup(tdi_string);
     char* new_string = NULL;
     char* new_signal;
 
     int i;
-    for(i=0;i<n_signals;i++){
+    for (i = 0; i < n_signals; i++) {
         new_signal = edit_signal(signals[i], ppf_user, ppf_sequence, new_dda);
         new_string = StringReplace(prev_string, signals[i], new_signal);
         free(prev_string);
@@ -154,27 +150,26 @@ char* edit_tdi(const char* tdi_string, const char* ppf_user, int ppf_sequence, c
         free(new_signal);
     }
 
-    for (i = 0; i < n_signals; i++){
-        if (signals[i] != NULL) free(signals[i]);
+    for (i = 0; i < n_signals; i++) {
+        if (signals[i] != NULL)
+            free(signals[i]);
     }
-    if (signals != NULL) free(signals);
+    if (signals != NULL)
+        free(signals);
 
     return new_string;
 }
 
-} // anon namespace
+} // namespace
 
-int mds_close()
-{
+int mds_close() {
     delete conn;
     conn = nullptr;
     return 0;
 }
 
-int mds_get(const char* experiment, const char* signalName, int shot, int run,
-            float** time, float** data, int* len, int* time_len, int time_dim,
-            const char* ppf_user, int ppf_sequence, const char* ppf_dda)
-{
+int mds_get(const char* experiment, const char* signalName, int shot, int run, float** time, float** data, int* len,
+            int* time_len, int time_dim, const char* ppf_user, int ppf_sequence, const char* ppf_dda) {
     if (conn == nullptr) {
 
         char host[100];
@@ -221,11 +216,9 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
             sprintf(host, "localhost:%d", g_server_port);
         } else {
             const char* ssh_username = getenv("JET_MDSPLUS_USERNAME");
-            if (ssh_username != nullptr)
-            {
+            if (ssh_username != nullptr) {
                 sprintf(host, "ssh://%s@mdsplus.jetdata.eu", ssh_username);
-            } else
-            {
+            } else {
                 strcpy(host, "mdsplus.jet.uk:8000");
             }
         }
@@ -285,10 +278,10 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
     char signal[2048];
 
     if (is_tdi) {
-        if(StringIEquals(experiment, "JET") && (ppf_user || ppf_sequence || ppf_dda)){
+        if (StringIEquals(experiment, "JET") && (ppf_user || ppf_sequence || ppf_dda)) {
 
-            char *new_string = edit_tdi(tmp3, ppf_user, ppf_sequence, ppf_dda);
-            
+            char* new_string = edit_tdi(tmp3, ppf_user, ppf_sequence, ppf_dda);
+
             sprintf(signal, "%s", new_string);
             free(new_string);
 
@@ -297,20 +290,19 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
         }
     } else if (StringIEquals(experiment, "JET")) {
         char* working_string = strdup(tmp3);
-        if(ppf_dda != NULL){
+        if (ppf_dda != NULL) {
             char* temp = replace_dda(working_string, ppf_dda);
-            
+
             free(working_string);
             working_string = temp;
         }
-        if (ppf_sequence != -1){
+        if (ppf_sequence != -1) {
 
             working_string = add_pff_sequence(working_string, ppf_sequence);
         }
-        if (ppf_user != NULL){
+        if (ppf_user != NULL) {
 
             working_string = add_ppf_user(working_string, ppf_user);
-
         }
         sprintf(signal, "_sig=jet(\"%s\",%d)", working_string, shot);
         free(working_string);
@@ -362,16 +354,16 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
 
     //*len = get_signal_length(*conn, signal);
 
-    //if (*len < 0) {
-    //    fprintf(stderr, " -> unable to get signal length.\n");
-    //    UDA_LOG(UDA_LOG_ERROR, "Unable to get signal length.\n");
-    //    return -1;
-    //}
+    // if (*len < 0) {
+    //     fprintf(stderr, " -> unable to get signal length.\n");
+    //     UDA_LOG(UDA_LOG_ERROR, "Unable to get signal length.\n");
+    //     return -1;
+    // }
 
     std::string buf;
 
     if (time != nullptr) {
-         buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
+        buf = std::string(signal) + "; dim_of(_sig, " + std::to_string(time_dim - 1) + ");";
 
         *time = nullptr;
 
@@ -402,7 +394,6 @@ int mds_get(const char* experiment, const char* signalName, int shot, int run,
             return -1;
         }
     }
-
 
     buf = std::string(signal) + "; _sig;";
 

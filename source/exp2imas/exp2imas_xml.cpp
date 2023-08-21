@@ -3,27 +3,26 @@
 #include <assert.h>
 #include <regex.h>
 
-#include <clientserver/initStructs.h>
-#include <clientserver/udaTypes.h>
 #include <clientserver/errorLog.h>
-#include <logging/logging.h>
+#include <clientserver/initStructs.h>
 #include <clientserver/stringUtils.h>
+#include <clientserver/udaTypes.h>
+#include <logging/logging.h>
 #include <plugins/udaPlugin.h>
 
 namespace {
 
-int convert_type_string_to_uda_type(const std::string& value)
-{
+int convert_type_string_to_uda_type(const std::string& value) {
     int i = UDA_TYPE_UNKNOWN;
     int err = 0;
 
     if (value == "matstring_type" || value == "vecstring_type" || value == "xs:string" || value == "STR_0D") {
         i = UDA_TYPE_STRING;
-    } else if (value == "matflt_type" || value == "vecflt_type" || value == "array3dflt_type" || value == "xs:float"
-            || value == "FLT_0D") {
+    } else if (value == "matflt_type" || value == "vecflt_type" || value == "array3dflt_type" || value == "xs:float" ||
+               value == "FLT_0D") {
         i = UDA_TYPE_FLOAT;
-    } else if (value == "matint_type" || value == "vecint_type" || value == "array3dint_type" || value == "xs:integer"
-            || value == "INT_0D") {
+    } else if (value == "matint_type" || value == "vecint_type" || value == "array3dint_type" ||
+               value == "xs:integer" || value == "INT_0D") {
         i = UDA_TYPE_INT;
     } else {
         err = 999;
@@ -32,8 +31,7 @@ int convert_type_string_to_uda_type(const std::string& value)
     return i;
 }
 
-double* get_content(xmlNode* node, size_t* n_vals)
-{
+double* get_content(xmlNode* node, size_t* n_vals) {
     xmlChar* content = node->children->content;
 
     const char* chr = (const char*)content;
@@ -54,62 +52,62 @@ double* get_content(xmlNode* node, size_t* n_vals)
 
     while (cont) {
         switch (*chr) {
-            case ',':
-            case '\0':
-                if (in_expand) {
-                    if (in_expand_range) {
-                        expand_start = (int)strtol(num_start, nullptr, 10);
-                        num_start = chr + 1;
-                    } else {
-                        expand_vals = (double*)realloc(expand_vals, (num_expand_vals + 1) * sizeof(double));
-                        expand_vals[num_expand_vals] = strtod(num_start, nullptr);
-                        ++num_expand_vals;
-                        num_start = chr + 1;
-                    }
-                } else if (*num_start != '\0') {
-                    vals = (double*)realloc(vals, (*n_vals + 1) * sizeof(double));
-                    vals[*n_vals] = strtod(num_start, nullptr);
-                    ++(*n_vals);
+        case ',':
+        case '\0':
+            if (in_expand) {
+                if (in_expand_range) {
+                    expand_start = (int)strtol(num_start, nullptr, 10);
+                    num_start = chr + 1;
+                } else {
+                    expand_vals = (double*)realloc(expand_vals, (num_expand_vals + 1) * sizeof(double));
+                    expand_vals[num_expand_vals] = strtod(num_start, nullptr);
+                    ++num_expand_vals;
                     num_start = chr + 1;
                 }
-                if (*chr == '\0') {
-                    cont = false;
-                }
-                break;
-            case '=':
-                in_expand_range = true;
+            } else if (*num_start != '\0') {
+                vals = (double*)realloc(vals, (*n_vals + 1) * sizeof(double));
+                vals[*n_vals] = strtod(num_start, nullptr);
+                ++(*n_vals);
                 num_start = chr + 1;
-                break;
-            case '(':
-                in_expand = true;
-                num_start = chr + 1;
-                break;
-            case ')': {
-                expand_end = (int)strtol(num_start, nullptr, 10);
-                int i = 0;
-                for (i = expand_start; i <= expand_end; ++i) {
-                    vals = (double*)realloc(vals, (*n_vals + num_expand_vals) * sizeof(double));
-                    int j;
-                    for (j = 0; j < num_expand_vals; ++j) {
-                        vals[*n_vals + j] = expand_vals[j];
-                    }
-                    *n_vals += num_expand_vals;
-                }
-                if (*(chr + 1) == ',') {
-                    ++chr;
-                }
-                num_start = chr + 1;
-                in_expand = false;
-                in_expand_range = false;
-                free(expand_vals);
-                expand_vals = nullptr;
-                num_expand_vals = 0;
-                expand_start = 0;
-                expand_end = 0;
-                break;
             }
-            default:
-                break;
+            if (*chr == '\0') {
+                cont = false;
+            }
+            break;
+        case '=':
+            in_expand_range = true;
+            num_start = chr + 1;
+            break;
+        case '(':
+            in_expand = true;
+            num_start = chr + 1;
+            break;
+        case ')': {
+            expand_end = (int)strtol(num_start, nullptr, 10);
+            int i = 0;
+            for (i = expand_start; i <= expand_end; ++i) {
+                vals = (double*)realloc(vals, (*n_vals + num_expand_vals) * sizeof(double));
+                int j;
+                for (j = 0; j < num_expand_vals; ++j) {
+                    vals[*n_vals + j] = expand_vals[j];
+                }
+                *n_vals += num_expand_vals;
+            }
+            if (*(chr + 1) == ',') {
+                ++chr;
+            }
+            num_start = chr + 1;
+            in_expand = false;
+            in_expand_range = false;
+            free(expand_vals);
+            expand_vals = nullptr;
+            num_expand_vals = 0;
+            expand_start = 0;
+            expand_end = 0;
+            break;
+        }
+        default:
+            break;
         }
         ++chr;
     }
@@ -117,17 +115,17 @@ double* get_content(xmlNode* node, size_t* n_vals)
     return vals;
 }
 
-const char* get_type(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
-{
+const char* get_type(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx) {
     const char* type = "xs:integer";
 
     /* First, we get the type of the element which is requested */
 
-    //Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is requested)
+    // Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is
+    // requested)
     const char* typeStr = "/@type";
     size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -148,18 +146,18 @@ const char* get_type(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
     return type;
 }
 
-int* get_dims(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, int* rank)
-{
+int* get_dims(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, int* rank) {
     int* dims = nullptr;
     *rank = 0;
 
     /* First, we get the type of the element which is requested */
 
-    //Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is requested)
+    // Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is
+    // requested)
     const char* typeStr = "/@dim";
     size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -190,17 +188,17 @@ int* get_dims(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, int* rank)
     return dims;
 }
 
-int* get_dimensions(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
-{
+int* get_dimensions(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx) {
     int* dimensions = nullptr;
 
     /* First, we get the type of the element which is requested */
 
-    //Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is requested)
+    // Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is
+    // requested)
     const char* typeStr = "/../dimension";
     size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -217,7 +215,6 @@ int* get_dimensions(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
                 cur = cur->children;
                 dimensions[i] = (int)strtol((char*)cur->content, nullptr, 10);
             }
-
         }
     }
 
@@ -226,17 +223,17 @@ int* get_dimensions(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
     return dimensions;
 }
 
-int get_time_dim(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
-{
+int get_time_dim(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx) {
     int time_dim = 0;
 
     /* First, we get the type of the element which is requested */
 
-    //Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is requested)
+    // Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is
+    // requested)
     const char* typeStr = "/../time_dim";
     size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -257,8 +254,7 @@ int get_time_dim(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
     return time_dim;
 }
 
-char* get_download(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, double** values, size_t* n_values)
-{
+char* get_download(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, double** values, size_t* n_values) {
     *values = nullptr;
     *n_values = 0;
 
@@ -269,7 +265,7 @@ char* get_download(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, double
     const char* typeStr = "/../download/download";
     size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -294,7 +290,7 @@ char* get_download(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, double
         const char* valueStr = "/../download/fixed_value";
         len = 1 + xmlStrlen(xpathExpr) + strlen(valueStr);
         typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-        xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, valueStr);
+        xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, valueStr);
 
         xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
         if (xpathObj != nullptr) {
@@ -315,7 +311,7 @@ char* get_download(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, double
         const char* repeatStr = "/../download/fixed_repeat";
         len = 1 + xmlStrlen(xpathExpr) + strlen(repeatStr);
         typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-        xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, repeatStr);
+        xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, repeatStr);
 
         xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
         if (xpathObj != nullptr) {
@@ -359,17 +355,17 @@ char* get_download(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx, double
     return download_type;
 }
 
-int* get_sizes(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
-{
+int* get_sizes(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx) {
     int* sizes = nullptr;
 
     /* First, we get the type of the element which is requested */
 
-    //Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is requested)
+    // Creating the Xpath request for the type which does not exist necessarly (it depends on the XML element which is
+    // requested)
     const char* typeStr = "/../size";
     size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -395,15 +391,14 @@ int* get_sizes(const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
     return sizes;
 }
 
-void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx)
-{
+void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, xmlXPathContextPtr xpathCtx) {
     *coefas = nullptr;
     *coefbs = nullptr;
 
     const char* typeStr = "/../coefa";
     size_t len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     xmlChar* typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -412,8 +407,8 @@ void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, xmlXPat
 
         xmlNodePtr cur;
 
-        if (nodes != nullptr && nodes->nodeNr > 0
-            && !STR_EQUALS((char*)nodes->nodeTab[0]->children->content, "Put value here")) {
+        if (nodes != nullptr && nodes->nodeNr > 0 &&
+            !STR_EQUALS((char*)nodes->nodeTab[0]->children->content, "Put value here")) {
 
             *coefas = (float*)malloc(nodes->nodeNr * sizeof(int));
 
@@ -435,7 +430,7 @@ void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, xmlXPat
     typeStr = "/../coefb";
     len = 1 + xmlStrlen(xpathExpr) + strlen(typeStr);
     typeXpathExpr = (xmlChar*)malloc(len * sizeof(xmlChar));
-    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE)"%s%s", xpathExpr, typeStr);
+    xmlStrPrintf(typeXpathExpr, (int)len, (XML_FMT_TYPE) "%s%s", xpathExpr, typeStr);
 
     /* Evaluate xpath expression for the type */
     xpathObj = xmlXPathEvalExpression(typeXpathExpr, xpathCtx);
@@ -444,8 +439,8 @@ void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, xmlXPat
 
         xmlNodePtr cur;
 
-        if (nodes != nullptr && nodes->nodeNr > 0
-            && !STR_EQUALS((char*)nodes->nodeTab[0]->children->content, "Put value here")) {
+        if (nodes != nullptr && nodes->nodeNr > 0 &&
+            !STR_EQUALS((char*)nodes->nodeTab[0]->children->content, "Put value here")) {
 
             *coefbs = (float*)malloc(nodes->nodeNr * sizeof(int));
 
@@ -465,10 +460,10 @@ void get_coefs(float** coefas, float** coefbs, const xmlChar* xpathExpr, xmlXPat
     free(typeXpathExpr);
 }
 
-} // anon namespace
+} // namespace
 
-int uda::exp2imas::execute_xpath_expression(const std::string& filename, const xmlChar* xpathExpr, int index, XML_DATA* xml_data)
-{
+int uda::exp2imas::execute_xpath_expression(const std::string& filename, const xmlChar* xpathExpr, int index,
+                                            XML_DATA* xml_data) {
     assert(xpathExpr);
 
     static std::string cached_filename = {};
@@ -574,7 +569,7 @@ int uda::exp2imas::execute_xpath_expression(const std::string& filename, const x
     if (xml_data->data_type == UDA_TYPE_DOUBLE) {
         xml_data->data = (char*)malloc(data_n * sizeof(double));
         if (xml_data->dims == nullptr) {
-            ((double*)xml_data->data)[0] = content[index-1];
+            ((double*)xml_data->data)[0] = content[index - 1];
         } else {
             for (i = 0; i < (xml_data->dims)[0]; i++) {
                 ((double*)xml_data->data)[i] = content[i];
@@ -583,7 +578,7 @@ int uda::exp2imas::execute_xpath_expression(const std::string& filename, const x
     } else if (xml_data->data_type == UDA_TYPE_FLOAT) {
         xml_data->data = (char*)malloc(data_n * sizeof(float));
         if (xml_data->dims == nullptr) {
-            ((float*)xml_data->data)[0] = (float)content[index-1];
+            ((float*)xml_data->data)[0] = (float)content[index - 1];
         } else {
             for (i = 0; i < data_n; i++) {
                 ((float*)xml_data->data)[i] = (float)content[i];
@@ -592,7 +587,7 @@ int uda::exp2imas::execute_xpath_expression(const std::string& filename, const x
     } else if (xml_data->data_type == UDA_TYPE_LONG) {
         xml_data->data = (char*)malloc(data_n * sizeof(long));
         if (xml_data->dims == nullptr) {
-            ((long*)xml_data->data)[0] = (long)content[index-1];
+            ((long*)xml_data->data)[0] = (long)content[index - 1];
         } else {
             for (i = 0; i < data_n; i++) {
                 ((long*)xml_data->data)[i] = (long)content[i];
@@ -601,7 +596,7 @@ int uda::exp2imas::execute_xpath_expression(const std::string& filename, const x
     } else if (xml_data->data_type == UDA_TYPE_INT) {
         xml_data->data = (char*)malloc(data_n * sizeof(int));
         if (xml_data->dims == nullptr) {
-            ((int*)xml_data->data)[0] = (int)content[index-1];
+            ((int*)xml_data->data)[0] = (int)content[index - 1];
         } else {
             for (i = 0; i < data_n; i++) {
                 ((int*)xml_data->data)[i] = (int)content[i];
@@ -610,7 +605,7 @@ int uda::exp2imas::execute_xpath_expression(const std::string& filename, const x
     } else if (xml_data->data_type == UDA_TYPE_SHORT) {
         xml_data->data = (char*)malloc(data_n * sizeof(short));
         if (xml_data->dims == nullptr) {
-            ((short*)xml_data->data)[0] = (short)content[index-1];
+            ((short*)xml_data->data)[0] = (short)content[index - 1];
         } else {
             for (i = 0; i < data_n; i++) {
                 ((short*)xml_data->data)[i] = (short)content[i];

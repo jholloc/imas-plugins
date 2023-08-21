@@ -7,23 +7,17 @@
 #include <clientserver/initStructs.h>
 #include <clientserver/stringUtils.h>
 #include <clientserver/udaTypes.h>
+#include <cmath>
 #include <logging/logging.h>
 #include <plugins/udaPlugin.h>
-#include <cmath>
 
+#include "exp2imas_mapping_files.h"
 #include "exp2imas_mds.h"
 #include "exp2imas_xml.h"
-#include "exp2imas_mapping_files.h"
 
 namespace {
 
-typedef enum MappingType {
-    NONE,
-    CONSTANT,
-    STATIC,
-    DYNAMIC,
-    ERROR
-} MAPPING_TYPE;
+typedef enum MappingType { NONE, CONSTANT, STATIC, DYNAMIC, ERROR } MAPPING_TYPE;
 
 typedef struct XMLMapping {
     const xmlChar* value;
@@ -48,13 +42,11 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
 char* deblank(char* token);
 xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_indices);
 
-} // anon namespace
+} // namespace
 
 #ifndef strndup
 
-char*
-strndup(const char* s, size_t n)
-{
+char* strndup(const char* s, size_t n) {
     char* result;
     size_t len = strlen(s);
 
@@ -73,8 +65,7 @@ strndup(const char* s, size_t n)
 
 #endif
 
-int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
+int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
     // ----------------------------------------------------------------------------------------
     // Standard v1 Plugin Interface
 
@@ -105,12 +96,10 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     // ----------------------------------------------------------------------------------------
     // Initialise
 
-    if (!init || STR_IEQUALS(request_data->function, "init")
-        || STR_IEQUALS(request_data->function, "initialise")) {
+    if (!init || STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
 
         init = 1;
-        if (STR_IEQUALS(request_data->function, "init")
-            || STR_IEQUALS(request_data->function, "initialise")) {
+        if (STR_IEQUALS(request_data->function, "init") || STR_IEQUALS(request_data->function, "initialise")) {
             return 0;
         }
     }
@@ -145,47 +134,42 @@ int exp2imasPlugin(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
 namespace {
 
 // Help: A Description of library functionality
-int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
-    const char* help = PLUGIN_NAME ": this plugin maps experimental data from mutliiple machines to IDS based on XML descriptions\n\n";
+int do_help(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
+    const char* help =
+        PLUGIN_NAME ": this plugin maps experimental data from mutliiple machines to IDS based on XML descriptions\n\n";
     const char* desc = PLUGIN_NAME ": help = plugin used for mapping experimental data to IDS";
 
     return setReturnDataString(idam_plugin_interface->data_block, help, desc);
 }
 
-int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
+int do_version(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
     const char* desc = "Plugin version number";
 
     return setReturnDataString(idam_plugin_interface->data_block, PLUGIN_VERSION, desc);
 }
 
 // Plugin Build Date
-int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
+int do_builddate(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
     const char* desc = "Plugin build date";
 
     return setReturnDataString(idam_plugin_interface->data_block, __DATE__, desc);
 }
 
 // Plugin Default Method
-int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
+int do_defaultmethod(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
     const char* desc = "Plugin default method";
 
     return setReturnDataString(idam_plugin_interface->data_block, THISPLUGIN_DEFAULT_METHOD, desc);
 }
 
 // Plugin Maximum Interface Version
-int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
+int do_maxinterfaceversion(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
     const char* desc = "Maximum Interface Version";
 
     return setReturnDataIntScalar(idam_plugin_interface->data_block, THISPLUGIN_MAX_INTERFACE_VERSION, desc);
 }
 
-xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_indices)
-{
+xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_indices) {
     xmlChar* indexedXpathExpr = xmlStrdup(xpathExpr);
 
     if ((*indices) == nullptr) {
@@ -198,14 +182,14 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
     while ((p = xmlStrchr(indexedXpathExpr, '#')) != nullptr) {
         int len = snprintf(nullptr, 0, "%d", (*indices)[n]);
         xmlChar num_str[len + 1];
-        xmlStrPrintf(num_str, len + 1, (XML_FMT_TYPE)"%d", (*indices)[n]);
+        xmlStrPrintf(num_str, len + 1, (XML_FMT_TYPE) "%d", (*indices)[n]);
         ++n;
 
         xmlChar* pre = xmlStrndup(indexedXpathExpr, (int)(p - indexedXpathExpr));
 
         len = xmlStrlen(pre) + xmlStrlen(num_str) + xmlStrlen(p + 1) + 1;
         auto temp = (xmlChar*)malloc((len + 1) * sizeof(xmlChar));
-        xmlStrPrintf(temp, len, (XML_FMT_TYPE)"%s%s%s", pre, num_str, p + 1);
+        xmlStrPrintf(temp, len, (XML_FMT_TYPE) "%s%s%s", pre, num_str, p + 1);
         free(indexedXpathExpr);
         indexedXpathExpr = temp;
 
@@ -230,35 +214,34 @@ xmlChar* insertNodeIndices(const xmlChar* xpathExpr, int** indices, size_t* n_in
     return indexedXpathExpr;
 }
 
-int handle_constant(DATA_BLOCK* data_block, int dtype, const xmlChar* xPath)
-{
+int handle_constant(DATA_BLOCK* data_block, int dtype, const xmlChar* xPath) {
     switch (dtype) {
-        case UDA_TYPE_SHORT:
-            setReturnDataShortScalar(data_block, (short)strtol((char*)xPath, nullptr, 10), nullptr);
-            break;
-        case UDA_TYPE_LONG:
-            setReturnDataLongScalar(data_block, strtol((char*)xPath, nullptr, 10), nullptr);
-            break;
-        case UDA_TYPE_FLOAT:
-            setReturnDataFloatScalar(data_block, strtof((char*)xPath, nullptr), nullptr);
-            break;
-        case UDA_TYPE_DOUBLE:
-            setReturnDataDoubleScalar(data_block, strtod((char*)xPath, nullptr), nullptr);
-            break;
-        case UDA_TYPE_INT:
-            setReturnDataIntScalar(data_block, (int)strtol((char*)xPath, nullptr, 10), nullptr);
-            break;
-        case UDA_TYPE_STRING:
-            setReturnDataString(data_block, (char*)xPath, nullptr);
-            break;
-        default: RAISE_PLUGIN_ERROR("unknown dtype given to plugin");
+    case UDA_TYPE_SHORT:
+        setReturnDataShortScalar(data_block, (short)strtol((char*)xPath, nullptr, 10), nullptr);
+        break;
+    case UDA_TYPE_LONG:
+        setReturnDataLongScalar(data_block, strtol((char*)xPath, nullptr, 10), nullptr);
+        break;
+    case UDA_TYPE_FLOAT:
+        setReturnDataFloatScalar(data_block, strtof((char*)xPath, nullptr), nullptr);
+        break;
+    case UDA_TYPE_DOUBLE:
+        setReturnDataDoubleScalar(data_block, strtod((char*)xPath, nullptr), nullptr);
+        break;
+    case UDA_TYPE_INT:
+        setReturnDataIntScalar(data_block, (int)strtol((char*)xPath, nullptr, 10), nullptr);
+        break;
+    case UDA_TYPE_STRING:
+        setReturnDataString(data_block, (char*)xPath, nullptr);
+        break;
+    default:
+        RAISE_PLUGIN_ERROR("unknown dtype given to plugin");
     }
     return 0;
 }
 
 int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
-                  const XML_MAPPING* mapping, int* indices, size_t nindices)
-{
+                  const XML_MAPPING* mapping, int* indices, size_t nindices) {
     // Executing XPath
 
     uda::exp2imas::XML_DATA xml_data;
@@ -299,7 +282,7 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
 
     if ((xml_data.rank != 0 || nindices != 1) && (xml_data.rank != nindices)) {
         if (xml_data.rank == 1 && nindices == 0) {
-            size_t shape[] = { (size_t)xml_data.dims[0] };
+            size_t shape[] = {(size_t)xml_data.dims[0]};
 
             if (xml_data.data_type == UDA_TYPE_DOUBLE) {
                 setReturnDataDoubleArray(data_block, (double*)xml_data.data, 1, shape, nullptr);
@@ -312,7 +295,7 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
             }
         } else if (xml_data.rank == 2 && nindices == 1) {
             if (mapping->slice_dim == 0) {
-                size_t shape[] = { (size_t)xml_data.dims[0] };
+                size_t shape[] = {(size_t)xml_data.dims[0]};
                 int idx = (indices[0] - 1);
 
                 if (xml_data.data_type == UDA_TYPE_DOUBLE) {
@@ -340,7 +323,7 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
                     RAISE_PLUGIN_ERROR("Unsupported data type");
                 }
             } else {
-                size_t shape[] = { (size_t)xml_data.dims[1] };
+                size_t shape[] = {(size_t)xml_data.dims[1]};
                 int idx = (indices[0] - 1) * xml_data.dims[1];
 
                 if (xml_data.data_type == UDA_TYPE_DOUBLE) {
@@ -354,7 +337,7 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
                 }
             }
         } else if (xml_data.rank == 3 && nindices == 1) {
-           
+
             int idx = (indices[0] - 1) * xml_data.dims[1] * xml_data.dims[2];
 
             size_t dy = (size_t)xml_data.dims[1];
@@ -363,7 +346,7 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
             int* data_in = &((int*)xml_data.data)[idx];
 
             if (xml_data.data_type == UDA_TYPE_INT) {
-                size_t shape[] = { dy, dz };
+                size_t shape[] = {dy, dz};
                 if (resize > 0) {
                     shape[0] = (size_t)resize;
                 }
@@ -380,9 +363,9 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
             } else {
                 RAISE_PLUGIN_ERROR("Unsupported data type");
             }
-        
+
         } else {
-            THROW_ERROR(999, "incorrect number of indices specified");
+            UDA_THROW_ERROR(999, "incorrect number of indices specified");
         }
     } else {
         int data_idx = 0;
@@ -429,8 +412,7 @@ int handle_static(DATA_BLOCK* data_block, const std::string& experiment_mapping_
     return 0;
 }
 
-size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int* indices, size_t nindices)
-{
+size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int* indices, size_t nindices) {
     char** signal_names = (char**)xml_data->data;
 
     size_t* name_indices = nullptr;
@@ -440,8 +422,8 @@ size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int*
 
     while (signal_names[signal_names_idx] != nullptr) {
         int size = (xml_data->sizes == nullptr || xml_data->sizes[signal_names_idx] == 0)
-                   ? 1
-                   : xml_data->sizes[signal_names_idx];
+                       ? 1
+                       : xml_data->sizes[signal_names_idx];
 
         name_indices = (size_t*)realloc(name_indices, (idx + size) * sizeof(size_t));
 
@@ -471,53 +453,52 @@ size_t get_signal_name_index(const uda::exp2imas::XML_DATA* xml_data, const int*
     return name_index;
 }
 
-void init_int_array(int* array, int len, int val){
+void init_int_array(int* array, int len, int val) {
     int i;
-    for (i = 0; i < len; i++){
+    for (i = 0; i < len; i++) {
         array[i] = val;
     }
 }
 
-int get_x_dimension_length(int n_dims, int data_length, int time_len){
+int get_x_dimension_length(int n_dims, int data_length, int time_len) {
     int x_len = -1;
     if (n_dims == 3) {
         // assume square
-        x_len = std::sqrt( data_length / time_len);
+        x_len = std::sqrt(data_length / time_len);
     } else {
         x_len = data_length / time_len;
     }
     return x_len;
 }
 
-int* get_dimension_sizes(int time_dim, int time_len, int x_len, int n_dims){
+int* get_dimension_sizes(int time_dim, int time_len, int x_len, int n_dims) {
 
     // int dim_n[3] = {1, 1, 1};
     int len = 3;
     int* dim_lengths = (int*)malloc(len * sizeof(int));
     init_int_array(dim_lengths, len, 1);
-    
+
     int i;
-    for(i = 0; i < n_dims; i++){
-        if (time_dim -1 == i){
+    for (i = 0; i < n_dims; i++) {
+        if (time_dim - 1 == i) {
             dim_lengths[i] = time_len;
-        }
-        else {
+        } else {
             dim_lengths[i] = x_len;
         }
     }
     return dim_lengths;
 }
 
-int* get_sliced_data_shape(int* dim_n, int slice_dim, int n_dims){
+int* get_sliced_data_shape(int* dim_n, int slice_dim, int n_dims) {
     // int shape[2] = {1, 1};
     int len = 2;
     int* shape = (int*)malloc(len * sizeof(int));
     init_int_array(shape, len, 1);
 
     int i;
-    int j =0;
-    for(i = 0; i < n_dims; i++){
-        if (slice_dim != i){
+    int j = 0;
+    for (i = 0; i < n_dims; i++) {
+        if (slice_dim != i) {
             shape[j] = dim_n[i];
             j++;
         }
@@ -525,12 +506,9 @@ int* get_sliced_data_shape(int* dim_n, int slice_dim, int n_dims){
     return shape;
 }
 
-
 int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
-                   XML_MAPPING* mapping,
-                   const char* experiment, const char* element, int shot, int run, const int* indices,
-                   size_t nindices, const char* ppf_user, int ppf_sequence, const char* ppf_dda)
-{
+                   XML_MAPPING* mapping, const char* experiment, const char* element, int shot, int run,
+                   const int* indices, size_t nindices, const char* ppf_user, int ppf_sequence, const char* ppf_dda) {
     // DYNAMIC case
 
     uda::exp2imas::XML_DATA xml_data;
@@ -570,7 +548,7 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
             char* signalName = signal_names[name_index];
 
             status = mds_get(experiment, signalName, shot, run, &time, &fdata, &len, &time_len, xml_data.time_dim,
-            ppf_user, ppf_sequence, ppf_dda);
+                             ppf_user, ppf_sequence, ppf_dda);
 
             if (status != 0) {
                 return status;
@@ -581,23 +559,22 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
             int size = 1;
 
             int* shape = nullptr;
-            
 
-            if (StringEndsWith(element, "/Shape_of")){
+            if (StringEndsWith(element, "/Shape_of")) {
 
-                int* data = (int *)malloc(sizeof(int));
+                int* data = (int*)malloc(sizeof(int));
                 data[0] = len;
                 data_n = 1;
                 data_block->data = (char*)data;
                 data_block->data_n = data_n;
                 data_block->data_type = UDA_TYPE_INT;
                 data_block->rank = 0;
-                
-            } else if (mapping->slice_dim >= 0){
+
+            } else if (mapping->slice_dim >= 0) {
 
                 int n_dims = xml_data.dimensions[name_index];
 
-                if(n_dims <= 3){
+                if (n_dims <= 3) {
 
                     int x_len = get_x_dimension_length(n_dims, len, time_len);
                     int* dim_n = get_dimension_sizes(xml_data.time_dim, time_len, x_len, n_dims);
@@ -613,19 +590,18 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
 
                     int i, j;
                     int k = 0;
-                    for(j = 0; j <shape[1]; ++j){
-                        for(i = 0; i < shape[0]; ++i){
+                    for (j = 0; j < shape[1]; ++j) {
+                        for (i = 0; i < shape[0]; ++i) {
 
-                            if (mapping->slice_dim == 0){
+                            if (mapping->slice_dim == 0) {
                                 offset = index + dim1_offset * i + dim2_offset * j;
-                            }
-                            else if (mapping->slice_dim == 1){
-                                offset = i + index * dim1_offset + j * dim2_offset; 
+                            } else if (mapping->slice_dim == 1) {
+                                offset = i + index * dim1_offset + j * dim2_offset;
 
                             } else {
-                                offset =  i + j * dim1_offset + index * dim2_offset;
+                                offset = i + j * dim1_offset + index * dim2_offset;
                             }
-                            data[k] =  coefa * fdata[offset] + coefb;
+                            data[k] = coefa * fdata[offset] + coefb;
                             ++k;
                         }
                     }
@@ -636,10 +612,9 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
                     data_block->data = (char*)data;
 
                     free(dim_n);
-                   
                 }
 
-            } else if (mapping->no_indexing){
+            } else if (mapping->no_indexing) {
                 int n_dims = xml_data.dimensions[name_index];
                 int x_len = get_x_dimension_length(n_dims, len, time_len);
                 int* dim_n = get_dimension_sizes(xml_data.time_dim, time_len, x_len, n_dims);
@@ -648,8 +623,8 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
                 float* data = (float*)malloc(len * sizeof(float));
 
                 int i;
-                for (i = 0; i < len; i++){
-                    data[i] =  coefa * fdata[i] + coefb;
+                for (i = 0; i < len; i++) {
+                    data[i] = coefa * fdata[i] + coefb;
                 }
 
                 data_block->rank = n_dims;
@@ -657,7 +632,7 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
                 data_block->data_n = len;
                 data_block->data = (char*)data;
 
-            } else{
+            } else {
 
                 size = (xml_data.sizes == nullptr || xml_data.sizes[name_index] == 0) ? 1 : xml_data.sizes[name_index];
 
@@ -730,21 +705,20 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
                         free(data_arrays);
                     }
                 }
-            
             }
             if (data_block->data_n > 1) {
                 int j;
                 data_block->dims = (DIMS*)malloc(data_block->rank * sizeof(DIMS));
                 for (j = 0; j < data_block->rank; j++) {
                     initDimBlock(&data_block->dims[j]);
-    
+
                     data_block->dims[j].data_type = UDA_TYPE_UNSIGNED_INT;
                     data_block->dims[j].compressed = 1;
                     data_block->dims[j].dim = (char*)nullptr;
                     data_block->dims[j].dim0 = 0.0;
                     data_block->dims[j].diff = 1.0;
                     data_block->dims[j].method = 0;
-                    if(data_block->rank == 1){
+                    if (data_block->rank == 1) {
                         data_block->dims[j].dim_n = data_block->data_n;
                     } else {
                         data_block->dims[j].dim_n = shape[j];
@@ -755,8 +729,8 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
             free(fdata);
             free(time);
             free(signalName);
-            if(shape != nullptr) free(shape);
-
+            if (shape != nullptr)
+                free(shape);
         }
         strcpy(data_block->data_label, "");
         strcpy(data_block->data_units, "");
@@ -770,10 +744,8 @@ int handle_dynamic(DATA_BLOCK* data_block, const std::string& experiment_mapping
 }
 
 int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_file_name, const xmlChar* xPath,
-                 XML_MAPPING* mapping,
-                 const char* experiment, const char* element, int shot, int run, const int* indices,
-                 size_t nindices, const char* ppf_user, int ppf_sequence, const char* ppf_dda)
-{
+                 XML_MAPPING* mapping, const char* experiment, const char* element, int shot, int run,
+                 const int* indices, size_t nindices, const char* ppf_user, int ppf_sequence, const char* ppf_dda) {
     // ERROR case
     if (StringEndsWith(element, "lower")) {
         // only upper error values are returned
@@ -784,8 +756,8 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
     uda::exp2imas::XML_DATA xml_abserror;
 
-    int status = execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)abserror, mapping->index,
-                                          &xml_abserror);
+    int status =
+        execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)abserror, mapping->index, &xml_abserror);
     if (status != 0) {
         xml_abserror.values = nullptr;
     }
@@ -794,8 +766,8 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
     uda::exp2imas::XML_DATA xml_relerror;
 
-    status = execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)relerror, mapping->index,
-                                      &xml_relerror);
+    status =
+        execute_xpath_expression(experiment_mapping_file_name, (const xmlChar*)relerror, mapping->index, &xml_relerror);
     if (status != 0) {
         xml_relerror.values = nullptr;
     }
@@ -847,7 +819,8 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         int len = -1;
 
         char* signalName = signal_names[name_index];
-        status = mds_get(experiment, signalName, shot, run, nullptr, &fdata, &len, nullptr, 0, ppf_user, ppf_sequence, ppf_dda);
+        status = mds_get(experiment, signalName, shot, run, nullptr, &fdata, &len, nullptr, 0, ppf_user, ppf_sequence,
+                         ppf_dda);
 
         if (status != 0) {
             return status;
@@ -856,7 +829,8 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         if (StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr) {
             signalName = abserror_signal_names[name_index];
             int abslen = -1;
-            status = mds_get(experiment, signalName, shot, run, nullptr, &fabserror, &abslen, nullptr, 0, ppf_user, ppf_sequence, ppf_dda);
+            status = mds_get(experiment, signalName, shot, run, nullptr, &fabserror, &abslen, nullptr, 0, ppf_user,
+                             ppf_sequence, ppf_dda);
 
             if (status != 0) {
                 return status;
@@ -870,7 +844,8 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
         if (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr) {
             signalName = relerror_signal_names[name_index];
             int rellen = -1;
-            status = mds_get(experiment, signalName, shot, run, nullptr, &frelerror, &rellen, nullptr, 0, ppf_user, ppf_sequence, ppf_dda);
+            status = mds_get(experiment, signalName, shot, run, nullptr, &frelerror, &rellen, nullptr, 0, ppf_user,
+                             ppf_sequence, ppf_dda);
 
             if (status != 0) {
                 return status;
@@ -913,8 +888,8 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
                 double error;
 
-                if ((StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr)
-                    || (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr)) {
+                if ((StringEquals(xml_abserror.download, "mds+") && abserror_signal_names != nullptr) ||
+                    (StringEquals(xml_relerror.download, "mds+") && relerror_signal_names != nullptr)) {
                     if (abserror_signal_names != nullptr && relerror_signal_names != nullptr) {
                         double fabs = abs_coefa * fabserror[i + j * size] + abs_coefb;
                         double frel = rel_coefa * frelerror[i + j * size] + rel_coefb;
@@ -992,8 +967,7 @@ int handle_error(DATA_BLOCK* data_block, const std::string& experiment_mapping_f
 
 // ----------------------------------------------------------------------------------------
 // Add functionality here ....
-int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
+int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
     DATA_BLOCK* data_block = idam_plugin_interface->data_block;
 
     initDataBlock(data_block);
@@ -1063,37 +1037,35 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
     int err = 0;
 
     switch (mapping->request_type) {
-        case CONSTANT:
-            err = handle_constant(data_block, dtype, xPath);
-            break;
-        case STATIC:
-            err = handle_static(data_block, experiment_mapping_file_name, xPath, mapping, indices, nindices);
-            break;
-        case DYNAMIC:
-            err = handle_dynamic(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
-                                 indices, nindices, ppf_user, ppf_sequence, ppf_dda);
-            break;
-        case ERROR:
-            err = handle_error(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
-                               indices, nindices, ppf_user, ppf_sequence, ppf_dda);
-            break;
-        default:
-            free(xPath);
-            RAISE_PLUGIN_ERROR("unknown request type");
+    case CONSTANT:
+        err = handle_constant(data_block, dtype, xPath);
+        break;
+    case STATIC:
+        err = handle_static(data_block, experiment_mapping_file_name, xPath, mapping, indices, nindices);
+        break;
+    case DYNAMIC:
+        err = handle_dynamic(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
+                             indices, nindices, ppf_user, ppf_sequence, ppf_dda);
+        break;
+    case ERROR:
+        err = handle_error(data_block, experiment_mapping_file_name, xPath, mapping, experiment, element, shot, run,
+                           indices, nindices, ppf_user, ppf_sequence, ppf_dda);
+        break;
+    default:
+        free(xPath);
+        RAISE_PLUGIN_ERROR("unknown request type");
     }
 
     free(xPath);
     return err;
 }
 
-int do_close(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
-{
+int do_close(IDAM_PLUGIN_INTERFACE* idam_plugin_interface) {
     mds_close();
     return 0;
 }
 
-xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, const char* attribute)
-{
+xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, const char* attribute) {
     // Creating the Xpath request
     const char* fmt = "//mapping[@key='%s']/@%s";
     size_t len = strlen(request) + strlen(attribute) + strlen(fmt) + 1;
@@ -1130,8 +1102,7 @@ xmlChar* xmlAttributeValue(xmlXPathContextPtr xpath_ctx, const char* request, co
     }
 }
 
-XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::string& request)
-{
+XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::string& request) {
     static std::string cached_filename = {};
     static xmlDocPtr doc = nullptr;
     static xmlXPathContextPtr xpath_ctx = nullptr;
@@ -1253,8 +1224,7 @@ XML_MAPPING* getMappingValue(const std::string& mapping_filename, const std::str
     return mapping;
 }
 
-char* deblank(char* token)
-{
+char* deblank(char* token) {
     size_t i, j;
     char* output = token;
     for (i = 0, j = 0; i < strlen(token); i++, j++) {
@@ -1268,4 +1238,4 @@ char* deblank(char* token)
     return output;
 }
 
-} // anon namespace
+} // namespace

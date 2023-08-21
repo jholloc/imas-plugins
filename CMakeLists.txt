@@ -6,9 +6,9 @@ endif()
 
 # Extra cmake modules to find libraries
 set( CMAKE_MODULE_PATH
-  ${CMAKE_MODULE_PATH}
-  ${CMAKE_SOURCE_DIR}/cmake
-  ${CMAKE_SOURCE_DIR}/cmake/Modules
+     ${CMAKE_MODULE_PATH}
+     ${CMAKE_SOURCE_DIR}/cmake
+     ${CMAKE_SOURCE_DIR}/cmake/Modules
 )
 
 ########################################################################################################################
@@ -58,6 +58,14 @@ include( use_cxx11 )
 use_cxx11()
 
 ########################################################################################################################
+# Static Analysis
+
+include( StaticAnalysis )
+
+add_clang_format_target()
+
+########################################################################################################################
+# Plugins
 
 include_directories( /usr/local/include )
 

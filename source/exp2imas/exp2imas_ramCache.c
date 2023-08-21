@@ -9,8 +9,7 @@ typedef struct RamCache {
     void** values;
 } RAM_CACHE;
 
-RAM_CACHE* ram_cache_new(size_t max_items)
-{
+RAM_CACHE* ram_cache_new(size_t max_items) {
     RAM_CACHE* cache = malloc(sizeof(RAM_CACHE));
 
     cache->keys = (char**)calloc(max_items, sizeof(char*));
@@ -21,8 +20,7 @@ RAM_CACHE* ram_cache_new(size_t max_items)
     return cache;
 }
 
-void ram_cache_add(RAM_CACHE* cache, const char* key, void* value, size_t value_nbytes)
-{
+void ram_cache_add(RAM_CACHE* cache, const char* key, void* value, size_t value_nbytes) {
     if (cache == NULL) {
         return;
     }
@@ -36,8 +34,7 @@ void ram_cache_add(RAM_CACHE* cache, const char* key, void* value, size_t value_
     cache->current_idx = (cache->current_idx + 1) % cache->max_items;
 }
 
-void* ram_cache_get(RAM_CACHE* cache, const char* key)
-{
+void* ram_cache_get(RAM_CACHE* cache, const char* key) {
     if (cache == NULL) {
         return NULL;
     }

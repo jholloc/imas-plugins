@@ -19,16 +19,17 @@ endif()
 
 include( plugins )
 
+set( SOURCES imas_plugin.cpp )
+set( HEADERS imas_plugin.h )
+
 uda_plugin(
   NAME IMAS
   VERSION ${PROJECT_VERSION}
   ENTRY_FUNC imasPlugin
-  DESCRIPTION ""
-  EXAMPLE ""
+  DESCRIPTION "Plugin which handles all requests coming from IMAS AL5 UDA backend"
+  EXAMPLE "IMAS::open(uri=imas:hdf5&path=/path/to/file, mode=open)"
   LIBNAME imas_plugin
-  SOURCES
-    imas_plugin.cpp
-    imas_plugin.h
+  SOURCES ${SOURCES}
   EXTRA_INCLUDE_DIRS
     ${UDA_CLIENT_INCLUDE_DIRS}
     ${IMAS_LOW_LEVEL_INCLUDE_DIRS}
@@ -43,3 +44,8 @@ uda_plugin(
     ${IMAS_LOW_LEVEL_LIBRARIES}
     ${Boost_LIBRARIES}
 )
+
+list( TRANSFORM SOURCES PREPEND ${CMAKE_CURRENT_LIST_DIR}/ )
+list( TRANSFORM HEADERS PREPEND ${CMAKE_CURRENT_LIST_DIR}/ )
+
+set_property( TARGET clang-format APPEND PROPERTY SOURCES ${SOURCES} ${HEADERS} )

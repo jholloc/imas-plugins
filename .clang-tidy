@@ -1,0 +1,22 @@
+---
+Checks: >
+  *,
+  -fuchsia-*,
+  -google-*,
+  -zircon-*,
+  -abseil-*,
+  -modernize-use-trailing-return-type,
+  -llvm-*,
+  -llvmlibc-*,
+  -bugprone-easily-swappable-parameters,
+  -altera-unroll-loops,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -altera-struct-pack-align,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -altera-id-dependent-backward-branch,
+  -hicpp-no-array-decay
+CheckOptions:
+  misc-non-private-member-variables-in-classes: IgnoreClassesWithAllMemberVariablesBeingPublic
+WarningsAsErrors: '*'
+HeaderFilterRegex: ''
+FormatStyle: none

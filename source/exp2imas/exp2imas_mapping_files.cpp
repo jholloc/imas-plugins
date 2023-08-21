@@ -1,22 +1,21 @@
 #include "exp2imas_mapping_files.h"
 
-#include <cstdlib>
-#include <sstream>
-#include <limits>
 #include <boost/filesystem.hpp>
+#include <cstdlib>
+#include <limits>
+#include <sstream>
 
 namespace bf = boost::filesystem;
 
-//#include <logging/logging.h>
+// #include <logging/logging.h>
 
 #define UDA_LOG_ERROR 0
-#define UDA_LOG(LEVEL, FMT, ...) printf("%s:%d >> " FMT, bf::basename((char *)__FILE__).data(), __LINE__, ##__VA_ARGS__)
+#define UDA_LOG(LEVEL, FMT, ...) printf("%s:%d >> " FMT, bf::basename((char*)__FILE__).data(), __LINE__, ##__VA_ARGS__)
 
 namespace {
 
-unsigned int find_shot_range(const std::string& directory, int shot)
-{
-    bf::path path{ directory };
+unsigned int find_shot_range(const std::string& directory, int shot) {
+    bf::path path{directory};
 
     long result = 0;
 
@@ -34,9 +33,8 @@ unsigned int find_shot_range(const std::string& directory, int shot)
     return static_cast<unsigned int>(result);
 }
 
-unsigned int find_version(const std::string& directory, const std::string& filename_prefix)
-{
-    bf::path path{ directory };
+unsigned int find_version(const std::string& directory, const std::string& filename_prefix) {
+    bf::path path{directory};
 
     long result = 0;
 
@@ -61,31 +59,27 @@ struct Version {
     long debug;
 };
 
-bool version_greater(const Version& lhs, const Version& rhs)
-{
-    return lhs.major > rhs.major
-            || (lhs.major == rhs.major && lhs.minor > rhs.minor)
-            || (lhs.major == rhs.major && lhs.minor == rhs.minor && lhs.debug > rhs.debug);
+bool version_greater(const Version& lhs, const Version& rhs) {
+    return lhs.major > rhs.major || (lhs.major == rhs.major && lhs.minor > rhs.minor) ||
+           (lhs.major == rhs.major && lhs.minor == rhs.minor && lhs.debug > rhs.debug);
 }
 
-std::string to_string(const Version& ver)
-{
+std::string to_string(const Version& ver) {
     return std::to_string(ver.major) + "." + std::to_string(ver.minor) + "." + std::to_string(ver.debug);
 }
 
 Version find_imas_version(const std::string& directory, const std::string& filename_prefix,
-                          const std::string& ids_version)
-{
+                          const std::string& ids_version) {
     constexpr long long_max = std::numeric_limits<long>::max();
-    Version version{ long_max, long_max, long_max };
+    Version version{long_max, long_max, long_max};
     if (!ids_version.empty()) {
-        std::stringstream ss{ ids_version };
+        std::stringstream ss{ids_version};
         ss >> version.major >> version.minor >> version.debug;
     }
 
-    bf::path path{ directory };
+    bf::path path{directory};
 
-    Version result{ 0, 0, 0 };
+    Version result{0, 0, 0};
 
     for (const bf::directory_entry& item : bf::directory_iterator(path)) {
         if (bf::is_regular_file(item)) {
@@ -94,7 +88,7 @@ Version find_imas_version(const std::string& directory, const std::string& filen
             size_t pos = filename.find(filename_prefix + "_v");
             if (pos != std::string::npos) {
                 char* end = nullptr;
-                Version found = { 0, 0, 0 };
+                Version found = {0, 0, 0};
                 found.major = std::strtol(&filename[pos + filename_prefix.size() + 2], &end, 10);
                 found.minor = end == nullptr ? 0 : std::strtol(end, &end, 10);
                 found.debug = end == nullptr ? 0 : std::strtol(end, &end, 10);
@@ -111,10 +105,9 @@ Version find_imas_version(const std::string& directory, const std::string& filen
     return result;
 }
 
-} // anon namespace
+} // namespace
 
-std::string uda::exp2imas::get_mapping_filename(const std::string& ids_version, const std::string& element)
-{
+std::string uda::exp2imas::get_mapping_filename(const std::string& ids_version, const std::string& element) {
     static char* dir = nullptr;
 
     if (dir == nullptr) {
@@ -138,8 +131,8 @@ std::string uda::exp2imas::get_mapping_filename(const std::string& ids_version, 
     return name;
 }
 
-std::string uda::exp2imas::get_machine_mapping_filename(const std::string& experiment, const std::string& element, int shot)
-{
+std::string uda::exp2imas::get_machine_mapping_filename(const std::string& experiment, const std::string& element,
+                                                        int shot) {
     static char* dir = nullptr;
 
     if (dir == nullptr) {

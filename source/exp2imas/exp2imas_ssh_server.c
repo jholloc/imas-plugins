@@ -1,23 +1,22 @@
+#include <arpa/inet.h>
+#include <clientserver/stringUtils.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <libssh/libssh.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
 #include <string.h>
-#include <errno.h>
+#include <strings.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <clientserver/stringUtils.h>
 
-#include "exp2imas_ssh_gui.h"
 #include "exp2imas_ssh.h"
+#include "exp2imas_ssh_gui.h"
 
 #ifndef HAVE_GTK3
-#  include <clientserver/stringUtils.h>
+#include <clientserver/stringUtils.h>
 #endif
 
-static int verify_knownhost(ssh_session session)
-{
+static int verify_knownhost(ssh_session session) {
     int state = ssh_is_server_known(session);
 
     ssh_key pubkey;
@@ -34,61 +33,60 @@ static int verify_knownhost(ssh_session session)
     }
 
     switch (state) {
-        case SSH_SERVER_KNOWN_OK:
-            break; /* ok */
-        case SSH_SERVER_KNOWN_CHANGED:
-            fprintf(stderr, "Host key for server changed: it is now:\n");
-            ssh_print_hexa("Public key hash", hash, (size_t)hlen);
-            fprintf(stderr, "For security reasons, connection will be stopped\n");
+    case SSH_SERVER_KNOWN_OK:
+        break; /* ok */
+    case SSH_SERVER_KNOWN_CHANGED:
+        fprintf(stderr, "Host key for server changed: it is now:\n");
+        ssh_print_hexa("Public key hash", hash, (size_t)hlen);
+        fprintf(stderr, "For security reasons, connection will be stopped\n");
+        free(hash);
+        return -1;
+    case SSH_SERVER_FOUND_OTHER:
+        fprintf(stderr, "The host key for this server was not found but an other"
+                        "type of key exists.\n");
+        fprintf(stderr, "An attacker might change the default server key to"
+                        "confuse your client into thinking the key does not exist\n");
+        free(hash);
+        return -1;
+    case SSH_SERVER_FILE_NOT_FOUND:
+        fprintf(stderr, "Could not find known host file.\n");
+        fprintf(stderr, "If you accept the host key here, the file will be"
+                        "automatically created.\n");
+        /* fallback to SSH_SERVER_NOT_KNOWN behavior */
+    case SSH_SERVER_NOT_KNOWN: {
+        char* hexa = ssh_get_hexa(hash, (size_t)hlen);
+        fprintf(stderr, "The server is unknown. Do you trust the host key?\n");
+        fprintf(stderr, "Public key hash: %s\n", hexa);
+        free(hexa);
+        char buf[10];
+        if (fgets(buf, sizeof(buf), stdin) == NULL) {
             free(hash);
             return -1;
-        case SSH_SERVER_FOUND_OTHER:
-            fprintf(stderr, "The host key for this server was not found but an other"
-                    "type of key exists.\n");
-            fprintf(stderr, "An attacker might change the default server key to"
-                    "confuse your client into thinking the key does not exist\n");
-            free(hash);
-            return -1;
-        case SSH_SERVER_FILE_NOT_FOUND:
-            fprintf(stderr, "Could not find known host file.\n");
-            fprintf(stderr, "If you accept the host key here, the file will be"
-                    "automatically created.\n");
-            /* fallback to SSH_SERVER_NOT_KNOWN behavior */
-        case SSH_SERVER_NOT_KNOWN: {
-            char* hexa = ssh_get_hexa(hash, (size_t)hlen);
-            fprintf(stderr, "The server is unknown. Do you trust the host key?\n");
-            fprintf(stderr, "Public key hash: %s\n", hexa);
-            free(hexa);
-            char buf[10];
-            if (fgets(buf, sizeof(buf), stdin) == NULL) {
-                free(hash);
-                return -1;
-            }
-            if (strncasecmp(buf, "yes", 3) != 0) {
-                free(hash);
-                return -1;
-            }
-            if (ssh_write_knownhost(session) < 0) {
-                fprintf(stderr, "Error %s\n", strerror(errno));
-                free(hash);
-                return -1;
-            }
-            break;
         }
-        case SSH_SERVER_ERROR:
-            fprintf(stderr, "Error %s", ssh_get_error(session));
+        if (strncasecmp(buf, "yes", 3) != 0) {
             free(hash);
             return -1;
-        default:
-            fprintf(stderr, "Unknown SSH state %d", state);
+        }
+        if (ssh_write_knownhost(session) < 0) {
+            fprintf(stderr, "Error %s\n", strerror(errno));
+            free(hash);
+            return -1;
+        }
+        break;
+    }
+    case SSH_SERVER_ERROR:
+        fprintf(stderr, "Error %s", ssh_get_error(session));
+        free(hash);
+        return -1;
+    default:
+        fprintf(stderr, "Unknown SSH state %d", state);
     }
 
     free(hash);
     return 0;
 }
 
-static ssh_session create_session(const char* experiment, const char* ssh_host)
-{
+static ssh_session create_session(const char* experiment, const char* ssh_host) {
     ssh_session session = ssh_new();
     if (session == NULL) {
         fprintf(stderr, "failed to create SSH session\n");
@@ -174,8 +172,7 @@ static ssh_session create_session(const char* experiment, const char* ssh_host)
     return session;
 }
 
-static ssh_channel create_forwarding_channel(ssh_session session, const char* remote_host, int32_t client_port)
-{
+static ssh_channel create_forwarding_channel(ssh_session session, const char* remote_host, int32_t client_port) {
     ssh_channel forwarding_channel = ssh_channel_new(session);
     if (forwarding_channel == NULL) {
         fprintf(stderr, "failed to create SSH channel\n");
@@ -195,8 +192,7 @@ static ssh_channel create_forwarding_channel(ssh_session session, const char* re
     return forwarding_channel;
 }
 
-static socket_t listen_for_client(int32_t* client_port)
-{
+static socket_t listen_for_client(int32_t* client_port) {
     // create socket
     socket_t sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
@@ -256,8 +252,7 @@ static socket_t listen_for_client(int32_t* client_port)
     return client_sock;
 }
 
-int ssh_run_server(const char* experiment, const char** ssh_hosts, int num_hosts, const char* remote_host)
-{
+int ssh_run_server(const char* experiment, const char** ssh_hosts, int num_hosts, const char* remote_host) {
     int32_t client_port;
     socket_t client_sock = listen_for_client(&client_port);
     if (client_sock < 0) {
@@ -316,4 +311,3 @@ int ssh_run_server(const char* experiment, const char** ssh_hosts, int num_hosts
 
     return 0;
 }
-

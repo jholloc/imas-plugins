@@ -32,6 +32,17 @@ set( SOURCES
   exp2imas_mapping_files.cpp
 )
 
+set( HEADERS
+  exp2imas_mapping_files.h
+  exp2imas_mds.h
+  exp2imas_plugin.h
+  exp2imas_ramCache.h
+  exp2imas_ssh.h
+  exp2imas_ssh_gui.h
+  exp2imas_ssh_server.h
+  exp2imas_xml.h
+)
+
 if( GTK3_FOUND )
   link_directories( ${GTK3_LIBRARY_DIRS} )
   add_definitions( -DHAVE_GTK3 )
@@ -71,3 +82,8 @@ uda_plugin(
 )
 
 add_subdirectory( tests )
+
+list( TRANSFORM SOURCES PREPEND ${CMAKE_CURRENT_LIST_DIR}/ )
+list( TRANSFORM HEADERS PREPEND ${CMAKE_CURRENT_LIST_DIR}/ )
+
+set_property( TARGET clang-format APPEND PROPERTY SOURCES ${SOURCES} ${HEADERS} )
