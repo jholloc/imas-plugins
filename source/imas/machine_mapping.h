@@ -13,20 +13,19 @@ namespace uda {
 namespace plugins {
 namespace imas {
 
+constexpr size_t MappingFileColumnCount = 5;
+
 class MachineMapping
 {
 public:
-    MachineMapping() : mappings_{}
+    MachineMapping()
     {
-        auto file_name = getenv("UDA_IMAS_MACHINE_MAP");
+        auto *file_name = getenv("UDA_IMAS_MACHINE_MAP");
         if (file_name == nullptr) {
             throw std::runtime_error("environmental variable UDA_IMAS_MACHINE_MAP not set");
         }
 
         std::ifstream in_file(file_name);
-
-        typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-        boost::char_separator<char> sep(" ");
 
         std::string line;
         while (std::getline(in_file, line)) {
@@ -36,7 +35,7 @@ public:
 
             std::vector<std::string> words;
             boost::split(words, line, boost::is_any_of(" \t"), boost::token_compress_on);
-            if (words.size() != 5) {
+            if (words.size() != MappingFileColumnCount) {
                 throw std::runtime_error(std::string("bad line in ") + file_name + ": " + line);
             }
 
