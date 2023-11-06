@@ -327,7 +327,6 @@ int uda::plugins::imas::Plugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plu
 
 namespace {
 
-#ifndef NO_IMAS
 bool is_null_value(void* data, int datatype, int rank) {
     switch (datatype) {
     case CHAR_DATA:
@@ -342,7 +341,6 @@ bool is_null_value(void* data, int datatype, int rank) {
         throw std::runtime_error{"unknown datatype"};
     }
 }
-#endif
 
 bool is_index(const std::string& string) {
     if (string.back() != ']') {
@@ -553,7 +551,6 @@ uda::plugins::imas::Plugin::read_data(Entry& entry, int ctx, std::deque<std::str
 
 namespace {
 
-#ifndef NO_IMAS
 UDA_TYPE imas2uda_type(int imas_type) {
     switch (imas_type) {
     case CHAR_DATA:
@@ -568,7 +565,6 @@ UDA_TYPE imas2uda_type(int imas_type) {
         UNREACHABLE();
     }
 }
-#endif // NO_IMAS
 
 #ifndef MAX_HOST_NAME
 #define MAX_HOST_NAME 255
@@ -819,6 +815,7 @@ int convert_interp_mode(const std::string& interp) {
         RAISE_PLUGIN_ERROR("unknown range mode")
     }
 }
+#endif //NO_IMAS
 
 int convert_datatype(const std::string& datatype) {
     if (datatype == "char") {
@@ -848,7 +845,6 @@ size_t sizeof_datatype(int type) {
         RAISE_PLUGIN_ERROR("unknown IMAS type")
     }
 }
-#endif NO_IMAS
 
 /**
  * Function: get
@@ -1103,8 +1099,6 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     const char* mode;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
 
-    int mode_int = convert_open_mode(mode);
-
     auto parsed_uri = uri::parse_uri(uri);
     auto maybe_machine = parsed_uri.query.get("machine");
     if (maybe_machine) {
@@ -1121,6 +1115,7 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
 #ifdef NO_IMAS
     RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
 #else
+    int mode_int = convert_open_mode(mode);
     int ctx;
     al_status_t status = al_begin_dataentry_action(uri, mode_int, &ctx);
     if (status.code != 0) {
