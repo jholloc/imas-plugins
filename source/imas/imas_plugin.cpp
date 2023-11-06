@@ -722,7 +722,7 @@ void uda::plugins::imas::Plugin::read_mapped_data_r(const Entry& entry, const st
 
         int rc = get_mapped_data(entry, ids, plugin_interface, data);
         if (rc != 0) {
-            return
+            return;
         }
 
         return_data.push_back(data);
