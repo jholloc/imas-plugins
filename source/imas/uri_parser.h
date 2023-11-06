@@ -101,10 +101,11 @@ public:
     bool empty() const {
         return map_.empty();
     }
-    std::vector<const char*> names() const {
-        std::vector<const char*> names{ map_.size() };
-        for (const auto& el : map_) {
-            names.push_back(el.first.c_str());
+    std::vector<std::string> names() const {
+        std::vector<std::string> names;
+        names.reserve(map_.size());
+        for (const auto& pair : map_) {
+            names.push_back(pair.first);
         }
         return names;
     }
