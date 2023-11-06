@@ -631,13 +631,32 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
         data_block = getIdamDataBlock(handle);
     }
 
+    if (data_block->data_type == UDA_TYPE_FLOAT && data.datatype == DOUBLE_DATA) {
+        auto newdata = reinterpret_cast<double*>(malloc(data_block->data_n * sizeof(double)));
+        for (int i = 0; i < data_block->data_n; i++) {
+            newdata[i] = static_cast<double>((reinterpret_cast<float*>(data_block->data))[i]);
+        }
+        free(data_block->data);
+        data_block->data = reinterpret_cast<char*>(newdata);
+        data_block->data_type = UDA_TYPE_DOUBLE;
+    }
+
+    size_t const size_of = getSizeOf((UDA_TYPE)data_block->data_type);
     if (data.rank == 0) {
         data.using_buffer = true;
         data.data = (void*)data.buffer.data();
+    } else {
+        data.using_buffer = false;
+        data.data = malloc(data_block->data_n * size_of);
     }
-    size_t const size_of = getSizeOf((UDA_TYPE)data_block->data_type);
+
+    for (int i = 0; i < data_block->rank; ++i) {
+        data.shape[i] = data_block->dims[i].dim_n;
+    }
     memcpy(data.data, data_block->data, data_block->data_n * size_of);
-    data.size = data_block->data_n;
+    if (data.is_size) {
+        data.size = *reinterpret_cast<int*>(data.data);
+    }
 
     freeDataBlock(data_block);
 
