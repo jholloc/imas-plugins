@@ -600,6 +600,9 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
 
     delim = ", ";
     for (const auto& name : entry.mapped_arguments.names()) {
+        if (name == "machine" || name == "path") {
+            continue;
+        }
         auto value = entry.mapped_arguments.get(name);
         ss << delim << name << "=" << value.value();
     }
@@ -672,11 +675,8 @@ void uda::plugins::imas::Plugin::read_mapped_data_r(const Entry& entry, const st
         }
 
         int rc = get_mapped_data(entry, ids, plugin_interface, data);
-        if (rc != 0) {
-            throw std::runtime_error{"failed to map data"};
-        }
 
-        data.found = !is_null_value(data.data, datatype, rank);
+        data.found = (rc == 0) && !is_null_value(data.data, datatype, rank);
         return_data.push_back(data);
     } else {
         // handle array_struct case
@@ -703,7 +703,7 @@ void uda::plugins::imas::Plugin::read_mapped_data_r(const Entry& entry, const st
 
         int rc = get_mapped_data(entry, ids, plugin_interface, data);
         if (rc != 0) {
-            throw std::runtime_error{"failed to get mapped data"};
+            return
         }
 
         return_data.push_back(data);
