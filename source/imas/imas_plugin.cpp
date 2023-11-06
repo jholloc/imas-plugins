@@ -30,7 +30,14 @@
 
 #include <client/accAPI.h>
 #include <client/udaGetAPI.h>
-#include <al_lowlevel.h>
+#ifndef NO_IMAS
+#  include <al_lowlevel.h>
+#else
+#  define CHAR_DATA     50
+#  define INTEGER_DATA  51
+#  define DOUBLE_DATA   52
+#  define COMPLEX_DATA  53
+#endif
 
 #include "machine_mapping.h"
 
@@ -320,6 +327,7 @@ int uda::plugins::imas::Plugin::max_interface_version(IDAM_PLUGIN_INTERFACE* plu
 
 namespace {
 
+#ifndef NO_IMAS
 bool is_null_value(void* data, int datatype, int rank) {
     switch (datatype) {
     case CHAR_DATA:
@@ -334,6 +342,7 @@ bool is_null_value(void* data, int datatype, int rank) {
         throw std::runtime_error{"unknown datatype"};
     }
 }
+#endif
 
 bool is_index(const std::string& string) {
     if (string.back() != ']') {
@@ -391,6 +400,7 @@ std::pair<std::string, long> parse_index(const std::string& string) {
 
 } // namespace
 
+#ifndef NO_IMAS
 void uda::plugins::imas::Plugin::read_data_r(Entry& entry, int ctx, std::deque<std::string>& tokens, int datatype,
                                              int rank, std::vector<IDSData>& return_data, const std::string& path,
                                              int is_homogeneous, const std::vector<bool>& dynamic_flags,
@@ -533,6 +543,7 @@ uda::plugins::imas::Plugin::read_data(Entry& entry, int ctx, std::deque<std::str
 
     return return_data;
 }
+#endif // NO_IMAS
 
 #ifdef _MSC_VER
 #define UNREACHABLE() __assume(0)
@@ -542,6 +553,7 @@ uda::plugins::imas::Plugin::read_data(Entry& entry, int ctx, std::deque<std::str
 
 namespace {
 
+#ifndef NO_IMAS
 UDA_TYPE imas2uda_type(int imas_type) {
     switch (imas_type) {
     case CHAR_DATA:
@@ -556,6 +568,7 @@ UDA_TYPE imas2uda_type(int imas_type) {
         UNREACHABLE();
     }
 }
+#endif // NO_IMAS
 
 #ifndef MAX_HOST_NAME
 #define MAX_HOST_NAME 255
@@ -756,6 +769,7 @@ uda::plugins::imas::Plugin::read_mapped_data(const Entry& entry, const std::stri
     return return_data;
 }
 
+#ifndef NO_IMAS
 int convert_open_mode(const std::string& mode) {
     if (mode == "open") {
         return OPEN_PULSE;
@@ -834,6 +848,7 @@ size_t sizeof_datatype(int type) {
         RAISE_PLUGIN_ERROR("unknown IMAS type")
     }
 }
+#endif NO_IMAS
 
 /**
  * Function: get
@@ -928,6 +943,9 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
             RAISE_PLUGIN_ERROR(ex.what());
         }
     } else {
+#ifdef NO_IMAS
+        RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
         int const access_mode = convert_access_mode(access);
         int const range_mode = convert_range_mode(range);
         int const interp_mode = convert_interp_mode(interp);
@@ -970,6 +988,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         } catch (std::runtime_error& ex) {
             RAISE_PLUGIN_ERROR(ex.what())
         }
+#endif // !NO_IMAS
     }
 
     if (results.empty()) {
@@ -1099,6 +1118,9 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapping return");
     }
 
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
     int ctx;
     al_status_t status = al_begin_dataentry_action(uri, mode_int, &ctx);
     if (status.code != 0) {
@@ -1111,6 +1133,7 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     _open_entries.emplace(uri, Entry::LocalEntry(ctx));
 
     return setReturnDataIntScalar(plugin_interface->data_block, ctx, "pulse context");
+#endif // !NO_IMAS
 }
 
 /**
@@ -1151,6 +1174,9 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapped return");
     }
 
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
     if (entry.operation_cache.ctx != -1) {
         while (!entry.operation_cache.array_struct_cache.empty()) {
             al_status_t status = al_end_action(entry.operation_cache.array_struct_cache.back().ctx);
@@ -1179,4 +1205,5 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     _open_entries.erase(uri);
 
     return setReturnDataIntScalar(plugin_interface->data_block, -1, "pulse context");
+#endif // !NO_IMAS
 }

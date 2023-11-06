@@ -66,9 +66,9 @@ macro( uda_plugin )
     add_definitions( -DA64 )
   endif()
 
-  add_definitions( -DSERVERBUILD -DPLUGIN_NAME="${PLUGIN_NAME}" -DPLUGIN_VERSION="${PLUGIN_VERSION}" )
+  target_compile_definitions( ${PLUGIN_LIBNAME} PRIVATE -DSERVERBUILD -DPLUGIN_NAME="${PLUGIN_NAME}" -DPLUGIN_VERSION="${PLUGIN_VERSION}" )
   foreach( DEF ${PLUGIN_EXTRA_DEFINITIONS} )
-    add_definitions( ${DEF} )
+    target_compile_definitions( ${PLUGIN_LIBNAME} PRIVATE ${DEF} )
   endforeach()
 
   target_link_libraries( ${PLUGIN_LIBNAME} LINK_PRIVATE ${UDA_PLUGINS_LIBRARIES} )
