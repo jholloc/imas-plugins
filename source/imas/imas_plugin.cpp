@@ -97,20 +97,20 @@ struct IDSData {
 struct Entry {
     bool is_mapped;
     int ctx;
-    std::string mapped_machine;
+    std::string mapping_name;
     uri::QueryDict mapped_arguments = {};
     OperationContextCache operation_cache = {"", -1, -1, -1, {}};
 
-    static Entry MappedEntry(std::string mapped_machine, uri::QueryDict mapped_arguments) {
-        return {true, -1, std::move(mapped_machine), std::move(mapped_arguments), {}};
+    static Entry MappedEntry(std::string mapping_name, uri::QueryDict mapped_arguments) {
+        return {true, -1, std::move(mapping_name), std::move(mapped_arguments), {}};
     }
 
     static Entry LocalEntry(int ctx) { return {false, ctx, "", {}, {"", -1, -1, -1, {}}}; }
 
   private:
-    Entry(bool is_mapped, int ctx, std::string&& mapped_machine, uri::QueryDict&& mapped_arguments,
+    Entry(bool is_mapped, int ctx, std::string&& mapping_name, uri::QueryDict&& mapped_arguments,
           OperationContextCache&& operation_cache)
-        : is_mapped{is_mapped}, ctx(ctx), mapped_machine{std::move(mapped_machine)},
+        : is_mapped{is_mapped}, ctx(ctx), mapping_name{std::move(mapping_name)},
           mapped_arguments{std::move(mapped_arguments)}, operation_cache{std::move(operation_cache)} {}
 };
 
@@ -155,7 +155,7 @@ class Plugin {
   private:
     bool _init = false;
     std::unordered_map<uri_t, Entry> _open_entries = {};
-    MachineMapping _machine_mapping = {};
+    MappingEntry _mapping_entry = {};
 
     std::vector<IDSData> read_data(Entry& entry, int ctx, std::deque<std::string>& tokens, int datatype, int rank,
                                    const std::string& ids, int is_homogeneous, const std::vector<bool>& dynamic_flags,
@@ -589,9 +589,9 @@ std::string get_host_name() {
 
 int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::string& ids,
                                                 IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data) {
-    auto plugin = _machine_mapping.plugin(entry.mapped_machine, ids);
-    auto host = _machine_mapping.host(entry.mapped_machine, ids);
-    auto port = _machine_mapping.port(entry.mapped_machine, ids);
+    auto plugin = _mapping_entry.plugin(entry.mapped_machine, ids);
+    auto host = _mapping_entry.host(entry.mapped_machine, ids);
+    auto port = _mapping_entry.port(entry.mapped_machine, ids);
 
     // Ignore host for now
 
@@ -609,7 +609,7 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
 
     delim = ", ";
     for (const auto& name : entry.mapped_arguments.names()) {
-        if (name == "machine" || name == "path") {
+        if (name == "mapping" || name == "path") {
             continue;
         }
         auto value = entry.mapped_arguments.get(name);
@@ -777,6 +777,16 @@ int convert_open_mode(const std::string& mode) {
         return FORCE_CREATE_PULSE;
     } else {
         RAISE_PLUGIN_ERROR("unknown open mode");
+    }
+}
+
+int convert_close_mode(const std::string& mode) {
+    if (mode == "close") {
+        return CLOSE_PULSE;
+    } else if (mode == "erase") {
+        return ERASE_PULSE;
+    } else {
+        RAISE_PLUGIN_ERROR("unknown close mode");
     }
 }
 
@@ -1087,7 +1097,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  *      Integer scalar containing the pulse context handle.
  *
  * Example:
- *      IMAS::open(shot=1000, run=1, user='test', tokamak='iter', version='3')
+ *      IMAS::open(uri='imas:hdf5?path=foo', mode='open')
  *
  * @param plugin_interface the UDA plugin interface structure
  * @return 0 on success, !=0 on error
@@ -1100,15 +1110,15 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
 
     auto parsed_uri = uri::parse_uri(uri);
-    auto maybe_machine = parsed_uri.query.get("machine");
-    if (maybe_machine) {
-        auto mapped_machine = maybe_machine.value();
+    auto maybe_mapping = parsed_uri.query.get("mapping");
+    if (maybe_mapping) {
+        auto mapping_name = maybe_mapping.value();
 
-        if (!_machine_mapping.contains(mapped_machine)) {
-            RAISE_PLUGIN_ERROR("machine not found")
+        if (!_mapping_entry.contains(mapping_name)) {
+            RAISE_PLUGIN_ERROR("mapping not found")
         }
 
-        _open_entries.emplace(uri, Entry::MappedEntry(mapped_machine, parsed_uri.query));
+        _open_entries.emplace(uri, Entry::MappedEntry(mapping_name, parsed_uri.query));
         return setReturnDataIntScalar(plugin_interface->data_block, 0, "mapping return");
     }
 
@@ -1139,13 +1149,13 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  *
  * Arguments:
  *      uri     (required, string)  - uri for data
- *      mode    (required, int)     - close mode
+ *      mode    (required, string)  - close mode `[close|erase]`
  *
  * Returns:
  *      Integer scalar -1
  *
  * Example:
- *      IMAS::close(shot=1000, run=1, user='test', tokamak='iter', version='3')
+ *      IMAS::close(uri='imas:hdf5?path=foo', mode='close')
  *
  * @param plugin_interface the UDA plugin interface structure
  * @return 0 on success, !=0 on error
@@ -1154,8 +1164,8 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     const char* uri;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
-    int mode;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, mode);
+    const char* mode;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
 
     initDataBlock(plugin_interface->data_block);
 
@@ -1188,7 +1198,8 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         entry.operation_cache = {"", -1, -1, {}};
     }
 
-    al_status_t status = al_close_pulse(entry.ctx, mode);
+    int mode_int = convert_close_mode(mode);
+    al_status_t status = al_close_pulse(entry.ctx, mode_int);
     if (status.code != 0) {
         RAISE_PLUGIN_ERROR(status.message);
     }

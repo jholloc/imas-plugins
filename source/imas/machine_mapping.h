@@ -15,14 +15,14 @@ namespace imas {
 
 constexpr size_t MappingFileColumnCount = 5;
 
-class MachineMapping
+class MappingEntry
 {
 public:
-    MachineMapping()
+    MappingEntry()
     {
-        auto *file_name = getenv("UDA_IMAS_MACHINE_MAP");
+        auto *file_name = getenv("UDA_IMAS_MAPPINGS_FILE");
         if (file_name == nullptr) {
-            throw std::runtime_error("environmental variable UDA_IMAS_MACHINE_MAP not set");
+            throw std::runtime_error("environmental variable UDA_IMAS_MAPPINGS_FILE not set");
         }
 
         std::ifstream in_file(file_name);
@@ -49,33 +49,33 @@ public:
         }
     }
 
-    bool contains(std::string machine)
+    bool contains(std::string mapping_name)
     {
-        boost::to_upper(machine);
-        return mappings_.count(machine) != 0;
+        boost::to_upper(mapping_name);
+        return mappings_.count(mapping_name) != 0;
     }
 
-    std::string host(std::string machine, std::string ids)
+    std::string host(std::string mapping_name, std::string ids)
     {
-        boost::to_upper(machine);
+        boost::to_upper(mapping_name);
         boost::to_upper(ids);
-        auto& plugin_map = mappings_[machine];
+        auto& plugin_map = mappings_[mapping_name];
         return plugin_map.count(ids) > 0 ? plugin_map[ids].host : plugin_map["*"].host;
     }
 
-    int port(std::string machine, std::string ids)
+    int port(std::string mapping_name, std::string ids)
     {
-        boost::to_upper(machine);
+        boost::to_upper(mapping_name);
         boost::to_upper(ids);
-        auto& plugin_map = mappings_[machine];
+        auto& plugin_map = mappings_[mapping_name];
         return plugin_map.count(ids) > 0 ? plugin_map[ids].port : plugin_map["*"].port;
     }
 
-    std::string plugin(std::string machine, std::string ids)
+    std::string plugin(std::string mapping_name, std::string ids)
     {
-        boost::to_upper(machine);
+        boost::to_upper(mapping_name);
         boost::to_upper(ids);
-        auto& plugin_map = mappings_[machine];
+        auto& plugin_map = mappings_[mapping_name];
         return plugin_map.count(ids) > 0 ? plugin_map[ids].plugin : plugin_map["*"].plugin;
     }
 
