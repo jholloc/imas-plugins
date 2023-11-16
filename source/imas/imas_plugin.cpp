@@ -589,9 +589,9 @@ std::string get_host_name() {
 
 int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::string& ids,
                                                 IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data) {
-    auto plugin = _mapping_entry.plugin(entry.mapped_machine, ids);
-    auto host = _mapping_entry.host(entry.mapped_machine, ids);
-    auto port = _mapping_entry.port(entry.mapped_machine, ids);
+    auto plugin = _mapping_entry.plugin(entry.mapping_name, ids);
+    auto host = _mapping_entry.host(entry.mapping_name, ids);
+    auto port = _mapping_entry.port(entry.mapping_name, ids);
 
     // Ignore host for now
 
@@ -603,7 +603,7 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
 
     std::stringstream ss;
     ss << plugin << "::get("
-       << "machine='" << entry.mapped_machine << "'"
+       << "mapping='" << entry.mapping_name << "'"
        << ", path='" << data.path << "'"
        << ", rank=" << data.rank << ", shape=" << shape_string << ", datatype=" << imas2uda_type(data.datatype);
 
