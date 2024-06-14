@@ -22,6 +22,7 @@
 #include <stack>
 #include <unistd.h>
 #include <unordered_map>
+#include <array>
 
 #include <clientserver/initStructs.h>
 #include <clientserver/stringUtils.h>
@@ -589,9 +590,9 @@ std::string get_host_name() {
 
 int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::string& ids,
                                                 IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data) {
-    auto plugin = _mapping_entry.plugin(entry.mapped_machine, ids);
-    auto host = _mapping_entry.host(entry.mapped_machine, ids);
-    auto port = _mapping_entry.port(entry.mapped_machine, ids);
+    auto plugin = _mapping_entry.plugin(entry.mapping_name, ids);
+    auto host = _mapping_entry.host(entry.mapping_name, ids);
+    auto port = _mapping_entry.port(entry.mapping_name, ids);
 
     // Ignore host for now
 
@@ -603,7 +604,7 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
 
     std::stringstream ss;
     ss << plugin << "::get("
-       << "machine='" << entry.mapped_machine << "'"
+       << "machine='" << entry.mapping_name << "'"
        << ", path='" << data.path << "'"
        << ", rank=" << data.rank << ", shape=" << shape_string << ", datatype=" << imas2uda_type(data.datatype);
 
@@ -915,6 +916,23 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     std::transform(dynamic_flags, dynamic_flags + ndynamic_flags, std::back_inserter(dynamic_flags_vec),
                    [](int flag) { return static_cast<bool>(flag); });
 
+    float time_range_tmin = 0.0;
+    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmin);
+
+    float time_range_tmax = 0.0;
+    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmax);
+
+    int time_range_interp = 0;
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_interp);
+
+    int time_range_dtime_shape = 0;
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_dtime_shape);
+
+    double* dtime_values = nullptr;
+    size_t ndtime_values;
+    FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime_values);
+    std::vector<double> dtime(dtime_values, dtime_values + ndtime_values);
+
     const char* timebase = nullptr;
     bool const is_timebase = FIND_STRING_VALUE(plugin_interface->request_data->nameValueList, timebase);
     if (!is_timebase) {
@@ -979,8 +997,12 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
             al_status_t status = {};
             if (range_mode == GLOBAL_OP) {
                 status = al_begin_global_action(entry.ctx, ids.c_str(), "", access_mode, &op_ctx);
-            } else {
+            } else if (range_mode == SLICE_OP) {
                 status = al_begin_slice_action(entry.ctx, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+            }
+            else if (range_mode == TIMERANGE_OP) {
+                status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax, 
+                dtime.data(), dtime.size(), time_range_interp, &op_ctx);
             }
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
