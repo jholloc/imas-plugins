@@ -1182,7 +1182,9 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     initDataBlock(plugin_interface->data_block);
 
     if (_open_entries.count(uri) == 0) {
-        RAISE_PLUGIN_ERROR("pulse is not currently open");
+        // Do not return an error as this might be from a server timeout
+        return setReturnDataIntScalar(plugin_interface->data_block, -2, "pulse context");
+//        RAISE_PLUGIN_ERROR("pulse is not currently open");
     }
     auto& entry = _open_entries.at(uri);
 
