@@ -604,7 +604,7 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
 
     std::stringstream ss;
     ss << plugin << "::get("
-       << "machine='" << entry.mapping_name << "'"
+       << "mapping='" << entry.mapping_name << "'"
        << ", path='" << data.path << "'"
        << ", rank=" << data.rank << ", shape=" << shape_string << ", datatype=" << imas2uda_type(data.datatype);
 
@@ -641,7 +641,18 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
         data_block = getIdamDataBlock(handle);
     }
 
-    if (data_block->data_type == UDA_TYPE_FLOAT && data.datatype == DOUBLE_DATA) {
+    if (data_block->data_type == UDA_TYPE_FLOAT && data.datatype == INTEGER_DATA) {
+
+        auto newdata = reinterpret_cast<int*>(malloc(data_block->data_n * sizeof(int)));
+        for (int i = 0; i < data_block->data_n; i++) {
+            newdata[i] = static_cast<int>((reinterpret_cast<float*>(data_block->data))[i]);
+        }
+        free(data_block->data);
+        data_block->data = reinterpret_cast<char*>(newdata);
+        data_block->data_type = UDA_TYPE_INT;
+
+    } else if (data_block->data_type == UDA_TYPE_FLOAT && data.datatype == DOUBLE_DATA) {
+
         auto newdata = reinterpret_cast<double*>(malloc(data_block->data_n * sizeof(double)));
         for (int i = 0; i < data_block->data_n; i++) {
             newdata[i] = static_cast<double>((reinterpret_cast<float*>(data_block->data))[i]);
@@ -649,6 +660,7 @@ int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::s
         free(data_block->data);
         data_block->data = reinterpret_cast<char*>(newdata);
         data_block->data_type = UDA_TYPE_DOUBLE;
+
     }
 
     size_t const size_of = getSizeOf((UDA_TYPE)data_block->data_type);
@@ -1192,7 +1204,9 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     initDataBlock(plugin_interface->data_block);
 
     if (_open_entries.count(uri) == 0) {
-        RAISE_PLUGIN_ERROR("pulse is not currently open");
+        // Do not return an error as this might be from a server timeout
+        return setReturnDataIntScalar(plugin_interface->data_block, -2, "pulse context");
+//        RAISE_PLUGIN_ERROR("pulse is not currently open");
     }
     auto& entry = _open_entries.at(uri);
 
