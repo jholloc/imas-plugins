@@ -985,7 +985,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         int const access_mode = convert_access_mode(access);
         int const range_mode = convert_range_mode(range);
         int const interp_mode = convert_interp_mode(interp);
-
+        int dtime_shape[] = { (int)dtime.size() };         
         int op_ctx = -1;
         if (entry.operation_cache.ids == ids && entry.operation_cache.access == access_mode &&
             entry.operation_cache.range == range_mode) {
@@ -1014,7 +1014,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
             }
             else if (range_mode == TIMERANGE_OP) {
                 status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax, 
-                dtime.data(), (const int*)dtime.size(), time_range_interp, &op_ctx);
+                dtime.data(), dtime_shape, time_range_interp, &op_ctx);
             }
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
