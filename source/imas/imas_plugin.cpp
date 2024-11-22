@@ -1014,7 +1014,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
             }
             else if (range_mode == TIMERANGE_OP) {
                 status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax, 
-                dtime.data(), dtime.size(), time_range_interp, &op_ctx);
+                dtime.data(), (const int*)dtime.size(), time_range_interp, &op_ctx);
             }
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
