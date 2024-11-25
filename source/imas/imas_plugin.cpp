@@ -873,6 +873,30 @@ size_t sizeof_datatype(int type) {
  * Function: get
  *
  * Returns the IMAS data for the given IDS path. If the database entry is not currently open then it will be opened.
+ * Time range parameters described belo are set according to three different modes:
+ *
+ *       1.  No interpolation. This method is selected when parameter dtime_values has an empty shape given by dtime_shape
+ *           and time_range_interp is 0.
+ * 
+ *           This mode returns an IDS object with all constant/static data filled. The
+ *           dynamic data are retrieved for the provided time range [time_range_tmin, time_range_tmax].
+ *
+ *       2.  Interpolate dynamic data on a uniform time base. This method is selected
+ *           when dtime_values with dtime_shape equals to 1 and time_range_interp are provided.
+ *
+ *           This mode will generate an IDS with a homogeneous time vector ``[time_range_tmin, time_range_tmin
+ *           + dtime_values[0], time_range_tmin + 2*dtime_values[0], ...`` up to time_range_tmax. The chosen interpolation
+ *           method will have no effect on the time vector, but may have an impact on the other dynamic values. 
+ *           The returned IDS always has ``ids_properties.homogeneous_time = 1``.
+ *
+ *       3.  Interpolate dynamic data on an explicit time base. This method is selected
+ *           when dtime_values with dtime_shape larger than 1 and time_range_interp are provided.
+ *
+ *           This mode will generate an IDS with a homogeneous time vector equals to
+ *           dtime_values of length dtime_shape. time_range_tmin and time_range_tmax are ignored in this mode.
+ *           The chosen interpolation method will have no effect on the time vector, but
+ *           may have an impact on the other dynamic values. 
+ *           The returned IDS always has ``ids_properties.homogeneous_time = 1``.
  *
  * Arguments:
  *      uri             (required, string)  - uri for data
@@ -885,7 +909,14 @@ size_t sizeof_datatype(int type) {
  *      rank            (required, int)     - rank of data to return
  *      is_homogeneous  (required, int)     - flag specifying whether data has been stored homogeneously
  *      dynamic_flags   (required, int array) - flags specifying dynamic status for each level of the path
- *
+ *      time_range_tmin (required, float)   - used for time range operation only. Lower bound of the requested time range
+ *      time_range_tmax (required, float)   - used for time range operation only. Upper bound of the requested time range, must be larger than or equal to time_range_tmin
+ *      time_range_interp (required, float) - used for time range operation only. Interpolation method to use (1=CLOSEST_INTERP, 2=PREVIOUS_INTERP, 3=LINEAR_INTERP)
+ *      dtime_values (required, double*)    - used for time range operation only. Interval to use when interpolating, must be an array of double values
+ *                                            containing an explicit time base to interpolate when using modes 2 and 3 described above
+ *      dtime_shape (required, int)         - used for time range operation only. Shape of the dtime_values parameter. 
+ * 
+ * 
  * Returns:
  *      CapNp serialised tree of depth 1, where each leaf node contains the name and data of a returned IMAS data node
  *
