@@ -820,7 +820,9 @@ int convert_range_mode(const std::string& range) {
         return GLOBAL_OP;
     } else if (range == "slice") {
         return SLICE_OP;
-    } else {
+    } else if (range == "time") {
+        return TIMERANGE_OP;
+    }else {
         RAISE_PLUGIN_ERROR("unknown range mode");
     }
 }
@@ -873,7 +875,7 @@ size_t sizeof_datatype(int type) {
  * Function: get
  *
  * Returns the IMAS data for the given IDS path. If the database entry is not currently open then it will be opened.
- * Time range parameters described belo are set according to three different modes:
+ * Time range parameters described below are set according to three different modes:
  *
  *       1.  No interpolation. This method is selected when parameter dtime_values has an empty shape given by dtime_shape
  *           and time_range_interp is 0.
