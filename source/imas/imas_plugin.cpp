@@ -22,6 +22,7 @@
 #include <stack>
 #include <unistd.h>
 #include <unordered_map>
+#include <filesystem>
 
 #include <clientserver/initStructs.h>
 #include <clientserver/stringUtils.h>
@@ -152,11 +153,14 @@ class Plugin {
 
     int close(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
+    int list_files(IDAM_PLUGIN_INTERFACE* plugin_interface);
+
   private:
     bool _init = false;
     std::unordered_map<uri_t, Entry> _open_entries = {};
     MappingEntry _mapping_entry = {};
 
+#ifndef NO_IMAS
     std::vector<IDSData> read_data(Entry& entry, int ctx, std::deque<std::string>& tokens, int datatype, int rank,
                                    const std::string& ids, int is_homogeneous, const std::vector<bool>& dynamic_flags,
                                    const std::string& timebase);
@@ -164,6 +168,7 @@ class Plugin {
     void read_data_r(Entry& entry, int ctx, std::deque<std::string>& tokens, int datatype, int rank,
                      std::vector<IDSData>& return_data, const std::string& path, int is_homogeneous,
                      const std::vector<bool>& dynamic_flags, const std::string& timebase, int flag_depth);
+#endif // NO_IMAS
 
     std::vector<IDSData> read_mapped_data(const Entry& entry, const std::string& ids,
                                           IDAM_PLUGIN_INTERFACE* plugin_interface, std::deque<std::string>& tokens,
@@ -183,7 +188,7 @@ class Plugin {
 
 int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* plugin_interface) {
     if (plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
-        RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
+        RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!")
     }
 
     plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
@@ -220,6 +225,8 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
         return_code = plugin.open(plugin_interface);
     } else if (function == "close") {
         return_code = plugin.close(plugin_interface);
+    } else if (function == "listFiles") {
+        return_code = plugin.list_files(plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
@@ -892,36 +899,36 @@ size_t sizeof_datatype(int type) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-    const char* uri;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+    const char* uri = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri)
 
     const char* access = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access)
 
     const char* range = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, range);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, range)
 
     float time = 0.0;
-    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time);
+    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time)
 
     const char* interp = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, interp);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, interp)
 
     const char* path = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, path);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, path)
 
     const char* datatype = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, datatype);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, datatype)
 
     int rank = -1;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, rank);
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, rank)
 
     int is_homogeneous = -1;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, is_homogeneous);
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, is_homogeneous)
 
     int* dynamic_flags = nullptr;
     size_t ndynamic_flags = -1;
-    FIND_REQUIRED_INT_ARRAY(plugin_interface->request_data->nameValueList, dynamic_flags);
+    FIND_REQUIRED_INT_ARRAY(plugin_interface->request_data->nameValueList, dynamic_flags)
 
     std::vector<bool> dynamic_flags_vec;
     std::transform(dynamic_flags, dynamic_flags + ndynamic_flags, std::back_inserter(dynamic_flags_vec),
@@ -1115,11 +1122,11 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-    const char* uri;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+    const char* uri = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri)
 
-    const char* mode;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
+    const char* mode = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode)
 
     auto parsed_uri = uri::parse_uri(uri);
     auto maybe_mapping = parsed_uri.query.get("mapping");
@@ -1173,11 +1180,11 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-    const char* uri;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+    const char* uri = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri)
 
-    const char* mode;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
+    const char* mode = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode)
 
     initDataBlock(plugin_interface->data_block);
 
@@ -1226,4 +1233,52 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
 
     return setReturnDataIntScalar(plugin_interface->data_block, -1, "pulse context");
 #endif // !NO_IMAS
+}
+
+int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    const char* path = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, path)
+
+    const char* backend = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, backend)
+
+    std::filesystem::path file_path = path;
+
+    if (!std::filesystem::exists(file_path)) {
+        std::string msg = std::string{"Path '"} + path + "' does not exist";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    if (!std::filesystem::is_directory(file_path)) {
+        std::string msg = std::string{"Path '"} + path + "' is not a directory";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    if (std::filesystem::is_empty(file_path)) {
+        std::string msg = std::string{"Path '"} + path + "' directory is empty";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    std::vector<std::string> filenames;
+
+    if (std::string{ backend } == "mdsplus") {
+        filenames.emplace_back("ids_001.datafile");
+        filenames.emplace_back("ids_001.characteristics");
+        filenames.emplace_back("ids_001.tree");
+    } else if (std::string{ backend } == "hdf5") {
+        for (const auto& entry : std::filesystem::directory_iterator(file_path)) {
+            if (entry.is_regular_file()) {
+                const auto& sub_path = entry.path();
+                if (sub_path.extension() == ".h5") {
+                    filenames.push_back(sub_path.filename());
+                }
+            }
+        }
+    } else {
+        std::string msg = std::string{"Unsupported backend '"} + backend + "'";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    return 0;
 }
