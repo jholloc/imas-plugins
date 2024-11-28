@@ -961,18 +961,6 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     std::transform(dynamic_flags, dynamic_flags + ndynamic_flags, std::back_inserter(dynamic_flags_vec),
                    [](int flag) { return static_cast<bool>(flag); });
 
-    float time_range_tmin = 0.0;
-    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmin);
-
-    float time_range_tmax = 0.0;
-    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmax);
-
-    int time_range_interp = 0;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_interp);
-
-    int time_range_dtime_shape = 0;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_dtime_shape);
-
     double* dtime_values = nullptr;
     size_t ndtime_values;
     FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime_values);
@@ -1018,7 +1006,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         int const access_mode = convert_access_mode(access);
         int const range_mode = convert_range_mode(range);
         int const interp_mode = convert_interp_mode(interp);
-        int dtime_shape[] = { (int)dtime.size() };         
+         
         int op_ctx = -1;
         if (entry.operation_cache.ids == ids && entry.operation_cache.access == access_mode &&
             entry.operation_cache.range == range_mode) {
@@ -1046,6 +1034,24 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
                 status = al_begin_slice_action(entry.ctx, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
             }
             else if (range_mode == TIMERANGE_OP) {
+		                float time_range_tmin = 0.0;
+                FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmin);
+
+                float time_range_tmax = 0.0;
+                FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmax);
+
+                int time_range_interp = 0;
+                FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_interp);
+
+                int time_range_dtime_shape = 0;
+                FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_dtime_shape);
+
+                double* dtime_values = nullptr;
+                size_t ndtime_values;
+                FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime_values);
+                std::vector<double> dtime(dtime_values, dtime_values + ndtime_values);
+                int dtime_shape[] = { (int)dtime.size() };
+
                 status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax, 
                 dtime.data(), dtime_shape, time_range_interp, &op_ctx);
             }
