@@ -961,11 +961,6 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     std::transform(dynamic_flags, dynamic_flags + ndynamic_flags, std::back_inserter(dynamic_flags_vec),
                    [](int flag) { return static_cast<bool>(flag); });
 
-    double* dtime_values = nullptr;
-    size_t ndtime_values;
-    FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime_values);
-    std::vector<double> dtime(dtime_values, dtime_values + ndtime_values);
-
     const char* timebase = nullptr;
     bool const is_timebase = FIND_STRING_VALUE(plugin_interface->request_data->nameValueList, timebase);
     if (!is_timebase) {
