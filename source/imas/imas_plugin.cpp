@@ -1280,5 +1280,26 @@ int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interfa
         RAISE_PLUGIN_ERROR(msg.c_str())
     }
 
-    return 0;
+    size_t max_len = 0;
+    for (const auto& filename : filenames) {
+        max_len = std::max(filename.size() + 1, max_len);
+    }
+
+    size_t sz = max_len * filenames.size();
+    std::vector<char> data(sz);
+
+    size_t i = 0;
+    for (const auto& filename : filenames) {
+        memcpy(&data[i * max_len], filename.data(), filename.size());
+        ++i;
+    }
+
+    int shape[] = {(int)max_len, (int)filenames.size() };
+
+    int rc = setReturnData(plugin_interface->data_block, data.data(), sz, UDA_TYPE_STRING, 2, shape, nullptr);
+
+    // setReturnData is broken in 2.8.0
+    plugin_interface->data_block->data_n = sz;
+
+    return rc;
 }
