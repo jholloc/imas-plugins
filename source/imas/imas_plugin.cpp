@@ -1029,7 +1029,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
                 status = al_begin_slice_action(entry.ctx, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
             }
             else if (range_mode == TIMERANGE_OP) {
-		                float time_range_tmin = 0.0;
+	        float time_range_tmin = 0.0;
                 FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmin);
 
                 float time_range_tmax = 0.0;
@@ -1038,17 +1038,17 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
                 int time_range_interp = 0;
                 FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_interp);
 
-                int time_range_dtime_shape = 0;
-                FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_dtime_shape);
-
-                double* dtime_values = nullptr;
-                size_t ndtime_values;
-                FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime_values);
-                std::vector<double> dtime(dtime_values, dtime_values + ndtime_values);
-                int dtime_shape[] = { (int)dtime.size() };
-
+                double* dtime = nullptr;
+                size_t ndtime = 0;
+                FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime);
+                int dtime_shape[1];
+		if (ndtime==1 && dtime[0]==-1)
+                    dtime_shape[0] = 0;
+		else
+                    dtime_shape[0] = (int)ndtime;
+		
                 status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax, 
-                dtime.data(), dtime_shape, time_range_interp, &op_ctx);
+                dtime, dtime_shape, time_range_interp, &op_ctx);
             }
             if (status.code != 0) {
                 RAISE_PLUGIN_ERROR(status.message);
