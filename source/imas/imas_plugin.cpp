@@ -153,6 +153,8 @@ class Plugin {
 
     int close(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
+    int getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_interface);
+
   private:
     bool _init = false;
     std::unordered_map<uri_t, Entry> _open_entries = {};
@@ -221,6 +223,8 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
         return_code = plugin.open(plugin_interface);
     } else if (function == "close") {
         return_code = plugin.close(plugin_interface);
+    }else if (function == "getOccurrences") {
+        return_code = plugin.getOccurrences(plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
@@ -1282,4 +1286,78 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
 
     return setReturnDataIntScalar(plugin_interface->data_block, -1, "pulse context");
 #endif // !NO_IMAS
+}
+
+/**
+ * Function: getOccurrences
+ *
+ * Get occurrences from the IMAS database entry corresponding to the given IDS. The entry must have been opened by calling the
+ * open(...) or get(...) functions.
+ *
+ * Arguments:
+ *      ids    (required, string)  - IDS Name `magnetics`
+ *
+ * Returns:
+ *      Integer scalar -1
+ *
+ * Example:
+ *      IMAS::getOccurrences(ids='magnetics')
+ *
+ * @param plugin_interface the UDA plugin interface structure
+ * @return 0 on success, !=0 on error
+ */
+int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_interface) {
+
+    const char* uri = "imas:hdf5?dd_version=3.42.0&path=/work/imas/shared/imasdb/ITER/3/134174/117";
+    //FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+
+    const char* ids = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, ids);
+
+    if (_open_entries.count(uri) == 0) {
+        int const return_code = open(plugin_interface);
+        if (return_code != 0) {
+            return return_code;
+        }
+    }
+
+    auto& entry = _open_entries.at(uri);
+
+    std::vector<IDSData> results = {};
+
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
+    int* occurrences_list;
+    int size;
+
+    al_status_t status = al_get_occurrences(entry.ctx, ids, &occurrences_list, &size);
+
+    if (status.code < 0) {
+      std::string msg = std::string{"failed to get occurrences: "} + status.message;
+      RAISE_PLUGIN_ERROR(msg.c_str());
+    }
+
+#endif // !NO_IMAS
+
+    //auto* tree = uda_capnp_new_tree();
+    //auto* root = uda_capnp_get_root(tree);
+    //uda_capnp_set_node_name(root, "occurrences");
+    //uda_capnp_add_children(root, size);
+
+	//auto* child = uda_capnp_get_child(tree, root, 0);
+    //auto* data_node = uda_capnp_get_child(tree, child, 0);
+    //uda_capnp_set_node_name(data_node, "data");
+    //uda_capnp_add_i32(data_node, *reinterpret_cast<const int32_t*>(occurrences_list));
+    //auto buffer = uda_capnp_serialise(tree);
+
+    //DATA_BLOCK* data_block = plugin_interface->data_block;
+    //initDataBlock(data_block);
+
+    //data_block->data_n = static_cast<int>(buffer.size);
+    //data_block->data = buffer.data;
+    //data_block->dims = nullptr;
+    //data_block->data_type = UDA_TYPE_CAPNP;
+
+    return 0;
 }
