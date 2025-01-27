@@ -1340,24 +1340,20 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
 
 #endif // !NO_IMAS
 
-    //auto* tree = uda_capnp_new_tree();
-    //auto* root = uda_capnp_get_root(tree);
-    //uda_capnp_set_node_name(root, "occurrences");
-    //uda_capnp_add_children(root, size);
+    auto* tree = uda_capnp_new_tree();
+    auto* root = uda_capnp_get_root(tree);
+    uda_capnp_set_node_name(root, "occurrences");
+    uda_capnp_add_array_i32(root, occurrences_list, size);
 
-	//auto* child = uda_capnp_get_child(tree, root, 0);
-    //auto* data_node = uda_capnp_get_child(tree, child, 0);
-    //uda_capnp_set_node_name(data_node, "data");
-    //uda_capnp_add_i32(data_node, *reinterpret_cast<const int32_t*>(occurrences_list));
-    //auto buffer = uda_capnp_serialise(tree);
+    auto buffer = uda_capnp_serialise(tree);
 
-    //DATA_BLOCK* data_block = plugin_interface->data_block;
-    //initDataBlock(data_block);
+    DATA_BLOCK* data_block = plugin_interface->data_block;
+    initDataBlock(data_block);
 
-    //data_block->data_n = static_cast<int>(buffer.size);
-    //data_block->data = buffer.data;
-    //data_block->dims = nullptr;
-    //data_block->data_type = UDA_TYPE_CAPNP;
+    data_block->data_n = static_cast<int>(buffer.size);
+    data_block->data = buffer.data;
+    data_block->dims = nullptr;
+    data_block->data_type = UDA_TYPE_CAPNP;
 
     return 0;
 }
