@@ -1308,10 +1308,10 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  */
 int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_interface) {
 
-    const char* uri = "imas:hdf5?dd_version=3.42.0&path=/work/imas/shared/imasdb/ITER/3/134174/117";
-    //FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+    const char* uri;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
-    const char* ids = nullptr;
+    const char* ids;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, ids);
 
     if (_open_entries.count(uri) == 0) {
