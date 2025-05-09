@@ -229,6 +229,8 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
         return_code = plugin.close(plugin_interface);
     } else if (function == "listFiles") {
         return_code = plugin.list_files(plugin_interface);
+    } else if (function == "beginArraystructAction") {
+        return_code = plugin.begin_arraystruct_action(plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
