@@ -155,6 +155,8 @@ class Plugin {
 
     int list_files(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
+    int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface);    
+
   private:
     bool _init = false;
     std::unordered_map<uri_t, Entry> _open_entries = {};
@@ -1302,4 +1304,279 @@ int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interfa
     plugin_interface->data_block->data_n = sz;
 
     return rc;
+}
+
+
+int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    REQUEST_DATA* request_data = plugin_interface->request_data;
+
+    const char* uri;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+
+    const char* access = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access);
+
+    const char* range = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, range);
+
+    float time = 0.0;
+    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time);
+
+    const char* interp = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, interp);
+
+    const char* path;
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path);
+
+    const char* timebase;
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, timebase);
+
+    if (_open_entries.count(uri) == 0) {
+        int const return_code = open(plugin_interface);
+        if (return_code != 0) {
+            return return_code;
+        }
+    }
+
+    auto& entry = _open_entries.at(uri);
+
+    std::deque<std::string> tokens;
+    boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
+
+    auto ids = tokens.front();
+    tokens.pop_front();
+    if (is_integer(tokens.front())) {
+        ids += "/" + tokens.front();
+        tokens.pop_front();
+    }
+
+    int const access_mode = convert_access_mode(access);
+    int const range_mode = convert_range_mode(range);
+    int const interp_mode = convert_interp_mode(interp);
+
+    int op_ctx = -1;
+    if (entry.operation_cache.ids == ids && entry.operation_cache.access == access_mode &&
+        entry.operation_cache.range == range_mode) {
+        op_ctx = entry.operation_cache.ctx;
+    } else {
+        if (entry.operation_cache.ctx != -1) {
+            while (!entry.operation_cache.array_struct_cache.empty()) {
+                al_status_t status = al_end_action(entry.operation_cache.array_struct_cache.back().ctx);
+                if (status.code != 0) {
+                    RAISE_PLUGIN_ERROR(status.message);
+                }
+                entry.operation_cache.array_struct_cache.pop_back();
+            }
+
+            al_status_t status = al_end_action(entry.operation_cache.ctx);
+            if (status.code != 0) {
+                RAISE_PLUGIN_ERROR(status.message);
+            }
+        }
+
+        al_status_t status = {};
+        if (range_mode == GLOBAL_OP) {
+            status = al_begin_global_action(entry.ctx, ids.c_str(), "", access_mode, &op_ctx);
+        } else if (range_mode == SLICE_OP) {
+            status = al_begin_slice_action(entry.ctx, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+        }
+        else if (range_mode == TIMERANGE_OP) {
+            float time_range_tmin = 0.0;
+            FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmin);
+
+            float time_range_tmax = 0.0;
+            FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmax);
+
+            int time_range_interp = 0;
+            FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_interp);
+
+            double* dtime = nullptr;
+            size_t ndtime = 0;
+            FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime);
+            int dtime_shape[1];
+                            if (ndtime==1 && dtime[0]==-1)
+                                                    dtime_shape[0] = 0;
+                            else
+                                            dtime_shape[0] = (int)ndtime;
+
+                                    status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax,
+                                    dtime, dtime_shape, time_range_interp, &op_ctx);
+        }
+        if (status.code != 0) {
+            RAISE_PLUGIN_ERROR(status.message);
+        }
+        entry.operation_cache = {ids, access_mode, range_mode, op_ctx, {}};
+    }
+
+    int size = -1;
+    int actxID = 0;
+    std::string node;
+    std::string delim;
+
+    while (!tokens.empty() && !is_index(tokens.front())) {
+        node += delim + tokens.front();
+        tokens.pop_front();
+
+        delim = "/";
+    }
+
+    al_status_t status = al_begin_arraystruct_action(op_ctx, node.c_str(), timebase, &size, &actxID);
+
+    if (status.code != 0) {
+        throw std::runtime_error{status.message};
+    }
+
+    if (size > 0) {
+        _open_entries.emplace(uri, Entry::LocalEntry(actxID));
+    }
+    setReturnDataIntScalar(plugin_interface->data_block, size, nullptr);
+    return 0;
+}
+
+/**
+ * Function: begin_arraystruct_action
+ *
+ * Returns the size of requested array of structure
+ *
+ * Arguments:
+ *      uri             (required, string)  - uri for data
+ *      access          (required, string)  - read access mode `[read|write|replace]`
+ *      range           (required, string)  - range mode `[global|slice]`
+ *      time            (required, float)   - slice time (ignored for global range mode)
+ *      interp          (required, string)  - interpolation mode (ignored for global range mode)
+ *      path            (required, string)  - IDS path, i.e. `equilibrium/time_slice`
+ *      timebase        (required, string)  - timebase '/time' or ''
+ *
+ * Returns:
+ *      CapNp serialised tree of depth 1, where each leaf node contains the name and data of a returned IMAS data node
+ *
+ * @param plugin_interface the UDA plugin interface structure
+ * @return 0 on success, !=0 on error
+ */
+int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    REQUEST_DATA* request_data = plugin_interface->request_data;
+
+    const char* uri;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+
+    const char* access = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access);
+
+    const char* range = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, range);
+
+    float time = 0.0;
+    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time);
+
+    const char* interp = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, interp);
+
+    const char* path;
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path);
+
+    const char* timebase;
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, timebase);
+
+    if (_open_entries.count(uri) == 0) {
+        int const return_code = open(plugin_interface);
+        if (return_code != 0) {
+            return return_code;
+        }
+    }
+
+    auto& entry = _open_entries.at(uri);
+
+    std::deque<std::string> tokens;
+    boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
+
+    auto ids = tokens.front();
+    tokens.pop_front();
+    if (is_integer(tokens.front())) {
+        ids += "/" + tokens.front();
+        tokens.pop_front();
+    }
+
+    int const access_mode = convert_access_mode(access);
+    int const range_mode = convert_range_mode(range);
+    int const interp_mode = convert_interp_mode(interp);
+
+    int op_ctx = -1;
+    if (entry.operation_cache.ids == ids && entry.operation_cache.access == access_mode &&
+        entry.operation_cache.range == range_mode) {
+        op_ctx = entry.operation_cache.ctx;
+    } else {
+        if (entry.operation_cache.ctx != -1) {
+            while (!entry.operation_cache.array_struct_cache.empty()) {
+                al_status_t status = al_end_action(entry.operation_cache.array_struct_cache.back().ctx);
+                if (status.code != 0) {
+                    RAISE_PLUGIN_ERROR(status.message);
+                }
+                entry.operation_cache.array_struct_cache.pop_back();
+            }
+
+            al_status_t status = al_end_action(entry.operation_cache.ctx);
+            if (status.code != 0) {
+                RAISE_PLUGIN_ERROR(status.message);
+            }
+        }
+
+        al_status_t status = {};
+        if (range_mode == GLOBAL_OP) {
+            status = al_begin_global_action(entry.ctx, ids.c_str(), "", access_mode, &op_ctx);
+        } else if (range_mode == SLICE_OP) {
+            status = al_begin_slice_action(entry.ctx, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+        }
+        else if (range_mode == TIMERANGE_OP) {
+            float time_range_tmin = 0.0;
+            FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmin);
+
+            float time_range_tmax = 0.0;
+            FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmax);
+
+            int time_range_interp = 0;
+            FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_interp);
+
+            double* dtime = nullptr;
+            size_t ndtime = 0;
+            FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime);
+            int dtime_shape[1];
+            if (ndtime==1 && dtime[0]==-1)
+               dtime_shape[0] = 0;
+            else
+               dtime_shape[0] = (int)ndtime;
+
+            status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax,
+                                 dtime, dtime_shape, time_range_interp, &op_ctx);
+        }
+        if (status.code != 0) {
+            RAISE_PLUGIN_ERROR(status.message);
+        }
+        entry.operation_cache = {ids, access_mode, range_mode, op_ctx, {}};
+    }
+
+    int size = -1;
+    int actxID = 0;
+    std::string node;
+    std::string delim;
+
+    while (!tokens.empty() && !is_index(tokens.front())) {
+        node += delim + tokens.front();
+        tokens.pop_front();
+
+        delim = "/";
+    }
+
+    al_status_t status = al_begin_arraystruct_action(op_ctx, node.c_str(), timebase, &size, &actxID);
+
+    if (status.code != 0) {
+        throw std::runtime_error{status.message};
+    }
+
+    if (size > 0) {
+        _open_entries.emplace(uri, Entry::LocalEntry(actxID));
+    }
+    setReturnDataIntScalar(plugin_interface->data_block, size, nullptr);
+    return 0;
 }
