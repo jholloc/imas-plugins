@@ -489,7 +489,13 @@ void uda::plugins::imas::Plugin::read_data_r(Entry& entry, int ctx, std::deque<s
                 }
             }
 
-            auto is_dynamic = dynamic_flags.at(depth);
+	    auto is_dynamic = 0;
+            // Check dynamic_flags vector size
+            if (dynamic_flags.size() > depth)
+                 is_dynamic = dynamic_flags.at(depth);
+            else
+                 is_dynamic = dynamic_flags.at(0);
+
             std::string struct_timebase;
             if (is_dynamic) {
                 if (is_homogeneous) {
