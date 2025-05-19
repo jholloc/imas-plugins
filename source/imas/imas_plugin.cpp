@@ -1440,23 +1440,32 @@ int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* 
     int actxID = 0;
     std::string node;
     std::string delim;
+    int current_ctx = 0;
+    current_ctx = op_ctx;
 
-    while (!tokens.empty() && !is_index(tokens.front())) {
+    while (!tokens.empty())
+    {
+        if (!is_index(tokens.front())){
         node += delim + tokens.front();
         tokens.pop_front();
 
         delim = "/";
+        }else{
+        auto head = tokens.front();
+        auto pair = parse_index(head);
+        long index = pair.second;
+        al_status_t status = al_begin_arraystruct_action(current_ctx, pair.first.c_str(), timebase, &size, &actxID);
+        current_ctx = actxID;
+        tokens.pop_front();
+        }
     }
 
-    al_status_t status = al_begin_arraystruct_action(op_ctx, node.c_str(), timebase, &size, &actxID);
+    al_status_t status = al_begin_arraystruct_action(current_ctx, node.c_str(), timebase, &size, &actxID);
 
     if (status.code != 0) {
         throw std::runtime_error{status.message};
     }
 
-    if (size > 0) {
-        _open_entries.emplace(uri, Entry::LocalEntry(actxID));
-    }
     setReturnDataIntScalar(plugin_interface->data_block, size, nullptr);
     return 0;
 }
