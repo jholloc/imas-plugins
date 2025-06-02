@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <array>
+#include <filesystem>
 
 #include <clientserver/initStructs.h>
 #include <clientserver/stringUtils.h>
@@ -155,6 +156,9 @@ class Plugin {
 
     int getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
+    int list_files(IDAM_PLUGIN_INTERFACE* plugin_interface);
+
+    int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface); 
   private:
     bool _init = false;
     std::unordered_map<uri_t, Entry> _open_entries = {};
@@ -188,7 +192,7 @@ class Plugin {
 
 int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* plugin_interface) {
     if (plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
-        RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!");
+        RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!")
     }
 
     plugin_interface->pluginVersion = strtol(PLUGIN_VERSION, nullptr, 10);
@@ -227,6 +231,10 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
         return_code = plugin.close(plugin_interface);
     }else if (function == "getOccurrences") {
         return_code = plugin.getOccurrences(plugin_interface);
+    } else if (function == "listFiles") {
+        return_code = plugin.list_files(plugin_interface);
+    } else if (function == "beginArraystructAction") {
+        return_code = plugin.begin_arraystruct_action(plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
@@ -484,8 +492,14 @@ void uda::plugins::imas::Plugin::read_data_r(Entry& entry, int ctx, std::deque<s
                     throw std::runtime_error{status.message};
                 }
             }
+	    
+	    auto is_dynamic = 0;
+            // Check dynamic_flags vector size
+            if (dynamic_flags.size() > depth)
+                 is_dynamic = dynamic_flags.at(depth);
+            else
+                 is_dynamic = dynamic_flags.at(0);
 
-            auto is_dynamic = dynamic_flags.at(depth);
             std::string struct_timebase;
             if (is_dynamic) {
                 if (is_homogeneous) {
@@ -932,36 +946,36 @@ size_t sizeof_datatype(int type) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-    const char* uri;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+    const char* uri = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri)
 
     const char* access = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access)
 
     const char* range = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, range);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, range)
 
     float time = 0.0;
-    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time);
+    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time)
 
     const char* interp = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, interp);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, interp)
 
     const char* path = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, path);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, path)
 
     const char* datatype = nullptr;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, datatype);
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, datatype)
 
     int rank = -1;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, rank);
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, rank)
 
     int is_homogeneous = -1;
-    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, is_homogeneous);
+    FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, is_homogeneous)
 
     int* dynamic_flags = nullptr;
     size_t ndynamic_flags = -1;
-    FIND_REQUIRED_INT_ARRAY(plugin_interface->request_data->nameValueList, dynamic_flags);
+    FIND_REQUIRED_INT_ARRAY(plugin_interface->request_data->nameValueList, dynamic_flags)
 
     std::vector<bool> dynamic_flags_vec;
     std::transform(dynamic_flags, dynamic_flags + ndynamic_flags, std::back_inserter(dynamic_flags_vec),
@@ -1177,11 +1191,11 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-    const char* uri;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+    const char* uri = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri)
 
-    const char* mode;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
+    const char* mode = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode)
 
     auto parsed_uri = uri::parse_uri(uri);
     auto maybe_mapping = parsed_uri.query.get("mapping");
@@ -1235,11 +1249,11 @@ int uda::plugins::imas::Plugin::open(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-    const char* uri;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
+    const char* uri = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri)
 
-    const char* mode;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode);
+    const char* mode = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, mode)
 
     initDataBlock(plugin_interface->data_block);
 
@@ -1357,5 +1371,230 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
     data_block->dims = nullptr;
     data_block->data_type = UDA_TYPE_CAPNP;
 
+    return 0;
+}
+
+int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    const char* path = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, path)
+
+    const char* backend = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, backend)
+
+    std::filesystem::path file_path = path;
+
+    if (!std::filesystem::exists(file_path)) {
+        std::string msg = std::string{"Path '"} + path + "' does not exist";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    if (!std::filesystem::is_directory(file_path)) {
+        std::string msg = std::string{"Path '"} + path + "' is not a directory";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    if (std::filesystem::is_empty(file_path)) {
+        std::string msg = std::string{"Path '"} + path + "' directory is empty";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    std::vector<std::string> filenames;
+
+    if (std::string{ backend } == "mdsplus") {
+        filenames.emplace_back("ids_001.datafile");
+        filenames.emplace_back("ids_001.characteristics");
+        filenames.emplace_back("ids_001.tree");
+    } else if (std::string{ backend } == "hdf5") {
+        for (const auto& entry : std::filesystem::directory_iterator(file_path)) {
+            if (entry.is_regular_file()) {
+                const auto& sub_path = entry.path();
+                if (sub_path.extension() == ".h5") {
+                    filenames.push_back(sub_path.filename());
+                }
+            }
+        }
+    } else {
+        std::string msg = std::string{"Unsupported backend '"} + backend + "'";
+        RAISE_PLUGIN_ERROR(msg.c_str())
+    }
+
+    size_t max_len = 0;
+    for (const auto& filename : filenames) {
+        max_len = std::max(filename.size() + 1, max_len);
+    }
+
+    size_t sz = max_len * filenames.size();
+    std::vector<char> data(sz);
+
+    size_t i = 0;
+    for (const auto& filename : filenames) {
+        memcpy(&data[i * max_len], filename.data(), filename.size());
+        ++i;
+    }
+
+    int shape[] = {(int)max_len, (int)filenames.size() };
+
+    int rc = setReturnData(plugin_interface->data_block, data.data(), sz, UDA_TYPE_STRING, 2, shape, nullptr);
+
+    // setReturnData is broken in 2.8.0
+    plugin_interface->data_block->data_n = sz;
+
+    return rc;
+}
+
+/**
+ * Function: begin_arraystruct_action
+ *
+ * Returns the size of requested array of structure
+ *
+ * Arguments:
+ *      uri             (required, string)  - uri for data
+ *      access          (required, string)  - read access mode `[read|write|replace]`
+ *      range           (required, string)  - range mode `[global|slice]`
+ *      time            (required, float)   - slice time (ignored for global range mode)
+ *      interp          (required, string)  - interpolation mode (ignored for global range mode)
+ *      path            (required, string)  - IDS path, i.e. `equilibrium/time_slice`
+ *      timebase        (required, string)  - timebase '/time' or ''
+ *
+ * Returns:
+ *      CapNp serialised tree of depth 1, where each leaf node contains the name and data of a returned IMAS data node
+ *
+ * @param plugin_interface the UDA plugin interface structure
+ * @return 0 on success, !=0 on error
+ */
+int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface)
+{
+    REQUEST_DATA* request_data = plugin_interface->request_data;
+
+    const char* uri = "";
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri)
+
+    const char* access = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, access)
+
+    const char* range = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, range)
+
+    float time = 0.0;
+    FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time)
+
+    const char* interp = nullptr;
+    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, interp)
+
+    const char* path = "";
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, path)
+
+    const char* timebase = "";
+    FIND_REQUIRED_STRING_VALUE(request_data->nameValueList, timebase)
+
+    if (_open_entries.count(uri) == 0) {
+        int const return_code = open(plugin_interface);
+        if (return_code != 0) {
+            return return_code;
+        }
+    }
+
+    auto& entry = _open_entries.at(uri);
+
+    std::deque<std::string> tokens;
+    boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
+
+    auto ids = tokens.front();
+    tokens.pop_front();
+    if (is_integer(tokens.front())) {
+        ids += "/" + tokens.front();
+        tokens.pop_front();
+    }
+
+    int const access_mode = convert_access_mode(access);
+    int const range_mode = convert_range_mode(range);
+    int const interp_mode = convert_interp_mode(interp);
+
+    int op_ctx = -1;
+    if (entry.operation_cache.ids == ids && entry.operation_cache.access == access_mode &&
+        entry.operation_cache.range == range_mode) {
+        op_ctx = entry.operation_cache.ctx;
+    } else {
+        if (entry.operation_cache.ctx != -1) {
+            while (!entry.operation_cache.array_struct_cache.empty()) {
+                al_status_t status = al_end_action(entry.operation_cache.array_struct_cache.back().ctx);
+                if (status.code != 0) {
+                    RAISE_PLUGIN_ERROR(status.message);
+                }
+                entry.operation_cache.array_struct_cache.pop_back();
+            }
+
+            al_status_t status = al_end_action(entry.operation_cache.ctx);
+            if (status.code != 0) {
+                RAISE_PLUGIN_ERROR(status.message);
+            }
+        }
+
+        al_status_t status = {};
+        if (range_mode == GLOBAL_OP) {
+            status = al_begin_global_action(entry.ctx, ids.c_str(), "", access_mode, &op_ctx);
+        } else if (range_mode == SLICE_OP) {
+            status = al_begin_slice_action(entry.ctx, ids.c_str(), access_mode, time, interp_mode, &op_ctx);
+        }
+        else if (range_mode == TIMERANGE_OP) {
+            float time_range_tmin = 0.0;
+            FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmin);
+
+            float time_range_tmax = 0.0;
+            FIND_REQUIRED_FLOAT_VALUE(plugin_interface->request_data->nameValueList, time_range_tmax);
+
+            int time_range_interp = 0;
+            FIND_REQUIRED_INT_VALUE(plugin_interface->request_data->nameValueList, time_range_interp);
+
+            double* dtime = nullptr;
+            size_t ndtime = 0;
+            FIND_REQUIRED_DOUBLE_ARRAY(plugin_interface->request_data->nameValueList, dtime);
+            int dtime_shape[1];
+            if (ndtime==1 && dtime[0]==-1)
+               dtime_shape[0] = 0;
+            else
+               dtime_shape[0] = (int)ndtime;
+
+            status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax,
+                                 dtime, dtime_shape, time_range_interp, &op_ctx);
+        }
+        if (status.code != 0) {
+            RAISE_PLUGIN_ERROR(status.message);
+        }
+        entry.operation_cache = {ids, access_mode, range_mode, op_ctx, {}};
+    }
+
+    int size = -1;
+    int actxID = 0;
+    std::string node;
+    std::string delim;
+    int current_ctx = 0;
+    current_ctx = op_ctx;
+
+    while (!tokens.empty())
+    {
+        if (!is_index(tokens.front())){
+        node += delim + tokens.front();
+        tokens.pop_front();
+
+        delim = "/";
+        }else{
+        auto head = tokens.front();
+        auto pair = parse_index(head);
+        long index = pair.second;
+        al_status_t status = al_begin_arraystruct_action(current_ctx, pair.first.c_str(), timebase, &size, &actxID);
+        current_ctx = actxID;
+        tokens.pop_front();
+        }
+    }
+
+    al_status_t status = al_begin_arraystruct_action(current_ctx, node.c_str(), timebase, &size, &actxID);
+
+    if (status.code != 0) {
+        throw std::runtime_error{status.message};
+    }
+
+    setReturnDataIntScalar(plugin_interface->data_block, size, nullptr);
     return 0;
 }
