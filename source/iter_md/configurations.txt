@@ -1,6 +1,0 @@
-# Shot Number       Machine Version     Configuration
-1000                2.2.0               ITER_NBI_geometry_off_off
-1001                2.2.0               ITER_NBI_geometry_off_on
-1002                2.2.0               ITER_NBI_geometry_on_off
-1003                2.2.0               ITER_NBI_geometry_on_on
-1004                2.2.0               nbi_off_on

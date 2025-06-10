@@ -1,2 +1,0 @@
-export UDA_TS_MAPPING_FILE=$HOME/itmwork/uda/latest/source/plugins/tore_supra/TS_mappings/UDA_mapping.xml
-export UDA_TS_MAPPING_FILE_DIRECTORY=$HOME/itmwork/uda/latest/source/plugins/tore_supra/TS_mappings
