@@ -11,19 +11,13 @@ if( NOT DEFINED BUILD_PLUGINS )
     imas_partial
     imas_remote
     imas_uda
-    imasdd
-    iter_md
-    #livedisplay
     jet_equilibrium
     jet_magnetics
     jet_summary
     mast_imas
-    #source
     tcv
     tcvm
-    tore_supra
     west
-    west_tunnel
   )
 endif()
 

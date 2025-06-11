@@ -68,7 +68,7 @@ A description of the plugins included in this repository is given below:
 |-----------------------------|----------------------------------------------------------------------------------------------------------------------|--------------------|--------------|
 | `exp2imas`                  | Uses the EXP2ITM mappings to return data from experimental data sources.                                             | MDSplus, LibSSH    |              |
 | `hl2a`                      | Uses the WEST HL2A data access library to return data to IMAS.                                                       | MDSplus, LibHL2A   |              |
-| [imas](source/imas/help.md) | Handles requests from UDA backend for IMAS AL5 for either remote data or mapped experimental data (**LGPL license**) | IMAS-Core          | New for AL 5 |
+| [imas](source/imas/help.md) | Handles requests from UDA backend for IMAS AL5 for either remote data or mapped experimental data                    | IMAS-Core          | New for AL 5 |
 | `imas_forward`              | Forwards IMAS related requests to another UDA server.                                                                | IMAS Access-Layer  | For AL 4     |
 | `imas_mapping`              | Forwards IMAS low-level data requests to plugin determined by machine name.                                          | IMAS Access-Layer  | For AL 4     |
 | `imas_partial`              | Uses data dictionary to expand partial IMAS data request and return data for expanded tree.                          | MDSplus, IMAS      | For AL 4     |
