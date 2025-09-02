@@ -4,13 +4,14 @@
 #include <cstdlib>
 #include <limits>
 #include <sstream>
+#include <logging/logging.h>
 
 namespace bf = boost::filesystem;
 
 // #include <logging/logging.h>
 
-#define UDA_LOG_ERROR 0
-#define UDA_LOG(LEVEL, FMT, ...) printf("%s:%d >> " FMT, bf::basename((char*)__FILE__).data(), __LINE__, ##__VA_ARGS__)
+// #define UDA_LOG_ERROR 0
+// #define UDA_LOG(LEVEL, FMT, ...) printf("%s:%d >> " FMT, bf::basename((char*)__FILE__).data(), __LINE__, ##__VA_ARGS__)
 
 namespace {
 

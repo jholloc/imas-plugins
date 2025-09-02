@@ -1323,7 +1323,9 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
     const char* uri;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
@@ -1341,9 +1343,6 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
 
     std::vector<IDSData> results = {};
 
-#ifdef NO_IMAS
-    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
-#else
     int* occurrences_list;
     int size;
 
@@ -1353,8 +1352,6 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
       std::string msg = std::string{"failed to get occurrences: "} + status.message;
       RAISE_PLUGIN_ERROR(msg.c_str());
     }
-
-#endif // !NO_IMAS
 
     auto* tree = uda_capnp_new_tree();
     auto* root = uda_capnp_get_root(tree);
@@ -1372,6 +1369,7 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
     data_block->data_type = UDA_TYPE_CAPNP;
 
     return 0;
+#endif // !NO_IMAS
 }
 
 int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interface)
@@ -1465,6 +1463,9 @@ int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interfa
  */
 int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
     REQUEST_DATA* request_data = plugin_interface->request_data;
 
     const char* uri = "";
@@ -1597,4 +1598,5 @@ int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* 
 
     setReturnDataIntScalar(plugin_interface->data_block, size, nullptr);
     return 0;
+#endif // NO_IMAS
 }

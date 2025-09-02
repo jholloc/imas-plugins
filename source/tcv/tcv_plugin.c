@@ -301,7 +301,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             free(data);
         } else {
             err = 999;
-            addIdamError(CODEERRORTYPE, __func__, err, "Unsupported data type");
+            addIdamError(UDA_CODE_ERROR_TYPE, __func__, err, "Unsupported data type");
         }
 
         free(data_block->dims);
@@ -373,7 +373,7 @@ int do_read(IDAM_PLUGIN_INTERFACE* idam_plugin_interface)
             strcpy(data_block->data_desc, "");
         } else {
             err = 999;
-            addIdamError(CODEERRORTYPE, __func__, err, "Unsupported data type");
+            addIdamError(UDA_CODE_ERROR_TYPE, __func__, err, "Unsupported data type");
         }
     }
 
@@ -469,7 +469,7 @@ char* getMappingValue(const char* mappingFileName, const char* IDSRequest,
         value = strdup((char*)cur->content);
     } else {
         err = 998;
-        addIdamError(CODEERRORTYPE, __func__, err,
+        addIdamError(UDA_CODE_ERROR_TYPE, __func__, err,
                      "no result on XPath request, no key attribute defined?");
     }
 
@@ -500,7 +500,7 @@ char* getMappingValue(const char* mappingFileName, const char* IDSRequest,
         typeStr = strdup((char*)cur->content);
     } else {
         err = 998;
-        addIdamError(CODEERRORTYPE, __func__, err,
+        addIdamError(UDA_CODE_ERROR_TYPE, __func__, err,
                      "no result on XPath request, no key attribute defined?");
     }
 
