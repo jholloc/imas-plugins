@@ -29,6 +29,7 @@
 #include <clientserver/stringUtils.h>
 #include <clientserver/udaTypes.h>
 #include <serialisation/capnp_serialisation.h>
+#include <authentication/oauth_authentication.h>
 
 #include <client/accAPI.h>
 #include <client/udaGetAPI.h>
@@ -242,10 +243,46 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
     return return_code;
 }
 
+bool check_authorisation(const IDAM_PLUGIN_INTERFACE* plugin_interface) {
+    static const char* url = nullptr;
+    static bool read_env = false;
+
+    if (!read_env) {
+        url = getenv("UDA_AUTHORISATION_URL");
+        read_env = true;
+    }
+
+    bool authorised = false;
+
+    if (url != nullptr) {
+        const auto* email = authPayloadValue("", plugin_interface); // get email
+        if (email != nullptr) {
+            const std::string auth_url = std::string{url} + "/" + email;
+            try {
+                const uda::authentication::CurlWrapper curl_wrapper;
+                if (const auto response = curl_wrapper.perform_get_request(auth_url); response == "True") {
+                    authorised = true;
+                }
+            } catch (...) {
+                authorised = false;
+            }
+        }
+    }
+
+    return authorised;
+}
+
 int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     try {
         static uda::plugins::imas::Plugin plugin{};
-        int return_code = handle_request(plugin, plugin_interface);
+        bool const is_authorised = check_authorisation(plugin_interface);
+        int return_code = 0;
+        if (is_authorised) {
+            return_code = handle_request(plugin, plugin_interface);
+        } else {
+            UDA_ADD_ERROR(999, "Unauthorised for accessing the IMAS plugin");
+            return_code = 999;
+        }
         concatUdaError(&plugin_interface->error_stack);
         return return_code;
     } catch (std::exception& ex) {
