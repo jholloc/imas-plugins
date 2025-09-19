@@ -12,14 +12,9 @@
 #include "uri_parser.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 #include <complex>
-#include <cstdlib>
-#include <cstring>
 #include <fstream>
 #include <libgen.h>
-#include <memory>
-#include <stack>
 #include <unistd.h>
 #include <unordered_map>
 #include <array>
@@ -29,7 +24,6 @@
 #include <clientserver/stringUtils.h>
 #include <clientserver/udaTypes.h>
 #include <serialisation/capnp_serialisation.h>
-#include <authentication/oauth_authentication.h>
 
 #include <client/accAPI.h>
 #include <client/udaGetAPI.h>
@@ -43,6 +37,7 @@
 #endif
 
 #include "machine_mapping.h"
+#include "curl_wrapper.h"
 
 constexpr size_t PATH_LEN = 2048;
 constexpr size_t MAX_DIMS = 64;
@@ -191,6 +186,8 @@ class Plugin {
 } // namespace plugins
 } // namespace uda
 
+namespace {
+
 int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* plugin_interface) {
     if (plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!")
@@ -255,11 +252,11 @@ bool check_authorisation(const IDAM_PLUGIN_INTERFACE* plugin_interface) {
     bool authorised = false;
 
     if (url != nullptr) {
-        const auto* email = authPayloadValue("", plugin_interface); // get email
+        const auto* email = authPayloadValue("email", plugin_interface); // get email
         if (email != nullptr) {
             const std::string auth_url = std::string{url} + "/" + email;
             try {
-                const uda::authentication::CurlWrapper curl_wrapper;
+                const uda::plugins::imas::CurlWrapper curl_wrapper;
                 if (const auto response = curl_wrapper.perform_get_request(auth_url); response == "True") {
                     authorised = true;
                 }
@@ -267,10 +264,14 @@ bool check_authorisation(const IDAM_PLUGIN_INTERFACE* plugin_interface) {
                 authorised = false;
             }
         }
+    } else {
+        authorised = true;
     }
 
     return authorised;
 }
+
+} // namespace
 
 int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     try {

@@ -1,6 +1,7 @@
 find_package( UDA QUIET )
 find_package( Boost QUIET COMPONENTS filesystem system )
 find_package( IMAS QUIET )
+find_package( CURL QUIET )
 
 set( IMAS_DEFINITIONS "" )
 
@@ -10,6 +11,9 @@ if( NOT UDA_FOUND )
 elseif( NOT Boost_FOUND )
   message( WARNING "Boost not found - skipping IMAS plugin" )
   return()
+elseif( NOT CURL_FOUND )
+  message( WARNING "CURL not found - skipping IMAS plugin" )
+  return()
 elseif( NOT IMAS_FOUND )
   message( WARNING "IMAS not found - building for MAPPING only" )
   set( IMAS_DEFINITIONS "-DNO_IMAS" )
@@ -17,7 +21,7 @@ endif()
 
 include( plugins )
 
-set( SOURCES imas_plugin.cpp )
+set( SOURCES imas_plugin.cpp curl_wrapper.cpp )
 set( HEADERS imas_plugin.h )
 
 uda_plugin(
@@ -40,6 +44,7 @@ uda_plugin(
     ${UDA_CLIENT_LIBRARIES}
     ${IMAS_LOW_LEVEL_LIBRARIES}
     ${Boost_LIBRARIES}
+    CURL::libcurl
   EXTRA_DEFINITIONS
     ${IMAS_DEFINITIONS}
 )
