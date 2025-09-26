@@ -1153,9 +1153,9 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
                 break;
 	    case COMPLEX_DATA:
                 if (result->using_buffer) {
-                    uda_capnp_add_complex(data_node, *reinterpret_cast<const COMPLEX*>(result->buffer.data()));
+                    uda_capnp_add_dcomplex(data_node, *reinterpret_cast<const DCOMPLEX*>(result->buffer.data()));
                 } else {
-                    uda_capnp_add_array_complex(data_node, reinterpret_cast<COMPLEX*>(result->data), count);
+                    uda_capnp_add_array_dcomplex(data_node, reinterpret_cast<DCOMPLEX*>(result->data), count);
                 }
                 break;
             default:
