@@ -36,6 +36,10 @@
 #  define COMPLEX_DATA  53
 #endif
 
+#if (UDA_BUILD_VERSION_MAJOR >= 2) && (UDA_BUILD_VERSION_MINOR >= 8) && (UDA_BUILD_VERSION_PATCH >= 2)
+#define UDA_AUTHORISATION 1
+#endif
+
 #include "machine_mapping.h"
 #include "curl_wrapper.h"
 
@@ -240,6 +244,7 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
     return return_code;
 }
 
+#ifdef UDA_AUTHORISATION
 bool check_authorisation(const IDAM_PLUGIN_INTERFACE* plugin_interface) {
     static const char* url = nullptr;
     static bool read_env = false;
@@ -270,13 +275,19 @@ bool check_authorisation(const IDAM_PLUGIN_INTERFACE* plugin_interface) {
 
     return authorised;
 }
+#endif
 
 } // namespace
 
 int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     try {
         static uda::plugins::imas::Plugin plugin{};
-        bool const is_authorised = check_authorisation(plugin_interface);
+
+#ifdef UDA_AUTHORISATION
+        const bool is_authorised = check_authorisation(plugin_interface);
+#else
+        constexpr bool is_authorised = true;
+#endif
         int return_code = 0;
         if (is_authorised) {
             return_code = handle_request(plugin, plugin_interface);
