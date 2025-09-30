@@ -40,6 +40,7 @@ uda_plugin(
     ${UDA_CLIENT_LIBRARIES}
     ${IMAS_LOW_LEVEL_LIBRARIES}
     ${Boost_LIBRARIES}
+    stdc++fs
   EXTRA_DEFINITIONS
     ${IMAS_DEFINITIONS}
 )
