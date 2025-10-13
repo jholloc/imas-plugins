@@ -36,10 +36,6 @@
 #  define COMPLEX_DATA  53
 #endif
 
-#if (UDA_BUILD_VERSION_MAJOR >= 2) && (UDA_BUILD_VERSION_MINOR >= 8) && (UDA_BUILD_VERSION_PATCH >= 2)
-#define UDA_AUTHORISATION 1
-#endif
-
 #include "machine_mapping.h"
 #include "curl_wrapper.h"
 
@@ -285,9 +281,6 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface) {
 
 #ifdef UDA_AUTHORISATION
         const bool is_authorised = check_authorisation(plugin_interface);
-#else
-        constexpr bool is_authorised = true;
-#endif
         int return_code = 0;
         if (is_authorised) {
             return_code = handle_request(plugin, plugin_interface);
@@ -295,6 +288,9 @@ int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface) {
             UDA_ADD_ERROR(999, "Unauthorised for accessing the IMAS plugin");
             return_code = 999;
         }
+#else
+        const int return_code = handle_request(plugin, plugin_interface);
+#endif
         concatUdaError(&plugin_interface->error_stack);
         return return_code;
     } catch (std::exception& ex) {
