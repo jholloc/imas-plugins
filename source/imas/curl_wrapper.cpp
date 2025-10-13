@@ -1,6 +1,7 @@
 #include "curl_wrapper.h"
 
 #include <string>
+#include <stdexcept>
 
 namespace {
 
