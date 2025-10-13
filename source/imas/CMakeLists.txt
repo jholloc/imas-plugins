@@ -18,11 +18,11 @@ elseif( NOT CURL_FOUND )
   return()
 elseif( NOT IMAS_FOUND )
   message( WARNING "IMAS not found - building for MAPPING only" )
-  set( IMAS_DEFINITIONS "-DNO_IMAS" )
+  list( APPEND IMAS_DEFINITIONS "-DNO_IMAS" )
 endif()
 
 if( ENABLE_AUTHORISATION )
-  set( IMAS_DEFINITIONS "${IMAS_DEFINITIONS} -DUDA_AUTHORISATION" )
+  list( APPEND IMAS_DEFINITIONS "-DUDA_AUTHORISATION" )
 endif(  )
 
 include( plugins )
