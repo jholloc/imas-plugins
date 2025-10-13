@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <array>
 #include <filesystem>
+#include <stdexcept>
 
 #include <clientserver/initStructs.h>
 #include <clientserver/stringUtils.h>
