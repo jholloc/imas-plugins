@@ -51,6 +51,7 @@ uda_plugin(
     ${IMAS_LOW_LEVEL_LIBRARIES}
     ${Boost_LIBRARIES}
     CURL::libcurl
+    stdc++fs
   EXTRA_DEFINITIONS
     ${IMAS_DEFINITIONS}
 )
