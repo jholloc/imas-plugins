@@ -12,18 +12,14 @@
 #include "uri_parser.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 #include <complex>
-#include <cstdlib>
-#include <cstring>
 #include <fstream>
 #include <libgen.h>
-#include <memory>
-#include <stack>
 #include <unistd.h>
 #include <unordered_map>
 #include <array>
 #include <filesystem>
+#include <stdexcept>
 
 #include <clientserver/initStructs.h>
 #include <clientserver/stringUtils.h>
@@ -42,6 +38,7 @@
 #endif
 
 #include "machine_mapping.h"
+#include "curl_wrapper.h"
 
 constexpr size_t PATH_LEN = 2048;
 constexpr size_t MAX_DIMS = 64;
@@ -190,6 +187,8 @@ class Plugin {
 } // namespace plugins
 } // namespace uda
 
+namespace {
+
 int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* plugin_interface) {
     if (plugin_interface->interfaceVersion > THISPLUGIN_MAX_INTERFACE_VERSION) {
         RAISE_PLUGIN_ERROR("Plugin Interface Version Unknown to this plugin: Unable to execute the request!")
@@ -242,10 +241,57 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
     return return_code;
 }
 
+#ifdef UDA_AUTHORISATION
+bool check_authorisation(const IDAM_PLUGIN_INTERFACE* plugin_interface) {
+    static const char* url = nullptr;
+    static bool read_env = false;
+
+    if (!read_env) {
+        url = getenv("UDA_AUTHORISATION_URL");
+        read_env = true;
+    }
+
+    bool authorised = false;
+
+    if (url != nullptr) {
+        const auto* email = authPayloadValue("email", plugin_interface); // get email
+        if (email != nullptr) {
+            const std::string auth_url = std::string{url} + "/" + email;
+            try {
+                const uda::plugins::imas::CurlWrapper curl_wrapper;
+                if (const auto response = curl_wrapper.perform_get_request(auth_url); response == "True") {
+                    authorised = true;
+                }
+            } catch (...) {
+                authorised = false;
+            }
+        }
+    } else {
+        authorised = true;
+    }
+
+    return authorised;
+}
+#endif
+
+} // namespace
+
 int imasPlugin(IDAM_PLUGIN_INTERFACE* plugin_interface) {
     try {
         static uda::plugins::imas::Plugin plugin{};
-        int return_code = handle_request(plugin, plugin_interface);
+
+#ifdef UDA_AUTHORISATION
+        const bool is_authorised = check_authorisation(plugin_interface);
+        int return_code = 0;
+        if (is_authorised) {
+            return_code = handle_request(plugin, plugin_interface);
+        } else {
+            UDA_ADD_ERROR(999, "Unauthorised for accessing the IMAS plugin");
+            return_code = 999;
+        }
+#else
+        const int return_code = handle_request(plugin, plugin_interface);
+#endif
         concatUdaError(&plugin_interface->error_stack);
         return return_code;
     } catch (std::exception& ex) {
@@ -1330,7 +1376,9 @@ int uda::plugins::imas::Plugin::close(IDAM_PLUGIN_INTERFACE* plugin_interface) {
  * @return 0 on success, !=0 on error
  */
 int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
     const char* uri;
     FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
 
@@ -1348,9 +1396,6 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
 
     std::vector<IDSData> results = {};
 
-#ifdef NO_IMAS
-    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
-#else
     int* occurrences_list;
     int size;
 
@@ -1360,8 +1405,6 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
       std::string msg = std::string{"failed to get occurrences: "} + status.message;
       RAISE_PLUGIN_ERROR(msg.c_str());
     }
-
-#endif // !NO_IMAS
 
     auto* tree = uda_capnp_new_tree();
     auto* root = uda_capnp_get_root(tree);
@@ -1379,6 +1422,7 @@ int uda::plugins::imas::Plugin::getOccurrences(IDAM_PLUGIN_INTERFACE* plugin_int
     data_block->data_type = UDA_TYPE_CAPNP;
 
     return 0;
+#endif // !NO_IMAS
 }
 
 int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interface)
@@ -1472,6 +1516,9 @@ int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interfa
  */
 int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
     REQUEST_DATA* request_data = plugin_interface->request_data;
 
     const char* uri = "";
@@ -1604,4 +1651,5 @@ int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* 
 
     setReturnDataIntScalar(plugin_interface->data_block, size, nullptr);
     return 0;
+#endif // NO_IMAS
 }

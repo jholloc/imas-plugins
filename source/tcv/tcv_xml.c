@@ -215,7 +215,7 @@ int execute_xpath_expression(const char* filename, const xmlChar* xpathExpr, DAT
     } else {
         err = 999;
         UDA_LOG(UDA_LOG_DEBUG, "TCV:Unsupported data type\n");
-        addIdamError(CODEERRORTYPE, "tcv : Unsupported data type", err, "");
+        addIdamError(UDA_CODE_ERROR_TYPE, "tcv : Unsupported data type", err, "");
     }
 
     data_block->dims[0].data_type = UDA_TYPE_UNSIGNED_INT;
@@ -285,7 +285,7 @@ int convertToInt(char* value)
         i = UDA_TYPE_INT;
     } else {
         err = 999;
-        addIdamError(CODEERRORTYPE, "tcv convertToInt() : Unsupported data type", err, "");
+        addIdamError(UDA_CODE_ERROR_TYPE, "tcv convertToInt() : Unsupported data type", err, "");
     }
     return i;
 }

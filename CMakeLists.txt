@@ -1,7 +1,13 @@
 cmake_minimum_required( VERSION 3.7 )
 
-if( ${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.12 )
+if( CMAKE_VERSION VERSION_GREATER 3.12 )
   cmake_policy( SET CMP0074 OLD )
+  cmake_policy( SET CMP0075 OLD )
+endif()
+
+if( CMAKE_VERSION VERSION_GREATER 3.30 )
+  cmake_policy( SET CMP0167 NEW )
+  cmake_policy( SET CMP0057 NEW )
 endif()
 
 # Extra cmake modules to find libraries

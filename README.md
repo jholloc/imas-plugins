@@ -81,5 +81,8 @@ A description of the plugins included in this repository is given below:
 | `tcvm`                      | Plugin which uses Matlab scripts to map TCV data for response to IMAS data access requests.                          | Matlab             |              |
 | `west`                      | Maps IDS data requests to MDS+ signal requests for WEST experiment.                                                  | MDSplus, LibTS     |              |
 
+### Plugin cmake configuration options
 
-
+| Name | Option               | Description                                                                                             | Default |
+|------|----------------------|---------------------------------------------------------------------------------------------------------|---------|
+| IMAS | ENABLE_AUTHORISATION | Enable authorisation code in the IMAS plugin to check current UDA user against an authorisation system. | OFF     |
