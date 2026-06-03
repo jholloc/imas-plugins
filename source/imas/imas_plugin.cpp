@@ -156,8 +156,6 @@ class Plugin {
     int list_files(IDAM_PLUGIN_INTERFACE* plugin_interface);
 
     int begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface); 
-
-    int list_filled_paths(IDAM_PLUGIN_INTERFACE* plugin_interface);
   private:
     bool _init = false;
     std::unordered_map<uri_t, Entry> _open_entries = {};
@@ -236,8 +234,6 @@ int handle_request(uda::plugins::imas::Plugin& plugin, IDAM_PLUGIN_INTERFACE* pl
         return_code = plugin.list_files(plugin_interface);
     } else if (function == "beginArraystructAction") {
         return_code = plugin.begin_arraystruct_action(plugin_interface);
-    } else if (function == "listFilledPaths") {
-        return_code = plugin.list_filled_paths(plugin_interface);
     } else {
         RAISE_PLUGIN_ERROR("Unknown function requested!");
     }
@@ -542,7 +538,7 @@ void uda::plugins::imas::Plugin::read_data_r(Entry& entry, int ctx, std::deque<s
                     throw std::runtime_error{status.message};
                 }
             }
-	    
+
 	    auto is_dynamic = 0;
             // Check dynamic_flags vector size
             if (dynamic_flags.size() > depth)
@@ -656,7 +652,89 @@ std::string get_host_name() {
     return host;
 }
 
-} // namespace
+int set_data_block(DataBlock* data_block, const std::vector<const uda::plugins::imas::IDSData*>& ids_data)
+{
+    initDataBlock(data_block);
+
+    auto* tree = uda_capnp_new_tree();
+    auto* root = uda_capnp_get_root(tree);
+    uda_capnp_set_node_name(root, "root");
+    uda_capnp_add_children(root, ids_data.size());
+
+    size_t index = 0;
+    for (const auto* const result : ids_data) {
+        auto* child = uda_capnp_get_child(tree, root, index);
+
+        uda_capnp_set_node_name(child, result->path.c_str());
+
+        uda_capnp_add_children(child, 2);
+        auto* shape_node = uda_capnp_get_child(tree, child, 0);
+        uda_capnp_set_node_name(shape_node, "shape");
+        auto* data_node = uda_capnp_get_child(tree, child, 1);
+        uda_capnp_set_node_name(data_node, "data");
+
+        uda_capnp_add_array_i32(shape_node, result->shape.data(), result->rank);
+
+        if (result->is_size) {
+            uda_capnp_add_i32(data_node, result->size);
+        } else {
+            size_t count = 1;
+            for (int i = 0; i < result->rank; ++i) {
+                count *= result->shape[i];
+            }
+
+            if (result->using_buffer && count > 1) {
+                RAISE_PLUGIN_ERROR("too much data to read from result buffer");
+            }
+
+            switch (result->datatype) {
+            case INTEGER_DATA:
+                if (result->using_buffer) {
+                    uda_capnp_add_i32(data_node, *reinterpret_cast<const int32_t*>(result->buffer.data()));
+                } else {
+                    uda_capnp_add_array_i32(data_node, reinterpret_cast<int32_t*>(result->data), count);
+                }
+                break;
+            case DOUBLE_DATA:
+                if (result->using_buffer) {
+                    uda_capnp_add_f64(data_node, *reinterpret_cast<const double*>(result->buffer.data()));
+                } else {
+                    uda_capnp_add_array_f64(data_node, reinterpret_cast<double*>(result->data), count);
+                }
+                break;
+            case CHAR_DATA:
+                if (result->using_buffer) {
+                    uda_capnp_add_char(data_node, *reinterpret_cast<const char*>(result->buffer.data()));
+                } else {
+                    uda_capnp_add_array_char(data_node, reinterpret_cast<char*>(result->data), count);
+                }
+                break;
+	    case COMPLEX_DATA:
+                if (result->using_buffer) {
+                    uda_capnp_add_dcomplex(data_node, *reinterpret_cast<const DCOMPLEX*>(result->buffer.data()));
+                } else {
+                    uda_capnp_add_array_dcomplex(data_node, reinterpret_cast<DCOMPLEX*>(result->data), count);
+                }
+                break;
+            default:
+                break;
+            }
+        }
+
+        ++index;
+    }
+
+    auto buffer = uda_capnp_serialise(tree);
+
+    data_block->data_n = static_cast<int>(buffer.size);
+    data_block->data = buffer.data;
+    data_block->dims = nullptr;
+    data_block->data_type = UDA_TYPE_CAPNP;
+
+    return 0;
+}
+
+} // anon namespace
 
 int uda::plugins::imas::Plugin::get_mapped_data(const Entry& entry, const std::string& ids,
                                                 IDAM_PLUGIN_INTERFACE* plugin_interface, IDSData& data) {
@@ -949,7 +1027,7 @@ size_t sizeof_datatype(int type) {
  *
  *       1.  No interpolation. This method is selected when parameter dtime_values has an empty shape given by dtime_shape
  *           and time_range_interp is 0.
- * 
+ *
  *           This mode returns an IDS object with all constant/static data filled. The
  *           dynamic data are retrieved for the provided time range [time_range_tmin, time_range_tmax].
  *
@@ -958,7 +1036,7 @@ size_t sizeof_datatype(int type) {
  *
  *           This mode will generate an IDS with a homogeneous time vector ``[time_range_tmin, time_range_tmin
  *           + dtime_values[0], time_range_tmin + 2*dtime_values[0], ...`` up to time_range_tmax. The chosen interpolation
- *           method will have no effect on the time vector, but may have an impact on the other dynamic values. 
+ *           method will have no effect on the time vector, but may have an impact on the other dynamic values.
  *           The returned IDS always has ``ids_properties.homogeneous_time = 1``.
  *
  *       3.  Interpolate dynamic data on an explicit time base. This method is selected
@@ -967,7 +1045,7 @@ size_t sizeof_datatype(int type) {
  *           This mode will generate an IDS with a homogeneous time vector equals to
  *           dtime_values of length dtime_shape. time_range_tmin and time_range_tmax are ignored in this mode.
  *           The chosen interpolation method will have no effect on the time vector, but
- *           may have an impact on the other dynamic values. 
+ *           may have an impact on the other dynamic values.
  *           The returned IDS always has ``ids_properties.homogeneous_time = 1``.
  *
  * Arguments:
@@ -986,9 +1064,9 @@ size_t sizeof_datatype(int type) {
  *      time_range_interp (required, float) - used for time range operation only. Interpolation method to use (1=CLOSEST_INTERP, 2=PREVIOUS_INTERP, 3=LINEAR_INTERP)
  *      dtime_values (required, double*)    - used for time range operation only. Interval to use when interpolating, must be an array of double values
  *                                            containing an explicit time base to interpolate when using modes 2 and 3 described above
- *      dtime_shape (required, int)         - used for time range operation only. Shape of the dtime_values parameter. 
- * 
- * 
+ *      dtime_shape (required, int)         - used for time range operation only. Shape of the dtime_values parameter.
+ *
+ *
  * Returns:
  *      CapNp serialised tree of depth 1, where each leaf node contains the name and data of a returned IMAS data node
  *
@@ -1071,7 +1149,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         int const access_mode = convert_access_mode(access);
         int const range_mode = convert_range_mode(range);
         int const interp_mode = convert_interp_mode(interp);
-         
+
         int op_ctx = -1;
         if (entry.operation_cache.ids == ids && entry.operation_cache.access == access_mode &&
             entry.operation_cache.range == range_mode) {
@@ -1116,8 +1194,8 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
                     dtime_shape[0] = 0;
 		else
                     dtime_shape[0] = (int)ndtime;
-		
-                status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax, 
+
+                status = al_begin_timerange_action(entry.ctx, ids.c_str(), access_mode, (double) time_range_tmin, (double) time_range_tmax,
                 dtime, dtime_shape, time_range_interp, &op_ctx);
             }
             if (status.code != 0) {
@@ -1148,85 +1226,7 @@ int uda::plugins::imas::Plugin::get(IDAM_PLUGIN_INTERFACE* plugin_interface) {
         found_results.push_back(&result);
     }
 
-    auto* tree = uda_capnp_new_tree();
-    auto* root = uda_capnp_get_root(tree);
-    uda_capnp_set_node_name(root, "root");
-    uda_capnp_add_children(root, found_results.size());
-
-    size_t index = 0;
-    for (const auto* const result : found_results) {
-        auto* child = uda_capnp_get_child(tree, root, index);
-
-        uda_capnp_set_node_name(child, result->path.c_str());
-
-        uda_capnp_add_children(child, 2);
-        auto* shape_node = uda_capnp_get_child(tree, child, 0);
-        uda_capnp_set_node_name(shape_node, "shape");
-        auto* data_node = uda_capnp_get_child(tree, child, 1);
-        uda_capnp_set_node_name(data_node, "data");
-
-        uda_capnp_add_array_i32(shape_node, result->shape.data(), result->rank);
-
-        if (result->is_size) {
-            uda_capnp_add_i32(data_node, result->size);
-        } else {
-            size_t count = 1;
-            for (int i = 0; i < result->rank; ++i) {
-                count *= result->shape[i];
-            }
-
-            if (result->using_buffer && count > 1) {
-                RAISE_PLUGIN_ERROR("too much data to read from result buffer");
-            }
-
-            switch (result->datatype) {
-            case INTEGER_DATA:
-                if (result->using_buffer) {
-                    uda_capnp_add_i32(data_node, *reinterpret_cast<const int32_t*>(result->buffer.data()));
-                } else {
-                    uda_capnp_add_array_i32(data_node, reinterpret_cast<int32_t*>(result->data), count);
-                }
-                break;
-            case DOUBLE_DATA:
-                if (result->using_buffer) {
-                    uda_capnp_add_f64(data_node, *reinterpret_cast<const double*>(result->buffer.data()));
-                } else {
-                    uda_capnp_add_array_f64(data_node, reinterpret_cast<double*>(result->data), count);
-                }
-                break;
-            case CHAR_DATA:
-                if (result->using_buffer) {
-                    uda_capnp_add_char(data_node, *reinterpret_cast<const char*>(result->buffer.data()));
-                } else {
-                    uda_capnp_add_array_char(data_node, reinterpret_cast<char*>(result->data), count);
-                }
-                break;
-	    case COMPLEX_DATA:
-                if (result->using_buffer) {
-                    uda_capnp_add_dcomplex(data_node, *reinterpret_cast<const DCOMPLEX*>(result->buffer.data()));
-                } else {
-                    uda_capnp_add_array_dcomplex(data_node, reinterpret_cast<DCOMPLEX*>(result->data), count);
-                }
-                break;
-            default:
-                break;
-            }
-        }
-
-        ++index;
-    }
-
-    auto buffer = uda_capnp_serialise(tree);
-
-    DATA_BLOCK* data_block = plugin_interface->data_block;
-    initDataBlock(data_block);
-
-    data_block->data_n = static_cast<int>(buffer.size);
-    data_block->data = buffer.data;
-    data_block->dims = nullptr;
-    data_block->data_type = UDA_TYPE_CAPNP;
-
-    return 0;
+    return set_data_block(plugin_interface->data_block, found_results);
 }
 
 /**
@@ -1520,9 +1520,6 @@ int uda::plugins::imas::Plugin::list_files(IDAM_PLUGIN_INTERFACE* plugin_interfa
  */
 int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* plugin_interface)
 {
-#ifdef NO_IMAS
-    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
-#else
     REQUEST_DATA* request_data = plugin_interface->request_data;
 
     const char* uri = "";
@@ -1559,6 +1556,36 @@ int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* 
     boost::split(tokens, path, boost::is_any_of("/"), boost::token_compress_on);
 
     auto ids = tokens.front();
+
+    if (entry.is_mapped) {
+        IDSData data = {};
+        data.path = path;
+        data.rank = 0;
+        data.datatype = INTEGER_DATA;
+
+        int rc = get_mapped_data(entry, ids, plugin_interface, data);
+        data.found = (rc == 0) && !is_null_value(data.data, INTEGER_DATA, 0);
+
+        if (rc != 0) {
+            return rc;
+        }
+
+        initDataBlock(plugin_interface->data_block);
+
+        if (!data.found) {
+            return setReturnDataIntScalar(plugin_interface->data_block, 0, nullptr);
+        }
+
+        std::vector<const IDSData*> return_data;
+        return_data.push_back(&data);
+        set_data_block(plugin_interface->data_block, return_data);
+
+        return rc;
+    }
+
+#ifdef NO_IMAS
+    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
+#else
     tokens.pop_front();
     if (is_integer(tokens.front())) {
         ids += "/" + tokens.front();
@@ -1656,80 +1683,4 @@ int uda::plugins::imas::Plugin::begin_arraystruct_action(IDAM_PLUGIN_INTERFACE* 
     setReturnDataIntScalar(plugin_interface->data_block, size, nullptr);
     return 0;
 #endif // NO_IMAS
-}
-
-/**
- * Function: list_filled_paths
- *
- * Get list of filled paths from the IMAS database entry corresponding to the given IDS. The entry must have been opened by calling the
- * open(...) or get(...) functions.
- *
- * Arguments:
- *      uri         (required, string)  - uri for data
- *      ids         (required, string)  - IDS Name, e.g. `magnetics`
- *
- * Returns:
- *      CapNp serialised tree containing the list of filled paths as an array of strings
- *
- * Example:
- *      IMAS::list_filled_paths(uri='imas:hdf5?path=foo', ids='magnetics')
- *
- * @param plugin_interface the UDA plugin interface structure
- * @return 0 on success, !=0 on error
- */
-int uda::plugins::imas::Plugin::list_filled_paths(IDAM_PLUGIN_INTERFACE* plugin_interface) {
-#ifdef NO_IMAS
-    RAISE_PLUGIN_ERROR("Plugin compiled without IMAS lowlevel - can only be used for mapped data");
-#else
-    const char* uri;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, uri);
-    const char* ids;
-    FIND_REQUIRED_STRING_VALUE(plugin_interface->request_data->nameValueList, ids);
-    if (_open_entries.count(uri) == 0) {
-        int const return_code = open(plugin_interface);
-        if (return_code != 0) {
-            return return_code;
-        }
-    }
-    auto& entry = _open_entries.at(uri);
-    std::vector<IDSData> results = {};
-    int size=0;
-    char** path_list;
-    al_status_t status = al_list_filled_paths(entry.ctx, ids, &path_list, &size);
-    if (status.code < 0) {
-       std::string msg = std::string{"failed to get list_filled_paths: "} + status.message;
-       RAISE_PLUGIN_ERROR(msg.c_str());
-    }
-    auto* tree = uda_capnp_new_tree();
-    auto* root = uda_capnp_get_root(tree);
-    
-    if (size > 0) {
-        size_t total_size = 0;
-        for (int i = 0; i < size; ++i) {
-            total_size += strlen(path_list[i]) + 1;
-        }
-        char* concatenated = static_cast<char*>(malloc(total_size));
-        char* ptr = concatenated;
-        for (int i = 0; i < size; ++i) {
-            size_t len = strlen(path_list[i]) + 1;
-            memcpy(ptr, path_list[i], len);
-            ptr += len;
-        }
-        uda_capnp_set_node_name(root, "filled_paths");
-        uda_capnp_add_array_char(root, concatenated, static_cast<int>(total_size));
-       free(concatenated);
-    }
-    else {
-       uda_capnp_add_array_char(root, nullptr, 0);
-    }
-    auto buffer = uda_capnp_serialise(tree);
-       
-    DATA_BLOCK* data_block = plugin_interface->data_block;
-    initDataBlock(data_block);
-    data_block->data_n = static_cast<int>(buffer.size);
-    data_block->data = buffer.data;
-    data_block->dims = nullptr;
-    data_block->data_type = UDA_TYPE_CAPNP;
-    return 0;
-#endif // !NO_IMAS
 }
